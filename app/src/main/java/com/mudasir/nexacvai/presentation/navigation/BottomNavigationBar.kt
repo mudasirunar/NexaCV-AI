@@ -18,13 +18,16 @@ fun BottomNavigationBar(navController: NavHostController) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route ?: Screen.Home.route
 
+    val baseRoute = currentRoute.split("?")[0]
+    val currentScreen = AllScreens.find { it.route == baseRoute }
+
     NavigationBar(
         containerColor = MaterialTheme.colorScheme.surface,
         contentColor = MaterialTheme.colorScheme.onSurface,
         tonalElevation = 8.dp
     ) {
         BottomNavScreens.forEach { screen ->
-            val isSelected = currentRoute == screen.route
+            val isSelected = currentScreen?.route == screen.route || currentScreen?.parentRoute == screen.route
             NavigationBarItem(
                 selected = isSelected,
                 onClick = {

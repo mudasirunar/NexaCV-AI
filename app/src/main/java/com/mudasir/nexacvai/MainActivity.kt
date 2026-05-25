@@ -20,8 +20,11 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.Box
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.dp
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,19 +50,18 @@ class MainActivity : ComponentActivity() {
                             innerPadding = innerPadding
                         )
                         
-                        AnimatedVisibility(
-                            visible = showBottomBar,
-                            modifier = Modifier.align(Alignment.BottomCenter),
-                            enter = slideInVertically(
-                                initialOffsetY = { it },
-                                animationSpec = tween(250)
-                            ) + fadeIn(animationSpec = tween(250)),
-                            exit = slideOutVertically(
-                                targetOffsetY = { it },
-                                animationSpec = tween(250)
-                            ) + fadeOut(animationSpec = tween(250))
+                        val bottomBarOffset by animateDpAsState(
+                            targetValue = if (showBottomBar) 0.dp else 120.dp,
+                            animationSpec = tween(durationMillis = 200),
+                            label = "bottomBarOffset"
+                        )
+
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .offset(y = bottomBarOffset)
                         ) {
-                            BottomNavigationBar(navController = navController) 
+                            BottomNavigationBar(navController = navController)
                         }
                     }
                 }
