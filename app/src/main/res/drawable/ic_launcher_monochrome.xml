@@ -1,0 +1,22 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Main Document Shape with all details (AI sparks, CV lines, and the Folded Corner) cut out using evenOdd fillType -->
+    <!-- Reverted main shape to the original cutout path to completely remove the extra top-right corner piece -->
+    <path
+        android:fillColor="#2563EB"
+        android:fillType="evenOdd"
+        android:pathData="
+            M54,22 H42 c-4.418,0 -8,3.582 -8,8 v48 c0,4.418 3.582,8 8,8 h24 c4.418,0 8,-3.582 8,-8 V42 L54,22 Z
+            M54,22 V38 c 0,2.209 1.791,4 4,4 H74 L54,22 Z
+            M54,45 Q54,54 63,54 Q54,54 54,63 Q54,54 45,54 Q54,54 54,45 Z
+            M67,42 Q67,45 70,45 Q67,45 67,48 Q67,45 64,45 Q67,45 67,42 Z
+            M42,40 Q42,42 44,42 Q42,42 42,44 Q42,42 40,42 Q42,42 42,40 Z
+            M43.5,69.5 H64.5 A1.5,1.5 0 0,1 66,71 A1.5,1.5 0 0,1 64.5,72.5 H43.5 A1.5,1.5 0 0,1 42,71 A1.5,1.5 0 0,1 43.5,69.5 Z
+            M43.5,76.5 H54.5 A1.5,1.5 0 0,1 56,78 A1.5,1.5 0 0,1 54.5,79.5 H43.5 A1.5,1.5 0 0,1 42,78 A1.5,1.5 0 0,1 43.5,76.5 Z
+        " />
+
+</vector>

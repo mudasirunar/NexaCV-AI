@@ -1,30 +1,42 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <path android:pathData="M31,63.928c0,0 6.4,-11 12.1,-13.1c7.2,-2.6 26,-1.4 26,-1.4l38.1,38.1L107,108.928l-32,-1L31,63.928z">
-        <aapt:attr name="android:fillColor">
-            <gradient
-                android:endX="85.84757"
-                android:endY="92.4963"
-                android:startX="42.9492"
-                android:startY="49.59793"
-                android:type="linear">
-                <item
-                    android:color="#44000000"
-                    android:offset="0.0" />
-                <item
-                    android:color="#00000000"
-                    android:offset="1.0" />
-            </gradient>
-        </aapt:attr>
-    </path>
+
+    <!-- Document Shadow (subtle depth) -->
+    <path
+        android:fillColor="#1A000000"
+        android:pathData="M54,24 H42 c -4.418,0 -8,3.582 -8,8 v48 c 0,4.418 3.582,8 8,8 h24 c 4.418,0 8,-3.582 8,-8 V44 L54,24 Z" />
+
+    <!-- Main Document Shape (PrimaryBlue) -->
+    <path
+        android:fillColor="#2563EB"
+        android:pathData="M54,22 H42 c -4.418,0 -8,3.582 -8,8 v48 c 0,4.418 3.582,8 8,8 h24 c 4.418,0 8,-3.582 8,-8 V42 L54,22 Z" />
+
+    <!-- Folded Corner (SecondaryBlue) -->
+    <path
+        android:fillColor="#1E40AF"
+        android:pathData="M54,22 V38 c 0,2.209 1.791,4 4,4 H74 L54,22 Z" />
+
+    <!-- Main AI Sparkle Cutout (White) -->
     <path
         android:fillColor="#FFFFFF"
-        android:fillType="nonZero"
-        android:pathData="M65.3,45.828l3.8,-6.6c0.2,-0.4 0.1,-0.9 -0.3,-1.1c-0.4,-0.2 -0.9,-0.1 -1.1,0.3l-3.9,6.7c-6.3,-2.8 -13.4,-2.8 -19.7,0l-3.9,-6.7c-0.2,-0.4 -0.7,-0.5 -1.1,-0.3C38.8,38.328 38.7,38.828 38.9,39.228l3.8,6.6C36.2,49.428 31.7,56.028 31,63.928h46C76.3,56.028 71.8,49.428 65.3,45.828zM43.4,57.328c-0.8,0 -1.5,-0.5 -1.8,-1.2c-0.3,-0.7 -0.1,-1.5 0.4,-2.1c0.5,-0.5 1.4,-0.7 2.1,-0.4c0.7,0.3 1.2,1 1.2,1.8C45.3,56.528 44.5,57.328 43.4,57.328L43.4,57.328zM64.6,57.328c-0.8,0 -1.5,-0.5 -1.8,-1.2s-0.1,-1.5 0.4,-2.1c0.5,-0.5 1.4,-0.7 2.1,-0.4c0.7,0.3 1.2,1 1.2,1.8C66.5,56.528 65.6,57.328 64.6,57.328L64.6,57.328z"
-        android:strokeWidth="1"
-        android:strokeColor="#00000000" />
+        android:pathData="M54,45 Q54,54 63,54 Q54,54 54,63 Q54,54 45,54 Q54,54 54,45 Z" />
+
+    <!-- CV Text Lines (White) -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"
+        android:pathData="M42,71 H66 M42,78 H56" />
+
+    <!-- Accent Sparks (AccentBlue) -->
+    <path
+        android:fillColor="#38BDF8"
+        android:pathData="M67,42 Q67,45 70,45 Q67,45 67,48 Q67,45 64,45 Q67,45 67,42 Z" />
+    <path
+        android:fillColor="#38BDF8"
+        android:pathData="M42,40 Q42,42 44,42 Q42,42 42,44 Q42,42 40,42 Q42,42 42,40 Z" />
+
 </vector>

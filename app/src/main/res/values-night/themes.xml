@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.NexaCVAI" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.NexaCVAI" parent="android:Theme.Material.NoActionBar" />
 
-    <!-- Splash Screen Theme (Light) -->
+    <!-- Splash Screen Theme (Dark) -->
     <style name="Theme.App.Starting" parent="Theme.SplashScreen">
-        <item name="windowSplashScreenBackground">@color/light_background</item>
+        <item name="windowSplashScreenBackground">@color/dark_background</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/nexacv_splash_logo</item>
         <item name="postSplashScreenTheme">@style/Theme.NexaCVAI</item>
     </style>

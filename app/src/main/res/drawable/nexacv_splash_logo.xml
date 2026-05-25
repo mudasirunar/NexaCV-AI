@@ -1,0 +1,103 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="288dp"
+    android:height="288dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+
+    <!-- Wrap and center the original 108x130 drawing inside the 200x200 viewport -->
+    <group android:translateX="46" android:translateY="35">
+
+    <group android:name="icon_group">
+        <group android:name="document_group" android:pivotX="54" android:pivotY="54">
+            <!-- Main Document Shape -->
+            <path
+                android:fillColor="#2563EB"
+                android:pathData="M54,22 H42 c -4.418,0 -8,3.582 -8,8 v48 c 0,4.418 3.582,8 8,8 h24 c 4.418,0 8,-3.582 8,-8 V42 L54,22 Z" />
+
+            <!-- Folded Corner -->
+            <path
+                android:fillColor="#1E40AF"
+                android:pathData="M54,22 V38 c 0,2.209 1.791,4 4,4 H74 L54,22 Z" />
+
+            <!-- CV Lines -->
+            <path
+                android:name="cv_lines"
+                android:strokeColor="#FFFFFF"
+                android:strokeWidth="3"
+                android:strokeLineCap="round"
+                android:pathData="M42,71 H66 M42,78 H56" />
+        </group>
+
+        <group android:name="sparkle_group" android:pivotX="54" android:pivotY="54">
+            <!-- AI Spark (Main) -->
+            <path
+                android:fillColor="#FFFFFF"
+                android:pathData="M54,45 Q54,54 63,54 Q54,54 54,63 Q54,54 45,54 Q54,54 54,45 Z" />
+
+            <!-- Accent Sparks -->
+            <path
+                android:fillColor="#38BDF8"
+                android:pathData="M67,42 Q67,45 70,45 Q67,45 67,48 Q67,45 64,45 Q67,45 67,42 Z" />
+            <path
+                android:fillColor="#38BDF8"
+                android:pathData="M42,40 Q42,42 44,42 Q42,42 42,44 Q42,42 40,42 Q42,42 42,40 Z" />
+        </group>
+    </group>
+
+    <!-- Text Group: NEXA CV (Custom Geometric Bold Typography) -->
+    <group android:name="text_group" android:pivotX="54" android:pivotY="104">
+        <!-- Separator: left line -->
+        <path
+            android:strokeColor="#3B82F6"
+            android:strokeWidth="1"
+            android:strokeLineCap="round"
+            android:pathData="M29,93 H50" />
+
+        <!-- Separator: right line -->
+        <path
+            android:strokeColor="#3B82F6"
+            android:strokeWidth="1"
+            android:strokeLineCap="round"
+            android:pathData="M58,93 H79" />
+
+        <!-- Separator: AI sparkle -->
+        <path
+            android:fillColor="#38BDF8"
+            android:pathData="M54,90 Q54,93 57,93 Q54,93 54,96 Q54,93 51,93 Q54,93 54,90 Z" />
+
+        <!-- N -->
+        <path android:strokeColor="#1E40AF" android:strokeWidth="1.8"
+            android:strokeLineCap="round" android:strokeLineJoin="round"
+            android:pathData="M29,105 V97 L35,105 V97" />
+
+        <!-- E -->
+        <path android:strokeColor="#1E40AF" android:strokeWidth="1.8"
+            android:strokeLineCap="round" android:strokeLineJoin="round"
+            android:pathData="M37,97 V105 M37,97 H43 M37,101 H41.5 M37,105 H43" />
+
+        <!-- X -->
+        <path android:strokeColor="#1E40AF" android:strokeWidth="1.8"
+            android:strokeLineCap="round"
+            android:pathData="M45,97 L51,105 M51,97 L45,105" />
+
+        <!-- A -->
+        <path android:strokeColor="#1E40AF" android:strokeWidth="1.8"
+            android:strokeLineCap="round" android:strokeLineJoin="round"
+            android:pathData="M53,105 L56,97 L59,105 M54.1,101.5 H57.9" />
+
+        <!-- C -->
+        <path
+            android:strokeColor="#38BDF8"
+            android:strokeWidth="1.8"
+            android:strokeLineCap="round"
+            android:pathData="M70,98.5 C70,97 64,97 64,101 C64,105 70,105 70,103.5" />
+
+        <!-- V -->
+        <path android:strokeColor="#38BDF8" android:strokeWidth="1.8"
+            android:strokeLineCap="round" android:strokeLineJoin="round"
+            android:pathData="M73,97 L76,105 L79,97" />
+
+    </group>
+    </group>
+
+</vector>

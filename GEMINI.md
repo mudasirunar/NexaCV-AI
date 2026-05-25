@@ -235,6 +235,8 @@ Generate ATS optimized CV summary and cover letter only.
 
 # 🧾 Room Database Design
 
+**CRITICAL RULE:** All data models/entities MUST include `createdAt` and `updatedAt` timestamps (Long, epoch millis). This is strictly required for future Firebase synchronization and conflict resolution.
+
 Entities:
 
 ### UserProfile
@@ -244,19 +246,24 @@ Entities:
 - skills
 - experience
 - education
+- createdAt
+- updatedAt
 
 ### CVGeneration
 - id
 - profileId
 - jobDescription
 - generatedCV
-- timestamp
+- timestamp / createdAt
+- updatedAt
 
 ### Template
-- id
-- name
-- type
-- layoutConfig
+- id (Primary Key)
+- templateKey (String ID mapping to Compose functions like "ats", "modern")
+- primaryColorHex (Optional user customization)
+- fontStyle (Optional user customization)
+- createdAt
+- updatedAt
 
 ---
 
@@ -275,13 +282,25 @@ Entities:
 
 ---
 
-# 🧩 Key Engineering Principles
+# 🧩 Key Engineering Principles & SOLID Architecture (STRICT)
 
-- Single Responsibility Principle
-- Separation of Concerns
-- No business logic in UI
-- Reusable components
-- Stateless UI where possible
+- **Single Responsibility Principle (SRP):** One file/function = one responsibility. ViewModels should only handle presentation logic for their specific screen.
+- **Helper/Utility Classes:** Isolate specific logic into dedicated helpers (e.g., `PreferenceManager` for DataStore, `PdfHelper` for PDF generation, `AiHelper` for AI API interactions). Do NOT clutter ViewModels or UI files with core logic.
+- **Dependency Injection:** Strictly use **Dagger Hilt** for all dependency injection.
+- **Clean Architecture:** Keep Domain (Use Cases, Models), Data (Repositories, Room, Network), and Presentation (Compose UI, ViewModels) strictly separated.
+- **State Persistence (CRITICAL):** All UI state (especially form inputs, text fields, and user selections) MUST survive configuration changes (screen rotations, theme toggles). Always hoist state into a `ViewModel` using `StateFlow`. Never use simple `remember { mutableStateOf() }` inside a Composable for important user data, as it will be lost on recreation.
+
+## 📁 Folder Structure System (Feature-Based)
+For the UI layer, we use **Feature-Based Packaging** rather than grouping by file type.
+**Why?** Grouping all screens in a single `screens/` folder becomes unmanageable as the app grows. Instead, each feature gets its own folder:
+```text
+presentation/
+  ui/
+    home/          -> HomeScreen.kt, HomeViewModel.kt, HomeState.kt
+    profiles/      -> ProfilesScreen.kt, ProfileViewModel.kt, ProfileComponents.kt
+    generate/      -> GenerateScreen.kt, GenerateViewModel.kt
+```
+This ensures everything related to a specific screen/feature is isolated and easy to scale.
 
 ---
 
@@ -332,4 +351,46 @@ Dark mode is treated as a "developer workspace".
 
 ## Performance UI Rules
 - App must be optimized. NO UI lag.
+- Use `remember` and `derivedStateOf` to prevent redundant recompositions.derivedStateOf` to prevent redundant recompositions. Dark Mode Background: `#0B1220` (Not pure black)
+
+## UI Component Rules
+- **Cards:** Radius 12–16dp, subtle shadows, optional light gray border. Stacked vertically with generous spacing. Max 1 primary action per card.
+- **Buttons:** Primary (Solid Blue, rounded 12-14dp), Secondary (Transparent with blue border), Destructive (Red `#EF4444` ONLY for deletions). Include scale animation on press (0.98).
+- **Typography:** Inter/Roboto/SF Pro style. Title (22-28sp bold), Section (18-20sp), Body (14-16sp), Caption (12sp). *No fancy fonts.*
+- **Interactions:** Always include small polish like shimmer loading, fade-in previews, smooth card transitions.
+
+## Performance UI Rules
+- App must be optimized. NO UI lag.
 - Use `remember` and `derivedStateOf` to prevent redundant recompositions.derivedStateOf` to prevent redundant recompositions.
+
+---
+
+# 🧱 STRICT CLEAN ARCHITECTURE BOUNDARY RULES (MANDATORY)
+
+## RULE 1
+Always enforce strict Clean Architecture boundaries:
+`UI (View) → ViewModel → UseCase → Repository → DataSource (DataSource / DAO)`
+No direct connection bypassing intermediate layers is ever allowed.
+
+## RULE 2
+Never use DAO, database entity, or raw JSON structures directly inside the ViewModels, UseCases, or Compose UI screens. All layers above the Repository must deal solely with pure Domain Models.
+
+## RULE 3
+Never store domain models directly inside Room Entity classes. Domain models must represent pure business structures, whereas Database Entities represent strict database table schemes.
+
+## RULE 4
+Always split massive object graphs (like User Profiles containing experiences, projects, educations) into normalized database tables with profileId foreign keys and CASCADE deletes rather than dumping everything in a single God Entity using TypeConverters.
+
+## RULE 5
+The Repository must serve as a real abstraction and data orchestrator (handling entity-to-domain mapping, synchronization, transactional child inserts, and edits) rather than just being a forwarding wrapper to Room DAOs.
+
+## RULE 6
+ViewModels must remain extremely lightweight, UI-only focused, and must solely manage UI states and delegate core triggers to UseCases. ViewModels must never contain mapping logic or direct repository/database updates.
+
+## RULE 7
+Always maintain structural and package boundaries cleanly:
+- `domain/model/`: Pure Kotlin/Java business logic objects.
+- `domain/usecase/`: Clean business flow scripts.
+- `domain/mapper/`: Mapping layers mapping entities to domains.
+- `domain/repository/`: Abstract repositories.
+- `data/`: DAO, Entities, database setups, and Repository implementations.
