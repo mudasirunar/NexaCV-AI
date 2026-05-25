@@ -1,11 +1,14 @@
 package com.mudasir.nexacvai.presentation.ui.components
 
 import androidx.compose.animation.*
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -41,7 +44,9 @@ fun NexaTextField(
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     visualTransformation: VisualTransformation = VisualTransformation.None,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    readOnly: Boolean = false,
+    onLeadingIconClick: (() -> Unit)? = null
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
@@ -70,23 +75,34 @@ fun NexaTextField(
         )
     }
 
-    // Professional color scheme mapping from MaterialTheme
-    val borderColors = MaterialTheme.colorScheme
-    val outlineColor = remember(isFocused, isError) {
-        when {
-            isError -> borderColors.error
-            isFocused -> borderColors.primary
-            else -> borderColors.outline.copy(alpha = 0.4f)
-        }
-    }
-    val borderThickness = if (isFocused || isError) 1.5.dp else 1.dp
+    // Smooth animated color transitions for focus/error states
+    // Using animateColorAsState instead of raw remember — provides both proper
+    // caching AND smooth visual transitions between states.
+    val outlineColor by animateColorAsState(
+        targetValue = when {
+            isError -> MaterialTheme.colorScheme.error
+            isFocused -> MaterialTheme.colorScheme.primary
+            else -> MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
+        },
+        animationSpec = tween(durationMillis = 150),
+        label = "outlineColor"
+    )
+    val borderThickness by animateDpAsState(
+        targetValue = if (isFocused || isError) 1.5.dp else 1.dp,
+        animationSpec = tween(durationMillis = 150),
+        label = "borderThickness"
+    )
     
     // Premium, clean slightly off-surface input background color (Notion/Apple style)
-    val inputBackgroundColor = if (isFocused) {
-        MaterialTheme.colorScheme.surface
-    } else {
-        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
-    }
+    val inputBackgroundColor by animateColorAsState(
+        targetValue = if (isFocused) {
+            MaterialTheme.colorScheme.surface
+        } else {
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
+        },
+        animationSpec = tween(durationMillis = 150),
+        label = "inputBackgroundColor"
+    )
 
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -131,7 +147,7 @@ fun NexaTextField(
             androidx.compose.foundation.text.BasicTextField(
                 value = value,
                 onValueChange = { newValue ->
-                    if (isFocused) {
+                    if (isFocused && !readOnly) {
                         onValueChange(newValue)
                     }
                 },
@@ -153,6 +169,7 @@ fun NexaTextField(
                 keyboardActions = resolvedKeyboardActions,
                 visualTransformation = visualTransformation,
                 enabled = enabled,
+                readOnly = readOnly,
                 interactionSource = interactionSource,
                 cursorBrush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.primary),
                 decorationBox = { innerTextField ->
@@ -173,14 +190,22 @@ fun NexaTextField(
                 }
             )
 
-            // Leading Icon positioning
             if (leadingIcon != null) {
                 Icon(
                     imageVector = leadingIcon,
                     contentDescription = null,
                     modifier = Modifier
                         .size(18.dp)
-                        .align(Alignment.CenterStart),
+                        .align(Alignment.CenterStart)
+                        .then(
+                            if (onLeadingIconClick != null) {
+                                Modifier.clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = null,
+                                    onClick = onLeadingIconClick
+                                )
+                            } else Modifier
+                        ),
                     tint = if (isError) {
                         MaterialTheme.colorScheme.error
                     } else if (isFocused) {

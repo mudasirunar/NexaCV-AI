@@ -7,7 +7,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 
 class ProfilesViewModel(
@@ -24,7 +23,6 @@ class ProfilesViewModel(
     private fun loadProfiles() {
         viewModelScope.launch {
             getAllProfilesUseCase()
-                .onStart { _state.value = _state.value.copy(isLoading = true) }
                 .catch { e ->
                     _state.value = _state.value.copy(
                         isLoading = false,
@@ -40,3 +38,4 @@ class ProfilesViewModel(
         }
     }
 }
+

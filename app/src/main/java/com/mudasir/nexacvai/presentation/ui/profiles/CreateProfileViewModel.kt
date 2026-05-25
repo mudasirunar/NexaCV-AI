@@ -18,7 +18,7 @@ data class CreateProfileState(
     val isSaving: Boolean = false,
     val isSaved: Boolean = false,
     val currentStep: Int = 0,
-    val totalSteps: Int = 10,
+    val totalSteps: Int = 9,
     val error: String? = null,
     
     // Original Profile ID (if editing)
@@ -76,21 +76,31 @@ class CreateProfileViewModel(
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(CreateProfileState())
+    private val initialProfileId = savedStateHandle.get<Long>("profileId")?.takeIf { it != -1L }
+
+    private val _state = MutableStateFlow(
+        CreateProfileState(
+            profileId = initialProfileId,
+            isLoading = initialProfileId != null
+        )
+    )
     val state: StateFlow<CreateProfileState> = _state.asStateFlow()
+    private var isCurrentlySaving = false
+    
+    // Track the initial state to detect unsaved changes
+    private var initialProfile: UserProfile = UserProfile()
 
     init {
-        val profileId = savedStateHandle.get<Long>("profileId")
-        if (profileId != null && profileId != -1L) {
-            loadProfile(profileId)
+        initialProfileId?.let { id ->
+            loadProfile(id)
         }
     }
 
     private fun loadProfile(id: Long) {
         viewModelScope.launch {
-            _state.value = _state.value.copy(isLoading = true)
             val profile = getProfileUseCase(id)
             if (profile != null) {
+                initialProfile = profile
                 _state.value = _state.value.copy(
                     isLoading = false,
                     profileId = profile.id,
@@ -110,6 +120,7 @@ class CreateProfileViewModel(
                     projects = profile.projects,
                     educations = profile.educations,
                     certifications = profile.certifications,
+                    references = profile.references,
                     socialLinks = profile.socialLinks,
                     languages = profile.languages,
                     hobbies = profile.hobbies,
@@ -216,9 +227,10 @@ class CreateProfileViewModel(
     }
 
     fun updateSummary(objective: String? = null, summary: String? = null) {
+        val capitalizedSummary = summary?.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
         _state.value = _state.value.copy(
             careerObjective = objective ?: _state.value.careerObjective,
-            professionalSummary = summary ?: _state.value.professionalSummary
+            professionalSummary = capitalizedSummary ?: _state.value.professionalSummary
         )
     }
 
@@ -244,6 +256,13 @@ class CreateProfileViewModel(
     
     fun removeExperience(exp: Experience) {
         _state.value = _state.value.copy(experiences = _state.value.experiences.filter { it.id != exp.id })
+    }
+
+    fun updateExperience(id: String, updated: Experience) {
+        val list = _state.value.experiences.map {
+            if (it.id == id) updated else it
+        }
+        _state.value = _state.value.copy(experiences = list)
     }
 
     fun addProject(project: Project) {
@@ -302,55 +321,86 @@ class CreateProfileViewModel(
         )
     }
 
+    private fun getCurrentProfile(): UserProfile {
+        val upToDateState = _state.value
+        val cleanedEmails = upToDateState.emails.filter { it.isNotBlank() }
+        val cleanedPhones = upToDateState.phones.filter { it.isNotBlank() }
+
+        return UserProfile(
+            id = upToDateState.profileId ?: 0L,
+            fullName = upToDateState.fullName,
+            professionalTitle = upToDateState.professionalTitle,
+            emails = cleanedEmails,
+            phones = cleanedPhones,
+            country = upToDateState.country,
+            city = upToDateState.city,
+            preferredRole = upToDateState.preferredRole,
+            yearsOfExperience = upToDateState.yearsOfExperience,
+            profilePictureUri = upToDateState.profilePictureUri,
+            careerObjective = upToDateState.careerObjective,
+            professionalSummary = upToDateState.professionalSummary,
+            skills = upToDateState.skills,
+            experiences = upToDateState.experiences,
+            projects = upToDateState.projects,
+            educations = upToDateState.educations,
+            certifications = upToDateState.certifications,
+            references = upToDateState.references,
+            socialLinks = upToDateState.socialLinks,
+            languages = upToDateState.languages,
+            hobbies = upToDateState.hobbies,
+            volunteerWork = upToDateState.volunteerWork,
+            awards = upToDateState.awards
+        )
+    }
+
+    fun hasUnsavedChanges(): Boolean {
+        val current = getCurrentProfile()
+        // Compare data ignoring dynamic timestamps
+        return current.copy(
+            createdAt = initialProfile.createdAt, 
+            updatedAt = initialProfile.updatedAt
+        ) != initialProfile.copy(
+            createdAt = initialProfile.createdAt, 
+            updatedAt = initialProfile.updatedAt
+        )
+    }
+
     fun saveProfile() {
-        val currentState = _state.value
+        if (isCurrentlySaving) return // synchronous double-save block
+        isCurrentlySaving = true
         
-        // Validation: Name and Title are strictly required
+        val currentState = _state.value
         if (currentState.fullName.isBlank()) {
             _state.value = currentState.copy(error = "Name is required")
-            return
-        }
-        if (currentState.professionalTitle.isBlank()) {
-            _state.value = currentState.copy(error = "Title is required")
+            isCurrentlySaving = false
             return
         }
 
+        // Set isSaving synchronously before starting any asynchronous work
+        _state.value = currentState.copy(isSaving = true, error = null)
+
         viewModelScope.launch {
-            _state.value = currentState.copy(isSaving = true, error = null)
-            
-            // Clean empty entries
-            val cleanedEmails = currentState.emails.filter { it.isNotBlank() }
-            val cleanedPhones = currentState.phones.filter { it.isNotBlank() }
-            
-            val profile = UserProfile(
-                id = currentState.profileId ?: 0L,
-                fullName = currentState.fullName,
-                professionalTitle = currentState.professionalTitle,
-                emails = cleanedEmails,
-                phones = cleanedPhones,
-                country = currentState.country,
-                city = currentState.city,
-                preferredRole = currentState.preferredRole,
-                yearsOfExperience = currentState.yearsOfExperience,
-                profilePictureUri = currentState.profilePictureUri,
-                careerObjective = currentState.careerObjective,
-                professionalSummary = currentState.professionalSummary,
-                skills = currentState.skills,
-                experiences = currentState.experiences,
-                projects = currentState.projects,
-                educations = currentState.educations,
-                certifications = currentState.certifications,
-                references = currentState.references,
-                socialLinks = currentState.socialLinks,
-                languages = currentState.languages,
-                hobbies = currentState.hobbies,
-                volunteerWork = currentState.volunteerWork,
-                awards = currentState.awards
-            )
-            
-            saveProfileUseCase(profile)
-            
-            _state.value = currentState.copy(isSaving = false, isSaved = true)
+            try {
+                val profile = getCurrentProfile()
+                val newId = saveProfileUseCase(profile)
+                
+                // Update initialProfile so subsequent back presses don't trigger discard warnings
+                initialProfile = profile.copy(id = newId)
+
+                // Return updated state, containing the new profileId so subsequent clicks are updates!
+                _state.value = _state.value.copy(
+                    profileId = newId,
+                    isSaving = false,
+                    isSaved = true
+                )
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    isSaving = false,
+                    error = e.localizedMessage ?: "Failed to save profile"
+                )
+            } finally {
+                isCurrentlySaving = false
+            }
         }
     }
 }
