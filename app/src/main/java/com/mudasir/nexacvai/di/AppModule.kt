@@ -1,0 +1,47 @@
+package com.mudasir.nexacvai.di
+
+import androidx.room.Room
+import com.mudasir.nexacvai.data.local.NexaCVDatabase
+import com.mudasir.nexacvai.data.local.datastore.AppSettingsManager
+import com.mudasir.nexacvai.data.repository.UserProfileRepositoryImpl
+import com.mudasir.nexacvai.domain.repository.UserProfileRepository
+import com.mudasir.nexacvai.domain.usecase.*
+import com.mudasir.nexacvai.presentation.ui.profiles.ProfilesViewModel
+import com.mudasir.nexacvai.presentation.ui.profiles.CreateProfileViewModel
+import org.koin.android.ext.koin.androidContext
+import org.koin.androidx.viewmodel.dsl.viewModel
+import org.koin.dsl.module
+
+val appModule = module {
+    
+    // DataStore
+    single { AppSettingsManager(androidContext()) }
+    
+    // Room Database
+    single { 
+        Room.databaseBuilder(
+            androidContext(),
+            NexaCVDatabase::class.java,
+            "nexacv_database"
+        ).build()
+    }
+    
+    // DAOs
+    single { get<NexaCVDatabase>().userProfileDao }
+    single { get<NexaCVDatabase>().cvGenerationDao }
+    single { get<NexaCVDatabase>().templateDao }
+    
+    // Repositories
+    single<UserProfileRepository> { UserProfileRepositoryImpl(get()) }
+
+    // UseCases
+    single { SaveProfileUseCase(get()) }
+    single { GetProfileUseCase(get()) }
+    single { DeleteProfileUseCase(get()) }
+    single { GetAllProfilesUseCase(get()) }
+
+    // ViewModels
+    viewModel { ProfilesViewModel(get()) }
+    viewModel { CreateProfileViewModel(get(), get(), get()) }
+}
+

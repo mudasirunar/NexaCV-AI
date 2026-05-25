@@ -1,0 +1,12 @@
+package com.mudasir.nexacvai.domain.repository
+
+import com.mudasir.nexacvai.domain.model.UserProfile
+import kotlinx.coroutines.flow.Flow
+
+interface UserProfileRepository {
+    fun getAllProfiles(): Flow<List<UserProfile>>
+    suspend fun getProfileById(id: Long): UserProfile?
+    suspend fun insertProfile(profile: UserProfile): Long
+    suspend fun updateProfile(profile: UserProfile)
+    suspend fun deleteProfile(profile: UserProfile)
+}
