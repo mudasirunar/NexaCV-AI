@@ -11,7 +11,6 @@ data class Experience(
     val endDate: String = "",
     val isCurrentlyWorking: Boolean = false,
     val description: String = "",
-    val responsibilities: String = "",
     val achievements: String = "",
     val technologiesUsed: List<String> = emptyList()
 )
@@ -37,7 +36,6 @@ data class Project(
     val liveDemoLink: String = "",
     val playStoreLink: String = "",
     val roleInProject: String = "",
-    val isTeamProject: Boolean = false,
     val startDate: String = "",
     val endDate: String = "",
     val projectImagesUris: List<String> = emptyList()
@@ -61,7 +59,7 @@ data class SocialLink(
 data class Language(
     val id: String = java.util.UUID.randomUUID().toString(),
     val languageName: String = "",
-    val proficiency: String = "" // Beginner, Intermediate, Fluent, Native
+    val proficiency: String = ""
 )
 
 data class Reference(
@@ -69,7 +67,6 @@ data class Reference(
     val fullName: String = "",
     val jobTitle: String = "",
     val company: String = "",
-    val relationship: String = "", // e.g. Manager, Mentor, Colleague
     val email: String? = null,
     val phone: String? = null,
     val linkedInUrl: String? = null,

@@ -30,7 +30,6 @@ data class ExperienceEntity(
     val endDate: String,
     val isCurrentlyWorking: Boolean,
     val description: String,
-    val responsibilities: String,
     val achievements: String,
     val technologiesUsed: List<String>
 )

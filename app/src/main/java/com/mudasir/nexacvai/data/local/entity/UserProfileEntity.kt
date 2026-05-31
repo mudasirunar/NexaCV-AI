@@ -13,16 +13,13 @@ data class UserProfileEntity(
     val professionalTitle: String = "",
     val emails: List<String> = emptyList(),
     val phones: List<String> = emptyList(),
-    val country: String = "",
-    val city: String = "",
+    val dateOfBirth: String = "",
     val address: String = "",
-    val shortBio: String = "",
     val preferredRole: String = "",
     val yearsOfExperience: String = "",
     val profilePictureUri: String? = null,
     
     // Summary
-    val careerObjective: String = "",
     val professionalSummary: String = "",
     
     // Primitive lists (retained via List<String> converter)
@@ -37,4 +34,3 @@ data class UserProfileEntity(
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 )
-

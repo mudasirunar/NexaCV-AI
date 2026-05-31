@@ -1,4 +1,4 @@
-package com.mudasir.nexacvai.presentation.ui.profiles
+package com.mudasir.nexacvai.presentation.ui.profiles.viewmodel
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -10,65 +10,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import androidx.compose.runtime.Immutable
-
-@Immutable
-data class CreateProfileState(
-    val isLoading: Boolean = false,
-    val isSaving: Boolean = false,
-    val isSaved: Boolean = false,
-    val currentStep: Int = 0,
-    val totalSteps: Int = 9,
-    val error: String? = null,
-    
-    // Original Profile ID (if editing)
-    val profileId: Long? = null,
-
-    // Step 1: Basic Info
-    val fullName: String = "",
-    val professionalTitle: String = "",
-    val emails: List<String> = listOf(""), 
-    val phones: List<String> = listOf(""),
-    val country: String = "",
-    val city: String = "",
-    val preferredRole: String = "",
-    val yearsOfExperience: String = "",
-    val profilePictureUri: String? = null,
-    
-    // Step 2: Summary
-    val careerObjective: String = "",
-    val professionalSummary: String = "",
-    
-    // Step 3: Skills
-    val skills: List<String> = emptyList(),
-    val currentSkillInput: String = "",
-    
-    // Step 4: Experiences
-    val experiences: List<Experience> = emptyList(),
-    
-    // Step 5: Projects
-    val projects: List<Project> = emptyList(),
-    
-    // Step 6: Educations
-    val educations: List<Education> = emptyList(),
-    
-    // Step 7: Certifications
-    val certifications: List<Certification> = emptyList(),
-    
-    // Step 8: References
-    val references: List<Reference> = emptyList(),
-    
-    // Step 9: Social Links
-    val socialLinks: List<SocialLink> = emptyList(),
-    
-    // Step 9: Languages
-    val languages: List<Language> = emptyList(),
-    
-    // Step 10: Additional Info
-    val hobbies: String = "",
-    val volunteerWork: String = "",
-    val awards: String = ""
-)
 
 class CreateProfileViewModel(
     private val saveProfileUseCase: SaveProfileUseCase,
@@ -108,12 +49,11 @@ class CreateProfileViewModel(
                     professionalTitle = profile.professionalTitle,
                     emails = profile.emails.ifEmpty { listOf("") },
                     phones = profile.phones.ifEmpty { listOf("") },
-                    country = profile.country,
-                    city = profile.city,
+                    dateOfBirth = profile.dateOfBirth,
+                    address = profile.address,
                     preferredRole = profile.preferredRole,
                     yearsOfExperience = profile.yearsOfExperience,
                     profilePictureUri = profile.profilePictureUri,
-                    careerObjective = profile.careerObjective,
                     professionalSummary = profile.professionalSummary,
                     skills = profile.skills,
                     experiences = profile.experiences,
@@ -159,8 +99,8 @@ class CreateProfileViewModel(
         title: String? = null,
         emails: List<String>? = null,
         phones: List<String>? = null,
-        country: String? = null,
-        city: String? = null,
+        dateOfBirth: String? = null,
+        address: String? = null,
         preferredRole: String? = null,
         yearsOfExperience: String? = null,
         profilePictureUri: String? = null
@@ -170,8 +110,8 @@ class CreateProfileViewModel(
             professionalTitle = title ?: _state.value.professionalTitle,
             emails = emails ?: _state.value.emails,
             phones = phones ?: _state.value.phones,
-            country = country ?: _state.value.country,
-            city = city ?: _state.value.city,
+            dateOfBirth = dateOfBirth ?: _state.value.dateOfBirth,
+            address = address ?: _state.value.address,
             preferredRole = preferredRole ?: _state.value.preferredRole,
             yearsOfExperience = yearsOfExperience ?: _state.value.yearsOfExperience,
             profilePictureUri = profilePictureUri ?: _state.value.profilePictureUri
@@ -226,10 +166,9 @@ class CreateProfileViewModel(
         }
     }
 
-    fun updateSummary(objective: String? = null, summary: String? = null) {
+    fun updateSummary(summary: String? = null) {
         val capitalizedSummary = summary?.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
         _state.value = _state.value.copy(
-            careerObjective = objective ?: _state.value.careerObjective,
             professionalSummary = capitalizedSummary ?: _state.value.professionalSummary
         )
     }
@@ -273,6 +212,13 @@ class CreateProfileViewModel(
         _state.value = _state.value.copy(projects = _state.value.projects.filter { it.id != project.id })
     }
 
+    fun updateProject(id: String, updated: Project) {
+        val list = _state.value.projects.map {
+            if (it.id == id) updated else it
+        }
+        _state.value = _state.value.copy(projects = list)
+    }
+
     fun addEducation(edu: Education) {
         _state.value = _state.value.copy(educations = _state.value.educations + edu)
     }
@@ -281,12 +227,33 @@ class CreateProfileViewModel(
         _state.value = _state.value.copy(educations = _state.value.educations.filter { it.id != edu.id })
     }
 
+    fun updateEducation(id: String, updated: Education) {
+        val list = _state.value.educations.map {
+            if (it.id == id) updated else it
+        }
+        _state.value = _state.value.copy(educations = list)
+    }
+
     fun addCertification(cert: Certification) {
         _state.value = _state.value.copy(certifications = _state.value.certifications + cert)
     }
     
     fun removeCertification(cert: Certification) {
         _state.value = _state.value.copy(certifications = _state.value.certifications.filter { it.id != cert.id })
+    }
+
+    fun updateCertification(id: String, updated: Certification) {
+        val list = _state.value.certifications.map {
+            if (it.id == id) updated else it
+        }
+        _state.value = _state.value.copy(certifications = list)
+    }
+
+    fun updateReference(id: String, updated: Reference) {
+        val list = _state.value.references.map {
+            if (it.id == id) updated else it
+        }
+        _state.value = _state.value.copy(references = list)
     }
 
     fun addReference(ref: Reference) {
@@ -313,6 +280,20 @@ class CreateProfileViewModel(
         _state.value = _state.value.copy(languages = _state.value.languages.filter { it.id != lang.id })
     }
 
+    fun updateSocialLink(id: String, updated: SocialLink) {
+        val list = _state.value.socialLinks.map {
+            if (it.id == id) updated else it
+        }
+        _state.value = _state.value.copy(socialLinks = list)
+    }
+
+    fun updateLanguage(id: String, updated: Language) {
+        val list = _state.value.languages.map {
+            if (it.id == id) updated else it
+        }
+        _state.value = _state.value.copy(languages = list)
+    }
+
     fun updateAdditionalInfo(hobbies: String? = null, volunteerWork: String? = null, awards: String? = null) {
         _state.value = _state.value.copy(
             hobbies = hobbies ?: _state.value.hobbies,
@@ -332,12 +313,11 @@ class CreateProfileViewModel(
             professionalTitle = upToDateState.professionalTitle,
             emails = cleanedEmails,
             phones = cleanedPhones,
-            country = upToDateState.country,
-            city = upToDateState.city,
+            dateOfBirth = upToDateState.dateOfBirth,
+            address = upToDateState.address,
             preferredRole = upToDateState.preferredRole,
             yearsOfExperience = upToDateState.yearsOfExperience,
             profilePictureUri = upToDateState.profilePictureUri,
-            careerObjective = upToDateState.careerObjective,
             professionalSummary = upToDateState.professionalSummary,
             skills = upToDateState.skills,
             experiences = upToDateState.experiences,

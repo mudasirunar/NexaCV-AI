@@ -24,7 +24,6 @@ data class ReferenceEntity(
     val fullName: String,
     val jobTitle: String,
     val company: String,
-    val relationship: String,
     val email: String?,
     val phone: String?,
     val linkedInUrl: String?,

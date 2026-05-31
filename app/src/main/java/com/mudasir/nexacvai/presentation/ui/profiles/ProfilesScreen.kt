@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.mudasir.nexacvai.presentation.navigation.Screen
 import org.koin.androidx.compose.koinViewModel
+import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.*
 
 /**
  * Derived UI mode for ProfilesScreen.
@@ -215,9 +216,9 @@ fun ProfilesScreen(
                                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                                 )
                                             }
-                                            if (profile.city.isNotBlank() || profile.country.isNotBlank()) {
+                                            if (profile.address.isNotBlank()) {
                                                 Text(
-                                                    text = "${profile.city}${if(profile.city.isNotBlank() && profile.country.isNotBlank()) ", " else ""}${profile.country}",
+                                                    text = profile.address,
                                                     style = MaterialTheme.typography.labelSmall,
                                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                                 )

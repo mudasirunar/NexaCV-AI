@@ -24,6 +24,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.coerceIn
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -46,7 +47,9 @@ fun NexaTextField(
     visualTransformation: VisualTransformation = VisualTransformation.None,
     enabled: Boolean = true,
     readOnly: Boolean = false,
-    onLeadingIconClick: (() -> Unit)? = null
+    onLeadingIconClick: (() -> Unit)? = null,
+    maxInputLength: Int? = null,
+    onlyDigits: Boolean = false
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
@@ -143,12 +146,76 @@ fun NexaTextField(
                 ),
             contentAlignment = Alignment.CenterStart
         ) {
+            // Track TextFieldValue internally to preserve cursor position
+            var internalTfv by remember {
+                mutableStateOf(
+                    androidx.compose.ui.text.input.TextFieldValue(
+                        text = value,
+                        selection = androidx.compose.ui.text.TextRange(value.length)
+                    )
+                )
+            }
+
+            // Synchronous update during composition avoids 1-frame delay and stale text race conditions
+            val textFieldValue = if (internalTfv.text != value) {
+                val newSelection = if (!isFocused) {
+                    androidx.compose.ui.text.TextRange(value.length)
+                } else {
+                    androidx.compose.ui.text.TextRange(
+                        internalTfv.selection.start.coerceIn(0, value.length),
+                        internalTfv.selection.end.coerceIn(0, value.length)
+                    )
+                }
+                val newTfv = internalTfv.copy(text = value, selection = newSelection)
+                internalTfv = newTfv
+                newTfv
+            } else {
+                internalTfv
+            }
+
+            // Move cursor to end when field gains focus (specifically helpful for Keyboard 'Next' navigation)
+            LaunchedEffect(isFocused) {
+                if (isFocused && internalTfv.text.isNotEmpty()) {
+                    internalTfv = internalTfv.copy(
+                        selection = androidx.compose.ui.text.TextRange(internalTfv.text.length)
+                    )
+                }
+            }
+
             // Raw text field underneath for 100% custom styling
             androidx.compose.foundation.text.BasicTextField(
-                value = value,
-                onValueChange = { newValue ->
-                    if (isFocused && !readOnly) {
-                        onValueChange(newValue)
+                value = textFieldValue,
+                onValueChange = { newTfv ->
+                    if (!readOnly) {
+                        // 1. Apply strict filtering immediately to internal state
+                        var filteredText = newTfv.text
+                        if (onlyDigits) {
+                            filteredText = filteredText.filter { it.isDigit() }
+                        }
+                        if (maxInputLength != null) {
+                            filteredText = filteredText.take(maxInputLength)
+                        }
+
+                        // 2. Adjust selection if filtering happened to avoid crash/jumps
+                        val effectiveTfv = if (filteredText.length != newTfv.text.length) {
+                            newTfv.copy(
+                                text = filteredText,
+                                selection = androidx.compose.ui.text.TextRange(
+                                    newTfv.selection.start.coerceIn(0, filteredText.length),
+                                    newTfv.selection.end.coerceIn(0, filteredText.length)
+                                )
+                            )
+                        } else {
+                            newTfv
+                        }
+
+                        // 3. Update internal state
+                        internalTfv = effectiveTfv
+
+                        // 4. Notify parent ONLY if the text actually changed compared to current prop value
+                        if (effectiveTfv.text != value) {
+                            onValueChange(effectiveTfv.text)
+                        }
                     }
                 },
                 modifier = Modifier

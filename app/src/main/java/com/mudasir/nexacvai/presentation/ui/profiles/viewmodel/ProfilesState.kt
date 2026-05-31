@@ -1,4 +1,4 @@
-package com.mudasir.nexacvai.presentation.ui.profiles
+package com.mudasir.nexacvai.presentation.ui.profiles.viewmodel
 
 import androidx.compose.runtime.Immutable
 import com.mudasir.nexacvai.domain.model.UserProfile

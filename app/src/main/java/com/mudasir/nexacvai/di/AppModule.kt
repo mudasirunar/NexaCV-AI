@@ -6,8 +6,8 @@ import com.mudasir.nexacvai.data.local.datastore.AppSettingsManager
 import com.mudasir.nexacvai.data.repository.UserProfileRepositoryImpl
 import com.mudasir.nexacvai.domain.repository.UserProfileRepository
 import com.mudasir.nexacvai.domain.usecase.*
-import com.mudasir.nexacvai.presentation.ui.profiles.ProfilesViewModel
-import com.mudasir.nexacvai.presentation.ui.profiles.CreateProfileViewModel
+import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.ProfilesViewModel
+import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.CreateProfileViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module

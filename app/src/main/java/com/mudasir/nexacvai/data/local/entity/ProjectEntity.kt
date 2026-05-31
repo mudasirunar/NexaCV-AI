@@ -28,7 +28,6 @@ data class ProjectEntity(
     val liveDemoLink: String,
     val playStoreLink: String,
     val roleInProject: String,
-    val isTeamProject: Boolean,
     val startDate: String,
     val endDate: String,
     val projectImagesUris: List<String>

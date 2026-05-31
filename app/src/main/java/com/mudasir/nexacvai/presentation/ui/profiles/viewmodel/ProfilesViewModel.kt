@@ -1,4 +1,4 @@
-package com.mudasir.nexacvai.presentation.ui.profiles
+package com.mudasir.nexacvai.presentation.ui.profiles.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -38,4 +38,3 @@ class ProfilesViewModel(
         }
     }
 }
-
