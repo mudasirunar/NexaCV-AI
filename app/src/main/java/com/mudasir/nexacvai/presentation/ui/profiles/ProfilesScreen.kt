@@ -33,8 +33,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.mudasir.nexacvai.presentation.navigation.Screen
+import com.mudasir.nexacvai.presentation.ui.components.UserProfileCard
+import com.mudasir.nexacvai.presentation.ui.components.ProfileCardSkeleton
+import com.mudasir.nexacvai.presentation.ui.components.NexaAlertDialog
 import org.koin.androidx.compose.koinViewModel
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.*
+import com.mudasir.nexacvai.domain.model.UserProfile
+import androidx.compose.foundation.shape.RoundedCornerShape
+
 
 /**
  * Derived UI mode for ProfilesScreen.
@@ -55,6 +61,7 @@ fun ProfilesScreen(
     val state by viewModel.state.collectAsState()
     val bottomInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     val bottomSpacing = remember(bottomInset) { 80.dp + bottomInset }
+    var profileToDelete by remember { mutableStateOf<UserProfile?>(null) }
 
     var lastClickTime by remember { mutableStateOf(0L) }
     val safeNavigate: (String) -> Unit = { route ->
@@ -122,116 +129,113 @@ fun ProfilesScreen(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
-        Crossfade(
-            targetState = screenMode,
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues),
-            label = "ProfilesScreenModeCrossfade"
-        ) { mode ->
-            Box(modifier = Modifier.fillMaxSize()) {
-                when (mode) {
-                    ProfilesScreenMode.Loading -> {
-                        CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                    }
-                    ProfilesScreenMode.Error -> {
-                        Text(
-                            text = state.error ?: "Unknown error",
-                            color = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.align(Alignment.Center)
-                        )
-                    }
-                    ProfilesScreenMode.Empty -> {
-                        // Empty State
-                        Column(
-                            modifier = Modifier
-                                .align(Alignment.Center)
-                                .padding(bottom = bottomSpacing),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.AccountBox,
-                                contentDescription = "Empty Profiles",
-                                modifier = Modifier.size(72.dp),
-                                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                text = "No Profiles Yet",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = "Create a profile to start generating CVs.",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                    }
-                    ProfilesScreenMode.Content -> {
-                        // List of Profiles
-                        val listState = rememberLazyListState()
-                        LazyColumn(
-                            state = listState,
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(
+                .padding(paddingValues)
+        ) {
+            when (screenMode) {
+                ProfilesScreenMode.Loading -> {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(
                                 start = 16.dp,
                                 top = 16.dp,
                                 end = 16.dp,
                                 bottom = bottomSpacing + 16.dp
                             ),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            items(state.profiles ?: emptyList(), key = { it.id }) { profile ->
-                                Card(
-                                    onClick = { safeNavigate("${Screen.CreateProfile.route}?profileId=${profile.id}") },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    colors = CardDefaults.cardColors(
-                                        containerColor = MaterialTheme.colorScheme.surface
-                                    ),
-                                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                                ) {
-                                    Column(modifier = Modifier.padding(16.dp)) {
-                                        Text(
-                                            text = profile.fullName.ifBlank { "Untitled Profile" },
-                                            style = MaterialTheme.typography.titleMedium,
-                                            color = MaterialTheme.colorScheme.onSurface
-                                        )
-                                        if (profile.professionalTitle.isNotBlank()) {
-                                            Spacer(modifier = Modifier.height(2.dp))
-                                            Text(
-                                                text = profile.professionalTitle,
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                color = MaterialTheme.colorScheme.primary
-                                            )
-                                        }
-                                        Spacer(modifier = Modifier.height(8.dp))
-                                        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                                            if (profile.yearsOfExperience.isNotBlank()) {
-                                                Text(
-                                                    text = "Exp: ${profile.yearsOfExperience}",
-                                                    style = MaterialTheme.typography.labelSmall,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                                )
-                                            }
-                                            if (profile.address.isNotBlank()) {
-                                                Text(
-                                                    text = profile.address,
-                                                    style = MaterialTheme.typography.labelSmall,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                                )
-                                            }
-                                        }
-                                    }
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        repeat(4) {
+                            ProfileCardSkeleton()
+                        }
+                    }
+                }
+                ProfilesScreenMode.Error -> {
+                    Text(
+                        text = state.error ?: "Unknown error",
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+                ProfilesScreenMode.Empty -> {
+                    // Empty State
+                    Column(
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .padding(bottom = bottomSpacing),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.AccountBox,
+                            contentDescription = "Empty Profiles",
+                            modifier = Modifier.size(72.dp),
+                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "No Profiles Yet",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Create a profile to start generating CVs.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+                ProfilesScreenMode.Content -> {
+                    // List of Profiles
+                    val listState = rememberLazyListState()
+                    LazyColumn(
+                        state = listState,
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(
+                            start = 16.dp,
+                            top = 16.dp,
+                            end = 16.dp,
+                            bottom = bottomSpacing + 16.dp
+                        ),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        items(state.profiles ?: emptyList(), key = { it.id }) { profile ->
+                            UserProfileCard(
+                                profile = profile,
+                                onEditClick = { safeNavigate("${Screen.CreateProfile.route}?profileId=${profile.id}") },
+                                onDeleteClick = {
+                                    profileToDelete = profile
+                                },
+                                onRemovePhotoClick = {
+                                    viewModel.removeProfilePicture(profile)
+                                },
+                                onPhotoSelected = { uri ->
+                                    viewModel.updateProfilePicture(profile, uri)
                                 }
-                            }
+                            )
                         }
                     }
                 }
             }
+
+            if (profileToDelete != null) {
+                val pToDelete = profileToDelete!!
+                NexaAlertDialog(
+                    onDismissRequest = { profileToDelete = null },
+                    title = "Delete Profile?",
+                    message = "Are you sure you want to permanently delete the profile for \"${pToDelete.fullName.ifBlank { "Untitled Profile" }}\"?",
+                    confirmLabel = "Delete",
+                    onConfirm = {
+                        viewModel.deleteProfile(pToDelete)
+                        profileToDelete = null
+                    },
+                    dismissLabel = "Cancel",
+                    isDestructive = true
+                )
+            }
         }
     }
 }
-
