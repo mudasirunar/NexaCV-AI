@@ -22,6 +22,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -94,7 +95,7 @@ fun BasicInfoStep(state: CreateProfileState, viewModel: CreateProfileViewModel) 
             uri?.let {
                 coroutineScope.launch {
                     isProcessingImage = true
-                    val compressedUri = ImageCompressionHelper.compressAndSaveProfilePicture(context, it)
+                    val compressedUri = ImageCompressionHelper.compressAndSaveProfilePicture(context, it, state.profileId ?: -1L)
                     if (compressedUri != null) {
                         viewModel.updateBasicInfo(profilePictureUri = compressedUri)
                     }
@@ -111,7 +112,7 @@ fun BasicInfoStep(state: CreateProfileState, viewModel: CreateProfileViewModel) 
                 tempCameraUri?.let {
                     coroutineScope.launch {
                         isProcessingImage = true
-                        val compressedUri = ImageCompressionHelper.compressAndSaveProfilePicture(context, it)
+                        val compressedUri = ImageCompressionHelper.compressAndSaveProfilePicture(context, it, state.profileId ?: -1L)
                         if (compressedUri != null) {
                             viewModel.updateBasicInfo(profilePictureUri = compressedUri)
                         }
@@ -399,22 +400,130 @@ fun BasicInfoStep(state: CreateProfileState, viewModel: CreateProfileViewModel) 
 
         Spacer(modifier = Modifier.height(18.dp))
 
-        NexaTextField(
-            value = state.yearsOfExperience,
-            onValueChange = { viewModel.updateBasicInfo(yearsOfExperience = it) },
-            label = "Years of Experience",
-            placeholder = "e.g. 5+",
-            leadingIcon = Icons.Default.Timeline,
-            keyboardOptions = KeyboardOptions(
-                capitalization = KeyboardCapitalization.None,
-                keyboardType = KeyboardType.Text,
-                imeAction = ImeAction.Done
-            ),
-            keyboardActions = KeyboardActions(
-                onDone = { focusManager.clearFocus() }
-            ),
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
+        Text(
+            text = "Experience Level",
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
         )
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        // Prefix-Decoding State calculation
+        val rawExperience = state.yearsOfExperience.trim()
+        val (selectedType, experienceValue) = remember(rawExperience) {
+            when {
+                rawExperience.startsWith("FRESH", ignoreCase = true) -> {
+                    "Fresh" to ""
+                }
+                rawExperience.startsWith("MONTHS:", ignoreCase = true) -> {
+                    "Months" to rawExperience.substringAfter("MONTHS:")
+                }
+                rawExperience.startsWith("YEARS:", ignoreCase = true) -> {
+                    "Years" to rawExperience.substringAfter("YEARS:")
+                }
+                rawExperience.startsWith("CUSTOM:", ignoreCase = true) -> {
+                    // Map legacy custom prefix to Years or keep raw value
+                    "Years" to rawExperience.substringAfter("CUSTOM:")
+                }
+                // Legacy support
+                rawExperience.isBlank() -> {
+                    "Years" to ""
+                }
+                rawExperience.equals("none", ignoreCase = true) || rawExperience.equals("fresh", ignoreCase = true) || rawExperience == "0" -> {
+                    "Fresh" to ""
+                }
+                rawExperience.contains("month", ignoreCase = true) -> {
+                    "Months" to rawExperience.filter { it.isDigit() || it == '+' }
+                }
+                rawExperience.contains("year", ignoreCase = true) || rawExperience.replace("+", "").trim().toIntOrNull() != null -> {
+                    "Years" to rawExperience.filter { it.isDigit() || it == '+' }
+                }
+                else -> {
+                    "Years" to rawExperience.filter { it.isDigit() || it == '+' }
+                }
+            }
+        }
+        
+        val categories = listOf("Fresh", "Months", "Years")
+        
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            categories.forEach { category ->
+                val isSelected = selectedType == category
+                FilterChip(
+                    selected = isSelected,
+                    onClick = {
+                        when (category) {
+                            "Fresh" -> viewModel.updateBasicInfo(yearsOfExperience = "FRESH")
+                            "Months" -> viewModel.updateBasicInfo(yearsOfExperience = "MONTHS:$experienceValue")
+                            "Years" -> viewModel.updateBasicInfo(yearsOfExperience = "YEARS:$experienceValue")
+                        }
+                    },
+                    label = { Text(category) },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primary,
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
+                        labelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    ),
+                    border = FilterChipDefaults.filterChipBorder(
+                        enabled = true,
+                        selected = isSelected,
+                        borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
+                        selectedBorderColor = MaterialTheme.colorScheme.primary
+                    )
+                )
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // Show secondary input based on decoded category
+        if (selectedType == "Fresh") {
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.15f),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text(
+                        text = "Fresh Candidate status is set. Your CV will emphasize your education, skills, and academic projects.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        } else {
+            NexaTextField(
+                value = experienceValue,
+                onValueChange = { viewModel.updateBasicInfo(yearsOfExperience = if (selectedType == "Months") "MONTHS:$it" else "YEARS:$it") },
+                label = if (selectedType == "Months") "Months of Experience*" else "Years of Experience*",
+                placeholder = if (selectedType == "Months") "e.g. 6" else "e.g. 3+",
+                leadingIcon = if (selectedType == "Months") Icons.Default.DateRange else Icons.Default.Timeline,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Phone,
+                    imeAction = ImeAction.Done
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = { focusManager.clearFocus() }
+                ),
+                onlyDigitsAndPlus = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
     }
 }

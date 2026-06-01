@@ -32,6 +32,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import com.mudasir.nexacvai.presentation.ui.components.BasicInfoSkeleton
+import com.mudasir.nexacvai.presentation.ui.components.NexaAlertDialog
 import org.koin.androidx.compose.koinViewModel
 import com.mudasir.nexacvai.presentation.ui.profiles.steps.*
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.*
@@ -90,36 +91,17 @@ fun CreateProfileScreen(
     }
 
     if (showDiscardDialog) {
-        AlertDialog(
+        NexaAlertDialog(
             onDismissRequest = { showDiscardDialog = false },
-            title = { Text("Discard changes?", style = MaterialTheme.typography.titleMedium) },
-            text = { 
-                Text(
-                    "You have unsaved changes. Are you sure you want to discard them and go back?",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+            title = "Discard changes?",
+            message = "You have unsaved changes. Are you sure you want to discard them and go back?",
+            confirmLabel = "Discard",
+            onConfirm = {
+                showDiscardDialog = false
+                navController.popBackStack()
             },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        showDiscardDialog = false
-                        navController.popBackStack()
-                    },
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text("Discard")
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { showDiscardDialog = false }
-                ) {
-                    Text("Cancel")
-                }
-            },
-            shape = RoundedCornerShape(16.dp),
-            containerColor = MaterialTheme.colorScheme.surface
+            dismissLabel = "Cancel",
+            isDestructive = true
         )
     }
 

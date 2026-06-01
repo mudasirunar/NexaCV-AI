@@ -1,33 +1,49 @@
 package com.mudasir.nexacvai.presentation.ui.components
 
-import androidx.compose.animation.*
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
-import androidx.compose.foundation.layout.*
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.focus.FocusDirection
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.text.coerceIn
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+/**
+ * A highly-optimized, premium Material 3 Text Field component.
+ *
+ * Refactored to act as a highly compatible, standard Material 3 OutlinedTextField
+ * that natively supports optimized soft keyboard (IME) input and clean character filtering.
+ */
 @Composable
 fun NexaTextField(
     value: String,
@@ -49,19 +65,39 @@ fun NexaTextField(
     readOnly: Boolean = false,
     onLeadingIconClick: (() -> Unit)? = null,
     maxInputLength: Int? = null,
-    onlyDigits: Boolean = false
+    onlyDigits: Boolean = false,
+    onlyDigitsAndPlus: Boolean = false
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isFocused by interactionSource.collectIsFocusedAsState()
     val focusManager = LocalFocusManager.current
 
+    // Local TextFieldValue state to maintain selection and composing state for 100% IME compatibility
+    var textFieldValueState by remember {
+        mutableStateOf(TextFieldValue(text = value, selection = TextRange(value.length)))
+    }
+
+    // Keep local state in sync with external value updates during composition
+    // Explicitly places the cursor on the last letter when programmatic focus transitions happen (e.g. keyboard "Next")
+    if (textFieldValueState.text != value) {
+        textFieldValueState = textFieldValueState.copy(
+            text = value,
+            selection = TextRange(value.length)
+        )
+    }
+
     // Automatically set default ImeAction to Next for single line text fields
-    val resolvedKeyboardOptions = remember(keyboardOptions, singleLine) {
-        if (singleLine && (keyboardOptions.imeAction == ImeAction.Default || keyboardOptions.imeAction == ImeAction.None)) {
+    val resolvedKeyboardOptions = remember(keyboardOptions, singleLine, onlyDigits, onlyDigitsAndPlus) {
+        var options = if (singleLine && (keyboardOptions.imeAction == ImeAction.Default || keyboardOptions.imeAction == ImeAction.None)) {
             keyboardOptions.copy(imeAction = ImeAction.Next)
         } else {
             keyboardOptions
         }
+
+        // Use standard text keyboard layout when input restrictions are active to ensure high compatibility
+        if (onlyDigits || onlyDigitsAndPlus) {
+            options = options.copy(keyboardType = KeyboardType.Text)
+        }
+
+        options
     }
 
     val resolvedKeyboardActions = remember(keyboardActions, focusManager) {
@@ -78,223 +114,110 @@ fun NexaTextField(
         )
     }
 
-    // Smooth animated color transitions for focus/error states
-    // Using animateColorAsState instead of raw remember — provides both proper
-    // caching AND smooth visual transitions between states.
-    val outlineColor by animateColorAsState(
-        targetValue = when {
-            isError -> MaterialTheme.colorScheme.error
-            isFocused -> MaterialTheme.colorScheme.primary
-            else -> MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
-        },
-        animationSpec = tween(durationMillis = 150),
-        label = "outlineColor"
-    )
-    val borderThickness by animateDpAsState(
-        targetValue = if (isFocused || isError) 1.5.dp else 1.dp,
-        animationSpec = tween(durationMillis = 150),
-        label = "borderThickness"
-    )
-    
-    // Premium, clean slightly off-surface input background color (Notion/Apple style)
-    val inputBackgroundColor by animateColorAsState(
-        targetValue = if (isFocused) {
-            MaterialTheme.colorScheme.surface
-        } else {
-            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
-        },
-        animationSpec = tween(durationMillis = 150),
-        label = "inputBackgroundColor"
-    )
-
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        // Premium structured label above the input field
+        // Structured M3 label above the input field
         if (label != null) {
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelLarge,
                 color = if (isError) {
                     MaterialTheme.colorScheme.error
-                } else if (isFocused) {
-                    MaterialTheme.colorScheme.primary
                 } else {
                     MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 }
             )
         }
 
-        // Clean Input Field Box
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = if (singleLine || minLines == 1) 52.dp else 100.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(inputBackgroundColor)
-                .border(
-                    width = borderThickness,
-                    color = outlineColor,
-                    shape = RoundedCornerShape(12.dp)
-                )
-                .padding(
-                    start = 14.dp,
-                    end = if (trailingIcon != null) 4.dp else 14.dp,
-                    top = if (singleLine) 0.dp else 12.dp,
-                    bottom = if (singleLine) 0.dp else 12.dp
-                ),
-            contentAlignment = Alignment.CenterStart
-        ) {
-            // Track TextFieldValue internally to preserve cursor position
-            var internalTfv by remember {
-                mutableStateOf(
-                    androidx.compose.ui.text.input.TextFieldValue(
-                        text = value,
-                        selection = androidx.compose.ui.text.TextRange(value.length)
-                    )
-                )
-            }
-
-            // Synchronous update during composition avoids 1-frame delay and stale text race conditions
-            val textFieldValue = if (internalTfv.text != value) {
-                val newSelection = if (!isFocused) {
-                    androidx.compose.ui.text.TextRange(value.length)
-                } else {
-                    androidx.compose.ui.text.TextRange(
-                        internalTfv.selection.start.coerceIn(0, value.length),
-                        internalTfv.selection.end.coerceIn(0, value.length)
-                    )
-                }
-                val newTfv = internalTfv.copy(text = value, selection = newSelection)
-                internalTfv = newTfv
-                newTfv
-            } else {
-                internalTfv
-            }
-
-            // Move cursor to end when field gains focus (specifically helpful for Keyboard 'Next' navigation)
-            LaunchedEffect(isFocused) {
-                if (isFocused && internalTfv.text.isNotEmpty()) {
-                    internalTfv = internalTfv.copy(
-                        selection = androidx.compose.ui.text.TextRange(internalTfv.text.length)
-                    )
-                }
-            }
-
-            // Raw text field underneath for 100% custom styling
-            androidx.compose.foundation.text.BasicTextField(
-                value = textFieldValue,
-                onValueChange = { newTfv ->
-                    if (!readOnly) {
-                        // 1. Apply strict filtering immediately to internal state
-                        var filteredText = newTfv.text
-                        if (onlyDigits) {
-                            filteredText = filteredText.filter { it.isDigit() }
-                        }
-                        if (maxInputLength != null) {
-                            filteredText = filteredText.take(maxInputLength)
-                        }
-
-                        // 2. Adjust selection if filtering happened to avoid crash/jumps
-                        val effectiveTfv = if (filteredText.length != newTfv.text.length) {
-                            newTfv.copy(
-                                text = filteredText,
-                                selection = androidx.compose.ui.text.TextRange(
-                                    newTfv.selection.start.coerceIn(0, filteredText.length),
-                                    newTfv.selection.end.coerceIn(0, filteredText.length)
-                                )
-                            )
-                        } else {
-                            newTfv
-                        }
-
-                        // 3. Update internal state
-                        internalTfv = effectiveTfv
-
-                        // 4. Notify parent ONLY if the text actually changed compared to current prop value
-                        if (effectiveTfv.text != value) {
-                            onValueChange(effectiveTfv.text)
-                        }
+        // Standard, robust M3 OutlinedTextField with identical premium aesthetics
+        OutlinedTextField(
+            value = textFieldValueState,
+            onValueChange = { newTfv ->
+                if (!readOnly) {
+                    var filteredText = newTfv.text
+                    if (onlyDigits) {
+                        filteredText = filteredText.filter { it.isDigit() }
+                    } else if (onlyDigitsAndPlus) {
+                        filteredText = filteredText.filter { it.isDigit() || it == '+' }
                     }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        start = if (leadingIcon != null) 30.dp else 0.dp,
-                        end = if (trailingIcon != null) 44.dp else 0.dp
-                    ),
-                textStyle = TextStyle(
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontSize = 15.sp,
-                    fontFamily = MaterialTheme.typography.bodyLarge.fontFamily
-                ),
-                singleLine = singleLine,
-                minLines = minLines,
-                maxLines = maxLines,
-                keyboardOptions = resolvedKeyboardOptions,
-                keyboardActions = resolvedKeyboardActions,
-                visualTransformation = visualTransformation,
-                enabled = enabled,
-                readOnly = readOnly,
-                interactionSource = interactionSource,
-                cursorBrush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.primary),
-                decorationBox = { innerTextField ->
-                    Box(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = if (singleLine) Alignment.CenterStart else Alignment.TopStart
-                    ) {
-                        if (value.isEmpty()) {
-                            Text(
-                                text = placeholder,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
-                                fontSize = 15.sp
-                            )
-                        }
-                        innerTextField()
-                    }
-                }
-            )
 
-            if (leadingIcon != null) {
-                Icon(
-                    imageVector = leadingIcon,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(18.dp)
-                        .align(Alignment.CenterStart)
-                        .then(
-                            if (onLeadingIconClick != null) {
-                                Modifier.clickable(
-                                    interactionSource = remember { MutableInteractionSource() },
-                                    indication = null,
-                                    onClick = onLeadingIconClick
-                                )
-                            } else Modifier
-                        ),
-                    tint = if (isError) {
-                        MaterialTheme.colorScheme.error
-                    } else if (isFocused) {
-                        MaterialTheme.colorScheme.primary
+                    if (maxInputLength != null) {
+                        filteredText = filteredText.take(maxInputLength)
+                    }
+
+                    val finalSelection = if (filteredText.length != newTfv.text.length) {
+                        TextRange(newTfv.selection.end.coerceAtMost(filteredText.length))
                     } else {
-                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                        newTfv.selection
                     }
-                )
-            }
 
-            // Trailing Icon positioning
-            if (trailingIcon != null) {
-                Box(
-                    modifier = Modifier.align(Alignment.CenterEnd),
-                    contentAlignment = Alignment.Center
-                ) {
-                    trailingIcon()
+                    val updatedTfv = newTfv.copy(text = filteredText, selection = finalSelection)
+                    textFieldValueState = updatedTfv
+
+                    if (filteredText != value) {
+                        onValueChange(filteredText)
+                    }
                 }
-            }
-        }
+            },
+            placeholder = {
+                Text(
+                    text = placeholder,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                )
+            },
+            leadingIcon = leadingIcon?.let {
+                {
+                    Icon(
+                        imageVector = it,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(18.dp)
+                            .then(
+                                if (onLeadingIconClick != null) {
+                                    Modifier.clickable(
+                                        interactionSource = remember { MutableInteractionSource() },
+                                        indication = null,
+                                        onClick = onLeadingIconClick
+                                    )
+                                } else Modifier
+                            ),
+                        tint = if (isError) {
+                            MaterialTheme.colorScheme.error
+                        } else {
+                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                        }
+                    )
+                }
+            },
+            trailingIcon = trailingIcon,
+            isError = isError,
+            singleLine = singleLine,
+            minLines = minLines,
+            maxLines = maxLines,
+            keyboardOptions = resolvedKeyboardOptions,
+            keyboardActions = resolvedKeyboardActions,
+            visualTransformation = visualTransformation,
+            enabled = enabled,
+            readOnly = readOnly,
+            shape = RoundedCornerShape(12.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
+                disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.1f),
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f),
+                disabledBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
+                errorBorderColor = MaterialTheme.colorScheme.error,
+                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+            ),
+            modifier = Modifier.fillMaxWidth()
+        )
 
-        // Animate Error message below the field with smooth reveal transition
+        // Animated error message
         AnimatedVisibility(
             visible = isError && !errorMessage.isNullOrBlank(),
             enter = fadeIn() + expandVertically(),
