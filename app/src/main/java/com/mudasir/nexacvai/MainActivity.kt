@@ -21,10 +21,14 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
+import com.mudasir.nexacvai.presentation.navigation.BottomNavScreens
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,12 +41,13 @@ class MainActivity : ComponentActivity() {
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = navBackStackEntry?.destination?.route
                 
-                val showBottomBar = currentRoute == null || com.mudasir.nexacvai.presentation.navigation.BottomNavScreens.any { 
+                val showBottomBar = currentRoute == null || BottomNavScreens.any {
                     currentRoute.startsWith(it.route) == true 
                 }
 
                 Scaffold(
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
+                    contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0.dp)
                 ) { innerPadding ->
                     Box(modifier = Modifier.fillMaxSize()) {
                         AppNavHost(

@@ -8,6 +8,11 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.compose.ui.platform.LocalContext
@@ -22,9 +27,11 @@ fun BottomNavigationBar(navController: NavHostController) {
     val currentScreen = AllScreens.find { it.route == baseRoute }
 
     NavigationBar(
+        windowInsets = WindowInsets(bottom = 8.dp),
         containerColor = MaterialTheme.colorScheme.surface,
         contentColor = MaterialTheme.colorScheme.onSurface,
-        tonalElevation = 8.dp
+        tonalElevation = 8.dp,
+        modifier = Modifier.fillMaxWidth()
     ) {
         BottomNavScreens.forEach { screen ->
             val isSelected = currentScreen?.route == screen.route || currentScreen?.parentRoute == screen.route
