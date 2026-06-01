@@ -41,7 +41,7 @@ val appModule = module {
     single { GetAllProfilesUseCase(get()) }
 
     // ViewModels
-    viewModel { ProfilesViewModel(get()) }
+    viewModel { ProfilesViewModel(get(), get(), get()) }
     viewModel { CreateProfileViewModel(get(), get(), get()) }
 }
 
