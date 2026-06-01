@@ -9,6 +9,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -18,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -25,13 +27,15 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.mudasir.nexacvai.domain.model.Language
 import com.mudasir.nexacvai.domain.model.SocialLink
+import com.mudasir.nexacvai.domain.model.Reference
 import com.mudasir.nexacvai.presentation.ui.components.NexaTextField
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.CreateProfileState
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.CreateProfileViewModel
 import androidx.compose.ui.res.painterResource
 import com.mudasir.nexacvai.R
+import com.mudasir.nexacvai.presentation.ui.profiles.utils.NexaCheckbox
 
-// Define platform data model containing official brand styling fallback
+// Platform Item styling helper
 data class PlatformItem(
     val name: String,
     val iconResId: Int?,
@@ -39,7 +43,7 @@ data class PlatformItem(
     val scale: Float = 1.0f
 )
 
-// Define CEFR language proficiency levels
+// CEFR proficiency helper
 data class ProficiencyLevel(
     val code: String,
     val label: String,
@@ -48,8 +52,10 @@ data class ProficiencyLevel(
 
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun SocialLinksStep(state: CreateProfileState, viewModel: CreateProfileViewModel) {
-    // Official Brand mappings using standard icons
+fun SocialsExtrasStep(state: CreateProfileState, viewModel: CreateProfileViewModel) {
+    val focusManager = LocalFocusManager.current
+
+    // Platform definitions
     val platformsList = remember {
         listOf(
             PlatformItem("LinkedIn", R.drawable.ic_linkedin, Icons.Default.Share, 1.2f),
@@ -81,13 +87,13 @@ fun SocialLinksStep(state: CreateProfileState, viewModel: CreateProfileViewModel
         // Step Title
         Column {
             Text(
-                text = "Step 8: Social Links & Languages",
+                text = "Step 5: Social Links & Extras",
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.primary
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Add your professional portfolios and languages you speak.",
+                text = "Add optional details to finish your professional CV profile.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -115,7 +121,7 @@ fun SocialLinksStep(state: CreateProfileState, viewModel: CreateProfileViewModel
             }
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Links to GitHub, LinkedIn, Behance, or your personal website.",
+                text = "Add portfolio links (GitHub, LinkedIn, Portfolio, Behance, etc.).",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -140,7 +146,7 @@ fun SocialLinksStep(state: CreateProfileState, viewModel: CreateProfileViewModel
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(modifier = Modifier.height(12.dp))
-                        
+
                         val addLinkInteractionSource = remember { MutableInteractionSource() }
                         val addLinkPressed by addLinkInteractionSource.collectIsPressedAsState()
                         val addLinkScale by animateFloatAsState(if (addLinkPressed) 0.98f else 1f, label = "addLinkScale")
@@ -166,10 +172,7 @@ fun SocialLinksStep(state: CreateProfileState, viewModel: CreateProfileViewModel
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                            border = androidx.compose.foundation.BorderStroke(
-                                width = 1.dp,
-                                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
-                            ),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
                             shape = RoundedCornerShape(16.dp),
                             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                         ) {
@@ -177,12 +180,9 @@ fun SocialLinksStep(state: CreateProfileState, viewModel: CreateProfileViewModel
                                 modifier = Modifier.padding(16.dp),
                                 verticalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
-                                // Card Header containing Brand Icon
                                 val platformInfo = remember(link.label) {
-                                    platformsList.find { it.name == link.label }
-                                        ?: platformsList.last() // Other Platform
+                                    platformsList.find { it.name == link.label } ?: platformsList.last()
                                 }
-                                
                                 val platformIconPainter = if (platformInfo.iconResId != null) {
                                     painterResource(id = platformInfo.iconResId)
                                 } else {
@@ -203,7 +203,7 @@ fun SocialLinksStep(state: CreateProfileState, viewModel: CreateProfileViewModel
                                             Icon(
                                                 painter = platformIconPainter,
                                                 contentDescription = null,
-                                                tint = androidx.compose.ui.graphics.Color.Unspecified, // Preserve SVG colors
+                                                tint = androidx.compose.ui.graphics.Color.Unspecified,
                                                 modifier = Modifier.size(18.dp).scale(platformInfo.scale)
                                             )
                                         } else {
@@ -219,7 +219,7 @@ fun SocialLinksStep(state: CreateProfileState, viewModel: CreateProfileViewModel
                                             style = MaterialTheme.typography.titleMedium,
                                             fontWeight = FontWeight.Bold,
                                             color = MaterialTheme.colorScheme.onSurface,
-                                            maxLines = 3,
+                                            maxLines = 2,
                                             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                                         )
                                     }
@@ -245,9 +245,8 @@ fun SocialLinksStep(state: CreateProfileState, viewModel: CreateProfileViewModel
 
                                 HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
 
-                                // Platform Dropdown with Brand icons
                                 var isExpanded by remember { mutableStateOf(false) }
-                                
+
                                 Box(modifier = Modifier.fillMaxWidth()) {
                                     val displayPlatformName = remember(link.label) {
                                         val isPrefilled = platformsList.any { it.name == link.label && it.name != "Other Platform" }
@@ -270,7 +269,7 @@ fun SocialLinksStep(state: CreateProfileState, viewModel: CreateProfileViewModel
                                         readOnly = true,
                                         modifier = Modifier.fillMaxWidth()
                                     )
-                                    
+
                                     Box(
                                         modifier = Modifier
                                             .align(Alignment.BottomCenter)
@@ -297,37 +296,37 @@ fun SocialLinksStep(state: CreateProfileState, viewModel: CreateProfileViewModel
                                             .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(16.dp)),
                                         shape = RoundedCornerShape(16.dp)
                                     ) {
-                                        platformsList.forEach { platformItem ->
-                                            val dropdownIconPainter = if (platformItem.iconResId != null) {
-                                                painterResource(id = platformItem.iconResId)
+                                        platformsList.forEach { pItem ->
+                                            val dIconPainter = if (pItem.iconResId != null) {
+                                                painterResource(id = pItem.iconResId)
                                             } else {
-                                                androidx.compose.ui.graphics.vector.rememberVectorPainter(image = platformItem.defaultIcon)
+                                                androidx.compose.ui.graphics.vector.rememberVectorPainter(image = pItem.defaultIcon)
                                             }
                                             DropdownMenuItem(
                                                 leadingIcon = {
-                                                    if (platformItem.iconResId != null) {
+                                                    if (pItem.iconResId != null) {
                                                         Icon(
-                                                            painter = dropdownIconPainter,
+                                                            painter = dIconPainter,
                                                             contentDescription = null,
-                                                            tint = androidx.compose.ui.graphics.Color.Unspecified, // Preserve SVG colors
-                                                            modifier = Modifier.size(18.dp).scale(platformItem.scale)
+                                                            tint = androidx.compose.ui.graphics.Color.Unspecified,
+                                                            modifier = Modifier.size(18.dp).scale(pItem.scale)
                                                         )
                                                     } else {
                                                         Icon(
-                                                            painter = dropdownIconPainter,
+                                                            painter = dIconPainter,
                                                             contentDescription = null,
-                                                            tint = if (platformItem.name == "Other Platform") MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary,
-                                                            modifier = Modifier.size(18.dp).scale(platformItem.scale)
+                                                            tint = if (pItem.name == "Other Platform") MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary,
+                                                            modifier = Modifier.size(18.dp).scale(pItem.scale)
                                                         )
                                                     }
                                                 },
-                                                text = { Text(platformItem.name, style = MaterialTheme.typography.bodyMedium) },
+                                                text = { Text(pItem.name, style = MaterialTheme.typography.bodyMedium) },
                                                 onClick = {
                                                     isExpanded = false
-                                                    if (platformItem.name == "Other Platform") {
+                                                    if (pItem.name == "Other Platform") {
                                                         viewModel.updateSocialLink(link.id, link.copy(label = "Other"))
                                                     } else {
-                                                        viewModel.updateSocialLink(link.id, link.copy(label = platformItem.name))
+                                                        viewModel.updateSocialLink(link.id, link.copy(label = pItem.name))
                                                     }
                                                 }
                                             )
@@ -335,7 +334,6 @@ fun SocialLinksStep(state: CreateProfileState, viewModel: CreateProfileViewModel
                                     }
                                 }
 
-                                // Secondary Other Platform input if Other selected
                                 val isOtherSelected = remember(link.label) {
                                     link.label.isNotBlank() && platformsList.none { it.name == link.label && it.name != "Other Platform" }
                                 }
@@ -354,7 +352,6 @@ fun SocialLinksStep(state: CreateProfileState, viewModel: CreateProfileViewModel
                                     )
                                 }
 
-                                // Link URL Field
                                 NexaTextField(
                                     value = link.url,
                                     onValueChange = { viewModel.updateSocialLink(link.id, link.copy(url = it)) },
@@ -397,6 +394,257 @@ fun SocialLinksStep(state: CreateProfileState, viewModel: CreateProfileViewModel
             modifier = Modifier.padding(vertical = 8.dp)
         )
 
+        // ================= REFERENCES SECTION =================
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
+                )
+                Text(
+                    text = "References",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Add professionals who can endorse your credentials. This section is optional.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+
+            if (state.references.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(
+                            width = 1.dp,
+                            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f),
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                        .padding(24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "No references added yet",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        val addRefInteractionSource = remember { MutableInteractionSource() }
+                        val addRefPressed by addRefInteractionSource.collectIsPressedAsState()
+                        val addRefScale by animateFloatAsState(if (addRefPressed) 0.98f else 1f, label = "addRefScale")
+
+                        Button(
+                            onClick = { viewModel.addReference(Reference()) },
+                            interactionSource = addRefInteractionSource,
+                            modifier = Modifier.graphicsLayer(scaleX = addRefScale, scaleY = addRefScale),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text("+ Add Reference")
+                        }
+                    }
+                }
+            } else {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .animateContentSize(),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    state.references.forEachIndexed { index, ref ->
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
+                            shape = RoundedCornerShape(16.dp),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(
+                                        modifier = Modifier.weight(1f),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Person,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                        Text(
+                                            text = if (ref.fullName.isNotBlank()) ref.fullName else "Reference #${index + 1}",
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                            maxLines = 2,
+                                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                        )
+                                    }
+
+                                    val removeInteractionSource = remember { MutableInteractionSource() }
+                                    val removePressed by removeInteractionSource.collectIsPressedAsState()
+                                    val removeScale by animateFloatAsState(if (removePressed) 0.98f else 1f, label = "removeRefScale")
+
+                                    IconButton(
+                                        onClick = { viewModel.removeReference(ref) },
+                                        interactionSource = removeInteractionSource,
+                                        modifier = Modifier
+                                            .size(28.dp)
+                                            .graphicsLayer(scaleX = removeScale, scaleY = removeScale)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Delete,
+                                            contentDescription = "Remove Reference",
+                                            tint = MaterialTheme.colorScheme.error
+                                        )
+                                    }
+                                }
+
+                                HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
+
+                                NexaTextField(
+                                    value = ref.fullName,
+                                    onValueChange = { viewModel.updateReference(ref.id, ref.copy(fullName = it)) },
+                                    label = "Full Name*",
+                                    placeholder = "e.g. John Doe",
+                                    keyboardOptions = KeyboardOptions(
+                                        capitalization = KeyboardCapitalization.Words,
+                                        imeAction = ImeAction.Next
+                                    ),
+                                    singleLine = true,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+
+                                NexaTextField(
+                                    value = ref.jobTitle,
+                                    onValueChange = { viewModel.updateReference(ref.id, ref.copy(jobTitle = it)) },
+                                    label = "Job Title*",
+                                    placeholder = "e.g. Product Manager",
+                                    keyboardOptions = KeyboardOptions(
+                                        capitalization = KeyboardCapitalization.Words,
+                                        imeAction = ImeAction.Next
+                                    ),
+                                    singleLine = true,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+
+                                NexaTextField(
+                                    value = ref.company,
+                                    onValueChange = { viewModel.updateReference(ref.id, ref.copy(company = it)) },
+                                    label = "Company / Organization*",
+                                    placeholder = "e.g. Google",
+                                    keyboardOptions = KeyboardOptions(
+                                        capitalization = KeyboardCapitalization.Words,
+                                        imeAction = ImeAction.Next
+                                    ),
+                                    singleLine = true,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+
+                                NexaTextField(
+                                    value = ref.email ?: "",
+                                    onValueChange = { viewModel.updateReference(ref.id, ref.copy(email = it.takeIf { it.isNotBlank() })) },
+                                    label = "Email Address",
+                                    placeholder = "e.g. reference@company.com",
+                                    keyboardOptions = KeyboardOptions(
+                                        capitalization = KeyboardCapitalization.None,
+                                        keyboardType = KeyboardType.Email,
+                                        imeAction = ImeAction.Next
+                                    ),
+                                    singleLine = true,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+
+                                NexaTextField(
+                                    value = ref.phone ?: "",
+                                    onValueChange = { viewModel.updateReference(ref.id, ref.copy(phone = it.takeIf { it.isNotBlank() })) },
+                                    label = "Phone Number",
+                                    placeholder = "e.g. +1 234 567 890",
+                                    keyboardOptions = KeyboardOptions(
+                                        capitalization = KeyboardCapitalization.None,
+                                        keyboardType = KeyboardType.Phone,
+                                        imeAction = ImeAction.Next
+                                    ),
+                                    singleLine = true,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+
+                                NexaTextField(
+                                    value = ref.linkedInUrl ?: "",
+                                    onValueChange = { viewModel.updateReference(ref.id, ref.copy(linkedInUrl = it.takeIf { it.isNotBlank() })) },
+                                    label = "LinkedIn URL",
+                                    placeholder = "e.g. linkedin.com/in/username",
+                                    keyboardOptions = KeyboardOptions(
+                                        capitalization = KeyboardCapitalization.None,
+                                        keyboardType = KeyboardType.Uri,
+                                        imeAction = ImeAction.Next
+                                    ),
+                                    singleLine = true,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+
+                                NexaTextField(
+                                    value = ref.notes ?: "",
+                                    onValueChange = { viewModel.updateReference(ref.id, ref.copy(notes = it.takeIf { it.isNotBlank() })) },
+                                    label = "Notes",
+                                    placeholder = "Any additional context about this reference...",
+                                    keyboardOptions = KeyboardOptions(
+                                        capitalization = KeyboardCapitalization.Sentences,
+                                        imeAction = ImeAction.Done
+                                    ),
+                                    singleLine = false,
+                                    minLines = 3,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    val addMoreRefInteractionSource = remember { MutableInteractionSource() }
+                    val addMoreRefPressed by addMoreRefInteractionSource.collectIsPressedAsState()
+                    val addMoreRefScale by animateFloatAsState(if (addMoreRefPressed) 0.98f else 1f, label = "addMoreRefScale")
+
+                    OutlinedButton(
+                        onClick = { viewModel.addReference(Reference()) },
+                        interactionSource = addMoreRefInteractionSource,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .graphicsLayer(scaleX = addMoreRefScale, scaleY = addMoreRefScale),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("+ Add Another Reference")
+                    }
+                }
+            }
+        }
+
+        HorizontalDivider(
+            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f),
+            modifier = Modifier.padding(vertical = 8.dp)
+        )
+
         // ================= LANGUAGES SECTION =================
         Column(modifier = Modifier.fillMaxWidth()) {
             Row(
@@ -405,7 +653,7 @@ fun SocialLinksStep(state: CreateProfileState, viewModel: CreateProfileViewModel
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Icon(
-                    imageVector = Icons.Default.Public, // Modern outline web icon
+                    imageVector = Icons.Default.Public,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(20.dp)
@@ -444,7 +692,7 @@ fun SocialLinksStep(state: CreateProfileState, viewModel: CreateProfileViewModel
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(modifier = Modifier.height(12.dp))
-                        
+
                         val addLangInteractionSource = remember { MutableInteractionSource() }
                         val addLangPressed by addLangInteractionSource.collectIsPressedAsState()
                         val addLangScale by animateFloatAsState(if (addLangPressed) 0.98f else 1f, label = "addLangScale")
@@ -470,10 +718,7 @@ fun SocialLinksStep(state: CreateProfileState, viewModel: CreateProfileViewModel
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                            border = androidx.compose.foundation.BorderStroke(
-                                width = 1.dp,
-                                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
-                            ),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
                             shape = RoundedCornerShape(16.dp),
                             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                         ) {
@@ -481,7 +726,6 @@ fun SocialLinksStep(state: CreateProfileState, viewModel: CreateProfileViewModel
                                 modifier = Modifier.padding(16.dp),
                                 verticalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
-                                // Card Header
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -493,7 +737,7 @@ fun SocialLinksStep(state: CreateProfileState, viewModel: CreateProfileViewModel
                                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                                     ) {
                                         Icon(
-                                            imageVector = Icons.Default.Public, // Modern outline web icon
+                                            imageVector = Icons.Default.Public,
                                             contentDescription = null,
                                             tint = MaterialTheme.colorScheme.primary,
                                             modifier = Modifier.size(18.dp)
@@ -503,7 +747,7 @@ fun SocialLinksStep(state: CreateProfileState, viewModel: CreateProfileViewModel
                                             style = MaterialTheme.typography.titleMedium,
                                             fontWeight = FontWeight.Bold,
                                             color = MaterialTheme.colorScheme.onSurface,
-                                            maxLines = 3,
+                                            maxLines = 2,
                                             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                                         )
                                     }
@@ -529,7 +773,6 @@ fun SocialLinksStep(state: CreateProfileState, viewModel: CreateProfileViewModel
 
                                 HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
 
-                                // Language Name input
                                 NexaTextField(
                                     value = lang.languageName,
                                     onValueChange = { viewModel.updateLanguage(lang.id, lang.copy(languageName = it)) },
@@ -543,7 +786,6 @@ fun SocialLinksStep(state: CreateProfileState, viewModel: CreateProfileViewModel
                                     modifier = Modifier.fillMaxWidth()
                                 )
 
-                                // Level-wise CEFR Language Proficiency Dropdown
                                 var isProfExpanded by remember { mutableStateOf(false) }
 
                                 Box(modifier = Modifier.fillMaxWidth()) {
@@ -590,7 +832,7 @@ fun SocialLinksStep(state: CreateProfileState, viewModel: CreateProfileViewModel
                                             .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(16.dp)),
                                         shape = RoundedCornerShape(16.dp)
                                     ) {
-                                        proficiencyLevels.forEachIndexed { index, level ->
+                                        proficiencyLevels.forEachIndexed { i, level ->
                                             DropdownMenuItem(
                                                 text = {
                                                     Column(
@@ -633,7 +875,7 @@ fun SocialLinksStep(state: CreateProfileState, viewModel: CreateProfileViewModel
                                                     viewModel.updateLanguage(lang.id, lang.copy(proficiency = "${level.code} - ${level.label}"))
                                                 }
                                             )
-                                            if (index < proficiencyLevels.lastIndex) {
+                                            if (i < proficiencyLevels.lastIndex) {
                                                 HorizontalDivider(
                                                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)
@@ -663,6 +905,176 @@ fun SocialLinksStep(state: CreateProfileState, viewModel: CreateProfileViewModel
                         Text("+ Add Another Language")
                     }
                 }
+            }
+        }
+
+        HorizontalDivider(
+            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f),
+            modifier = Modifier.padding(vertical = 8.dp)
+        )
+
+        // ================= ADDITIONAL INFORMATION SECTION =================
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Favorite,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(20.dp)
+            )
+            Text(
+                text = "Extras & Interests",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+        Spacer(modifier = Modifier.height(4.dp))
+
+        // Card 1: Volunteer Work
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.FavoriteBorder,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Text(
+                        text = "Volunteer Work",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
+                NexaTextField(
+                    value = state.volunteerWork,
+                    onValueChange = { viewModel.updateAdditionalInfo(volunteerWork = it) },
+                    label = "Volunteer Work & Contributions",
+                    placeholder = "Describe any volunteering or open-source community contributions...",
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = false,
+                    minLines = 3,
+                    maxLines = 5,
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Sentences,
+                        imeAction = ImeAction.Next
+                    )
+                )
+            }
+        }
+
+        // Card 2: Honors & Awards
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.WorkspacePremium,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Text(
+                        text = "Honors & Awards",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
+                NexaTextField(
+                    value = state.awards,
+                    onValueChange = { viewModel.updateAdditionalInfo(awards = it) },
+                    label = "Honors & Awards",
+                    placeholder = "List key professional milestones, hackathon wins, or academic honors...",
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = false,
+                    minLines = 3,
+                    maxLines = 5,
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Sentences,
+                        imeAction = ImeAction.Next
+                    )
+                )
+            }
+        }
+
+        // Card 3: Hobbies & Interests
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Palette,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Text(
+                        text = "Hobbies & Interests",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
+                NexaTextField(
+                    value = state.hobbies,
+                    onValueChange = { viewModel.updateAdditionalInfo(hobbies = it) },
+                    label = "Hobbies & Interests",
+                    placeholder = "e.g. Photography, Reading Technical Blogs, Playing Football...",
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = false,
+                    minLines = 3,
+                    maxLines = 5,
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Sentences,
+                        imeAction = ImeAction.Done
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onDone = { focusManager.clearFocus() }
+                    )
+                )
             }
         }
     }

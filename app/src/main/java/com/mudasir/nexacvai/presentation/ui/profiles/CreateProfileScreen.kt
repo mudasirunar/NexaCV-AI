@@ -253,13 +253,10 @@ fun CreateProfileScreen(
                                         when (state.currentStep) {
                                             0 -> state.fullName.isNotBlank() && state.professionalTitle.isNotBlank()
                                             1 -> state.skills.size >= 1
-                                            2 -> state.experiences.all { it.jobTitle.isNotBlank() && it.companyName.isNotBlank() }
-                                            3 -> state.projects.all { it.projectName.isNotBlank() }
-                                            4 -> state.educations.isNotEmpty() && state.educations.all { it.degree.isNotBlank() && it.instituteName.isNotBlank() }
-                                            5 -> state.certifications.all { it.certificationName.isNotBlank() && it.issuingOrganization.isNotBlank() }
-                                            6 -> state.references.all { it.fullName.isNotBlank() && it.jobTitle.isNotBlank() && it.company.isNotBlank() }
-                                            7 -> state.socialLinks.all { it.label.isNotBlank() && it.url.isNotBlank() } &&
-                                                 state.languages.all { it.languageName.isNotBlank() && it.proficiency.isNotBlank() }
+                                            2 -> state.experiences.all { it.jobTitle.isNotBlank() && it.companyName.isNotBlank() } &&
+                                                 state.projects.all { it.projectName.isNotBlank() }
+                                            3 -> state.educations.isNotEmpty() && state.educations.all { it.degree.isNotBlank() && it.instituteName.isNotBlank() } &&
+                                                 state.certifications.all { it.certificationName.isNotBlank() && it.issuingOrganization.isNotBlank() }
                                             else -> true
                                         }
                                     }
@@ -368,13 +365,9 @@ fun CreateProfileScreen(
                         when (step) {
                             0 -> BasicInfoStep(state, viewModel)
                             1 -> SummaryStep(state, viewModel)
-                            2 -> ExperiencesStep(state, viewModel)
-                            3 -> ProjectsStep(state, viewModel)
-                            4 -> EducationStep(state, viewModel)
-                            5 -> CertificationsStep(state, viewModel)
-                            6 -> ReferencesStep(state, viewModel)
-                            7 -> SocialLinksStep(state, viewModel)
-                            8 -> AdditionalInfoStep(state, viewModel)
+                            2 -> ExperienceProjectsStep(state, viewModel)
+                            3 -> EducationCertsStep(state, viewModel)
+                            4 -> SocialsExtrasStep(state, viewModel)
                             else -> {}
                         }
                         Spacer(modifier = Modifier.height(24.dp))

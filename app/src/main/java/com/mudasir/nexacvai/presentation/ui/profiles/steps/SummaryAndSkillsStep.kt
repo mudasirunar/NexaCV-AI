@@ -41,7 +41,7 @@ fun SummaryStep(state: CreateProfileState, viewModel: CreateProfileViewModel) {
             color = MaterialTheme.colorScheme.primary
         )
 
-        // Card 1: Professional Summary & Bio
+        // Card 1: Professional Summary
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
@@ -67,18 +67,24 @@ fun SummaryStep(state: CreateProfileState, viewModel: CreateProfileViewModel) {
                         tint = MaterialTheme.colorScheme.primary
                     )
                     Text(
-                        text = "Professional Summary / Bio",
+                        text = "Career Summary",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 }
 
+                Text(
+                    text = "A brief overview of your professional background, key achievements, and career goals. This is often the first thing recruiters read.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
                  NexaTextField(
                     value = state.professionalSummary,
                     onValueChange = { viewModel.updateSummary(summary = it) },
-                    label = "Professional Summary / Bio",
-                    placeholder = "Describe your career highlights, goals, and core expertise in detail...",
+                    label = "Professional Summary",
+                    placeholder = "e.g. Passionate Android Developer with 5+ years of experience in building high-performance apps...",
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = false,
                     minLines = 6,

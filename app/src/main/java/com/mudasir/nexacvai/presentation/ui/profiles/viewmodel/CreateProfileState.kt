@@ -9,48 +9,39 @@ data class CreateProfileState(
     val isSaving: Boolean = false,
     val isSaved: Boolean = false,
     val currentStep: Int = 0,
-    val totalSteps: Int = 9,
+    val totalSteps: Int = 5,
     val error: String? = null,
     
     // Original Profile ID (if editing)
     val profileId: Long? = null,
 
-    // Step 1: Basic Info
+    // Step 1: Basic Information
     val fullName: String = "",
     val professionalTitle: String = "",
     val emails: List<String> = listOf(""), 
     val phones: List<String> = listOf(""),
     val dateOfBirth: String = "",
     val address: String = "",
-    val preferredRole: String = "",
     val yearsOfExperience: String = "",
     val profilePictureUri: String? = null,
     
-    // Step 2: Summary and Skills
+    // Step 2: Professional Snapshot & Skills
     val professionalSummary: String = "",
     val skills: List<String> = emptyList(),
     val currentSkillInput: String = "",
     
-    // Step 3: Experiences
+    // Step 3: Experience & Projects
     val experiences: List<Experience> = emptyList(),
-    
-    // Step 4: Projects
     val projects: List<Project> = emptyList(),
     
-    // Step 5: Educations
+    // Step 4: Education & Certifications
     val educations: List<Education> = emptyList(),
-    
-    // Step 6: Certifications
     val certifications: List<Certification> = emptyList(),
     
-    // Step 7: References
-    val references: List<Reference> = emptyList(),
-    
-    // Step 8: Social Links and Languages
+    // Step 5: Social Links & Extras
     val socialLinks: List<SocialLink> = emptyList(),
     val languages: List<Language> = emptyList(),
-    
-    // Step 9: Additional Info
+    val references: List<Reference> = emptyList(),
     val hobbies: String = "",
     val volunteerWork: String = "",
     val awards: String = ""

@@ -51,7 +51,6 @@ class CreateProfileViewModel(
                     phones = profile.phones.ifEmpty { listOf("") },
                     dateOfBirth = profile.dateOfBirth,
                     address = profile.address,
-                    preferredRole = profile.preferredRole,
                     yearsOfExperience = profile.yearsOfExperience,
                     profilePictureUri = profile.profilePictureUri,
                     professionalSummary = profile.professionalSummary,
@@ -101,7 +100,6 @@ class CreateProfileViewModel(
         phones: List<String>? = null,
         dateOfBirth: String? = null,
         address: String? = null,
-        preferredRole: String? = null,
         yearsOfExperience: String? = null,
         profilePictureUri: String? = null
     ) {
@@ -112,7 +110,6 @@ class CreateProfileViewModel(
             phones = phones ?: _state.value.phones,
             dateOfBirth = dateOfBirth ?: _state.value.dateOfBirth,
             address = address ?: _state.value.address,
-            preferredRole = preferredRole ?: _state.value.preferredRole,
             yearsOfExperience = yearsOfExperience ?: _state.value.yearsOfExperience,
             profilePictureUri = profilePictureUri ?: _state.value.profilePictureUri
         )
@@ -315,7 +312,6 @@ class CreateProfileViewModel(
             phones = cleanedPhones,
             dateOfBirth = upToDateState.dateOfBirth,
             address = upToDateState.address,
-            preferredRole = upToDateState.preferredRole,
             yearsOfExperience = upToDateState.yearsOfExperience,
             profilePictureUri = upToDateState.profilePictureUri,
             professionalSummary = upToDateState.professionalSummary,

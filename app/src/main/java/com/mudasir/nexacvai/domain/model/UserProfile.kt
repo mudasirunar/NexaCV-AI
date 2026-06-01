@@ -8,7 +8,6 @@ data class UserProfile(
     val phones: List<String> = emptyList(),
     val dateOfBirth: String = "",
     val address: String = "",
-    val preferredRole: String = "",
     val yearsOfExperience: String = "",
     val profilePictureUri: String? = null,
     val professionalSummary: String = "",

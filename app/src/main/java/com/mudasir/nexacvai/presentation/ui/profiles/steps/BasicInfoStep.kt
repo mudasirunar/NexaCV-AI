@@ -383,23 +383,6 @@ fun BasicInfoStep(state: CreateProfileState, viewModel: CreateProfileViewModel) 
 
         Spacer(modifier = Modifier.height(18.dp))
 
-        NexaTextField(
-            value = state.preferredRole,
-            onValueChange = { viewModel.updateBasicInfo(preferredRole = it) },
-            label = "Preferred Role",
-            placeholder = "e.g. Senior Software Engineer",
-            leadingIcon = Icons.Default.Star,
-            keyboardOptions = KeyboardOptions(
-                capitalization = KeyboardCapitalization.Words,
-                keyboardType = KeyboardType.Text,
-                imeAction = ImeAction.Next
-            ),
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
-        )
-
-        Spacer(modifier = Modifier.height(18.dp))
-
         Text(
             text = "Experience Level",
             style = MaterialTheme.typography.labelLarge,
