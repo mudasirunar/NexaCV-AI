@@ -355,6 +355,7 @@ fun dateStringToMillis(dateStr: String): Long? {
         } else {
             java.text.SimpleDateFormat("MM/yyyy", java.util.Locale.getDefault())
         }
+        format.timeZone = java.util.TimeZone.getTimeZone("UTC")
         format.parse(dateStr)?.time
     } catch (e: Exception) {
         null
@@ -368,6 +369,7 @@ fun millisToDateString(millis: Long, showDay: Boolean): String {
     } else {
         java.text.SimpleDateFormat("MM/yyyy", java.util.Locale.getDefault())
     }
+    format.timeZone = java.util.TimeZone.getTimeZone("UTC")
     return format.format(date)
 }
 

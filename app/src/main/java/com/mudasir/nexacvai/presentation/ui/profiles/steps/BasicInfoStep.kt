@@ -52,40 +52,42 @@ fun BasicInfoStep(state: CreateProfileState, viewModel: CreateProfileViewModel) 
     var showDobPicker by remember { mutableStateOf(false) }
 
     if (showDobPicker) {
-        val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = dateStringToMillis(state.dateOfBirth)
-        )
-        DatePickerDialog(
-            onDismissRequest = { showDobPicker = false },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        datePickerState.selectedDateMillis?.let { millis ->
-                            val dateStr = millisToDateString(millis, true)
-                            viewModel.updateBasicInfo(dateOfBirth = dateStr)
-                        }
-                        showDobPicker = false
-                    },
-                    shape = RoundedCornerShape(12.dp)
-                ) { Text("OK") }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDobPicker = false }) { Text("Cancel") }
-            },
-            shape = RoundedCornerShape(24.dp)
-        ) {
-            DatePicker(
-                state = datePickerState,
-                colors = DatePickerDefaults.colors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface,
-                    headlineContentColor = MaterialTheme.colorScheme.primary,
-                    selectedDayContainerColor = MaterialTheme.colorScheme.primary,
-                    selectedDayContentColor = MaterialTheme.colorScheme.onPrimary,
-                    todayContentColor = MaterialTheme.colorScheme.primary,
-                    todayDateBorderColor = MaterialTheme.colorScheme.primary
-                )
+        key(showDobPicker) {
+            val datePickerState = rememberDatePickerState(
+                initialSelectedDateMillis = dateStringToMillis(state.dateOfBirth)
             )
+            DatePickerDialog(
+                onDismissRequest = { showDobPicker = false },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            datePickerState.selectedDateMillis?.let { millis ->
+                                val dateStr = millisToDateString(millis, true)
+                                viewModel.updateBasicInfo(dateOfBirth = dateStr)
+                            }
+                            showDobPicker = false
+                        },
+                        shape = RoundedCornerShape(12.dp)
+                    ) { Text("OK") }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDobPicker = false }) { Text("Cancel") }
+                },
+                shape = RoundedCornerShape(24.dp)
+            ) {
+                DatePicker(
+                    state = datePickerState,
+                    colors = DatePickerDefaults.colors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        titleContentColor = MaterialTheme.colorScheme.onSurface,
+                        headlineContentColor = MaterialTheme.colorScheme.primary,
+                        selectedDayContainerColor = MaterialTheme.colorScheme.primary,
+                        selectedDayContentColor = MaterialTheme.colorScheme.onPrimary,
+                        todayContentColor = MaterialTheme.colorScheme.primary,
+                        todayDateBorderColor = MaterialTheme.colorScheme.primary
+                    )
+                )
+            }
         }
     }
 
