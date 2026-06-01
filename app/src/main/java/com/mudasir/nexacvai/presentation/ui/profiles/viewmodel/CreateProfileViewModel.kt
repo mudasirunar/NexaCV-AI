@@ -329,7 +329,13 @@ class CreateProfileViewModel(
             languages = upToDateState.languages,
             hobbies = upToDateState.hobbies,
             volunteerWork = upToDateState.volunteerWork,
-            awards = upToDateState.awards
+            awards = upToDateState.awards,
+            createdAt = if (upToDateState.profileId == null || upToDateState.profileId == 0L) {
+                System.currentTimeMillis()
+            } else {
+                initialProfile.createdAt
+            },
+            updatedAt = System.currentTimeMillis()
         )
     }
 

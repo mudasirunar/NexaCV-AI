@@ -28,6 +28,8 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import kotlinx.coroutines.launch
 import com.mudasir.nexacvai.presentation.ui.components.ImagePickerDialog
 import com.mudasir.nexacvai.presentation.ui.components.NexaTextField
 import com.mudasir.nexacvai.presentation.ui.components.NexaDateTextField
@@ -42,6 +44,8 @@ import com.mudasir.nexacvai.presentation.ui.profiles.utils.*
 fun BasicInfoStep(state: CreateProfileState, viewModel: CreateProfileViewModel) {
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
+    val coroutineScope = rememberCoroutineScope()
+    var isProcessingImage by remember { mutableStateOf(false) }
     var showImageDialog by remember { mutableStateOf(false) }
     var tempCameraUri by remember { mutableStateOf<Uri?>(null) }
     var showDobPicker by remember { mutableStateOf(false) }
@@ -87,7 +91,16 @@ fun BasicInfoStep(state: CreateProfileState, viewModel: CreateProfileViewModel) 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
         onResult = { uri ->
-            uri?.let { viewModel.updateBasicInfo(profilePictureUri = it.toString()) }
+            uri?.let {
+                coroutineScope.launch {
+                    isProcessingImage = true
+                    val compressedUri = ImageCompressionHelper.compressAndSaveProfilePicture(context, it)
+                    if (compressedUri != null) {
+                        viewModel.updateBasicInfo(profilePictureUri = compressedUri)
+                    }
+                    isProcessingImage = false
+                }
+            }
         }
     )
 
@@ -95,7 +108,16 @@ fun BasicInfoStep(state: CreateProfileState, viewModel: CreateProfileViewModel) 
         contract = ActivityResultContracts.TakePicture(),
         onResult = { success ->
             if (success) {
-                tempCameraUri?.let { viewModel.updateBasicInfo(profilePictureUri = it.toString()) }
+                tempCameraUri?.let {
+                    coroutineScope.launch {
+                        isProcessingImage = true
+                        val compressedUri = ImageCompressionHelper.compressAndSaveProfilePicture(context, it)
+                        if (compressedUri != null) {
+                            viewModel.updateBasicInfo(profilePictureUri = compressedUri)
+                        }
+                        isProcessingImage = false
+                    }
+                }
             }
         }
     )
@@ -150,9 +172,17 @@ fun BasicInfoStep(state: CreateProfileState, viewModel: CreateProfileViewModel) 
                         .clickable { showImageDialog = true },
                     contentAlignment = Alignment.Center
                 ) {
-                    if (state.profilePictureUri != null) {
+                    if (isProcessingImage) {
+                        CircularProgressIndicator(
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    } else if (state.profilePictureUri != null) {
                         AsyncImage(
-                            model = state.profilePictureUri,
+                            model = ImageRequest.Builder(context)
+                                .data(state.profilePictureUri)
+                                .crossfade(true)
+                                .build(),
                             contentDescription = "Profile Picture",
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop
