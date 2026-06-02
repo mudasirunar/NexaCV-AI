@@ -10,6 +10,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -21,7 +23,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
@@ -30,7 +35,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
 
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun NexaDateTextField(
     value: String,
@@ -43,9 +50,13 @@ fun NexaDateTextField(
     errorMessage: String? = null,
     enabled: Boolean = true
 ) {
+    val density = LocalDensity.current
     val focusManager = LocalFocusManager.current
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
+    
+    val bringIntoViewRequester = remember { BringIntoViewRequester() }
+    val coroutineScope = rememberCoroutineScope()
 
     // Map String value from parent to TextFieldValue internally to keep track of selection
     var internalTfv by remember {
@@ -93,7 +104,28 @@ fun NexaDateTextField(
     )
 
     Column(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .bringIntoViewRequester(bringIntoViewRequester)
+            .onFocusEvent { focusState ->
+                if (focusState.isFocused) {
+                    coroutineScope.launch {
+                        // Delay slightly to let the framework's internal text field scroll finish first,
+                        // then scroll our custom region (label + text field + top offset) into view.
+                        kotlinx.coroutines.delay(150)
+                        val topOffset = with(density) { 24.dp.toPx() }
+                        val bottomOffset = with(density) { 90.dp.toPx() }
+                        bringIntoViewRequester.bringIntoView(
+                            rect = Rect(
+                                left = 0f,
+                                top = -topOffset,
+                                right = 0f,
+                                bottom = bottomOffset
+                            )
+                        )
+                    }
+                }
+            },
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         if (label != null) {

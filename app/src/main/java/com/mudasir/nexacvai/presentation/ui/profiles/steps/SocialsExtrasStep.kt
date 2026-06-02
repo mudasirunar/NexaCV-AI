@@ -19,12 +19,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.DpOffset
 import com.mudasir.nexacvai.domain.model.Language
 import com.mudasir.nexacvai.domain.model.SocialLink
 import com.mudasir.nexacvai.domain.model.Reference
@@ -98,301 +101,6 @@ fun SocialsExtrasStep(state: CreateProfileState, viewModel: CreateProfileViewMod
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-
-        // ================= SOCIAL LINKS SECTION =================
-        Column(modifier = Modifier.fillMaxWidth()) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Link,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(20.dp)
-                )
-                Text(
-                    text = "Social Links & Portfolios",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            }
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "Add portfolio links (GitHub, LinkedIn, Portfolio, Behance, etc.).",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-
-            if (state.socialLinks.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .border(
-                            width = 1.dp,
-                            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f),
-                            shape = RoundedCornerShape(12.dp)
-                        )
-                        .padding(24.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = "No social links added yet",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        val addLinkInteractionSource = remember { MutableInteractionSource() }
-                        val addLinkPressed by addLinkInteractionSource.collectIsPressedAsState()
-                        val addLinkScale by animateFloatAsState(if (addLinkPressed) 0.98f else 1f, label = "addLinkScale")
-
-                        Button(
-                            onClick = { viewModel.addSocialLink(SocialLink()) },
-                            interactionSource = addLinkInteractionSource,
-                            modifier = Modifier.graphicsLayer(scaleX = addLinkScale, scaleY = addLinkScale),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Text("+ Add Social Link")
-                        }
-                    }
-                }
-            } else {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .animateContentSize(),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    state.socialLinks.forEachIndexed { index, link ->
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
-                            shape = RoundedCornerShape(16.dp),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(16.dp)
-                            ) {
-                                val platformInfo = remember(link.label) {
-                                    platformsList.find { it.name == link.label } ?: platformsList.last()
-                                }
-                                val platformIconPainter = if (platformInfo.iconResId != null) {
-                                    painterResource(id = platformInfo.iconResId)
-                                } else {
-                                    androidx.compose.ui.graphics.vector.rememberVectorPainter(image = platformInfo.defaultIcon)
-                                }
-
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Row(
-                                        modifier = Modifier.weight(1f),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        if (platformInfo.iconResId != null) {
-                                            Icon(
-                                                painter = platformIconPainter,
-                                                contentDescription = null,
-                                                tint = androidx.compose.ui.graphics.Color.Unspecified,
-                                                modifier = Modifier.size(18.dp).scale(platformInfo.scale)
-                                            )
-                                        } else {
-                                            Icon(
-                                                painter = platformIconPainter,
-                                                contentDescription = null,
-                                                tint = if (platformInfo.name == "Other Platform") MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary,
-                                                modifier = Modifier.size(18.dp).scale(platformInfo.scale)
-                                            )
-                                        }
-                                        Text(
-                                            text = if (link.label.isNotBlank()) link.label else "Link #${index + 1}",
-                                            style = MaterialTheme.typography.titleMedium,
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.onSurface,
-                                            maxLines = 2,
-                                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-                                        )
-                                    }
-
-                                    val removeLinkInteractionSource = remember { MutableInteractionSource() }
-                                    val removeLinkPressed by removeLinkInteractionSource.collectIsPressedAsState()
-                                    val removeLinkScale by animateFloatAsState(if (removeLinkPressed) 0.98f else 1f, label = "removeLinkScale")
-
-                                    IconButton(
-                                        onClick = { viewModel.removeSocialLink(link) },
-                                        interactionSource = removeLinkInteractionSource,
-                                        modifier = Modifier
-                                            .size(28.dp)
-                                            .graphicsLayer(scaleX = removeLinkScale, scaleY = removeLinkScale)
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Delete,
-                                            contentDescription = "Remove Link",
-                                            tint = MaterialTheme.colorScheme.error
-                                        )
-                                    }
-                                }
-
-                                HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
-
-                                var isExpanded by remember { mutableStateOf(false) }
-
-                                Box(modifier = Modifier.fillMaxWidth()) {
-                                    val displayPlatformName = remember(link.label) {
-                                        val isPrefilled = platformsList.any { it.name == link.label && it.name != "Other Platform" }
-                                        if (isPrefilled) link.label else if (link.label.isBlank()) "" else "Other Platform"
-                                    }
-
-                                    NexaTextField(
-                                        value = displayPlatformName,
-                                        onValueChange = {},
-                                        label = "Platform / Website*",
-                                        placeholder = "Select Platform",
-                                        trailingIcon = {
-                                            Icon(
-                                                imageVector = if (isExpanded) Icons.Default.ArrowDropUp else Icons.Default.ArrowDropDown,
-                                                contentDescription = null,
-                                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                        },
-                                        enabled = true,
-                                        readOnly = true,
-                                        modifier = Modifier.fillMaxWidth()
-                                    )
-
-                                    Box(
-                                        modifier = Modifier
-                                            .align(Alignment.BottomCenter)
-                                            .fillMaxWidth()
-                                            .height(52.dp)
-                                            .clickable(
-                                                interactionSource = remember { MutableInteractionSource() },
-                                                indication = null
-                                            ) {
-                                                isExpanded = true
-                                            }
-                                    )
-
-                                    DropdownMenu(
-                                        expanded = isExpanded,
-                                        onDismissRequest = { isExpanded = false },
-                                        modifier = Modifier
-                                            .fillMaxWidth(0.85f)
-                                            .border(
-                                                width = 1.dp,
-                                                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f),
-                                                shape = RoundedCornerShape(16.dp)
-                                            )
-                                            .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(16.dp)),
-                                        shape = RoundedCornerShape(16.dp)
-                                    ) {
-                                        platformsList.forEach { pItem ->
-                                            val dIconPainter = if (pItem.iconResId != null) {
-                                                painterResource(id = pItem.iconResId)
-                                            } else {
-                                                androidx.compose.ui.graphics.vector.rememberVectorPainter(image = pItem.defaultIcon)
-                                            }
-                                            DropdownMenuItem(
-                                                leadingIcon = {
-                                                    if (pItem.iconResId != null) {
-                                                        Icon(
-                                                            painter = dIconPainter,
-                                                            contentDescription = null,
-                                                            tint = androidx.compose.ui.graphics.Color.Unspecified,
-                                                            modifier = Modifier.size(18.dp).scale(pItem.scale)
-                                                        )
-                                                    } else {
-                                                        Icon(
-                                                            painter = dIconPainter,
-                                                            contentDescription = null,
-                                                            tint = if (pItem.name == "Other Platform") MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary,
-                                                            modifier = Modifier.size(18.dp).scale(pItem.scale)
-                                                        )
-                                                    }
-                                                },
-                                                text = { Text(pItem.name, style = MaterialTheme.typography.bodyMedium) },
-                                                onClick = {
-                                                    isExpanded = false
-                                                    if (pItem.name == "Other Platform") {
-                                                        viewModel.updateSocialLink(link.id, link.copy(label = "Other"))
-                                                    } else {
-                                                        viewModel.updateSocialLink(link.id, link.copy(label = pItem.name))
-                                                    }
-                                                }
-                                            )
-                                        }
-                                    }
-                                }
-
-                                val isOtherSelected = remember(link.label) {
-                                    link.label.isNotBlank() && platformsList.none { it.name == link.label && it.name != "Other Platform" }
-                                }
-                                if (isOtherSelected) {
-                                    NexaTextField(
-                                        value = if (link.label == "Other") "" else link.label,
-                                        onValueChange = { viewModel.updateSocialLink(link.id, link.copy(label = it)) },
-                                        label = "Other Platform Name*",
-                                        placeholder = "e.g. Product Hunt",
-                                        keyboardOptions = KeyboardOptions(
-                                            capitalization = KeyboardCapitalization.Words,
-                                            imeAction = ImeAction.Next
-                                        ),
-                                        singleLine = true,
-                                        modifier = Modifier.fillMaxWidth()
-                                    )
-                                }
-
-                                NexaTextField(
-                                    value = link.url,
-                                    onValueChange = { viewModel.updateSocialLink(link.id, link.copy(url = it)) },
-                                    label = "Website URL*",
-                                    placeholder = "e.g. github.com/username",
-                                    keyboardOptions = KeyboardOptions(
-                                        capitalization = KeyboardCapitalization.None,
-                                        keyboardType = KeyboardType.Uri,
-                                        imeAction = ImeAction.Next
-                                    ),
-                                    singleLine = true,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    val addMoreLinkInteractionSource = remember { MutableInteractionSource() }
-                    val addMoreLinkPressed by addMoreLinkInteractionSource.collectIsPressedAsState()
-                    val addMoreLinkScale by animateFloatAsState(if (addMoreLinkPressed) 0.98f else 1f, label = "addMoreLinkScale")
-
-                    OutlinedButton(
-                        onClick = { viewModel.addSocialLink(SocialLink()) },
-                        interactionSource = addMoreLinkInteractionSource,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .graphicsLayer(scaleX = addMoreLinkScale, scaleY = addMoreLinkScale),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Text("+ Add Another Social Link")
-                    }
-                }
-            }
-        }
-
-        HorizontalDivider(
-            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f),
-            modifier = Modifier.padding(vertical = 8.dp)
-        )
 
         // ================= REFERENCES SECTION =================
         Column(modifier = Modifier.fillMaxWidth()) {
@@ -787,8 +495,17 @@ fun SocialsExtrasStep(state: CreateProfileState, viewModel: CreateProfileViewMod
                                 )
 
                                 var isProfExpanded by remember { mutableStateOf(false) }
+                                var profItemWidth by remember { mutableStateOf(0) }
+                                val density = LocalDensity.current
+                                val profItemWidthDp = with(density) { profItemWidth.toDp() }
 
-                                Box(modifier = Modifier.fillMaxWidth()) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .onGloballyPositioned { coordinates ->
+                                            profItemWidth = coordinates.size.width
+                                        }
+                                ) {
                                     NexaTextField(
                                         value = lang.proficiency,
                                         onValueChange = {},
@@ -819,11 +536,15 @@ fun SocialsExtrasStep(state: CreateProfileState, viewModel: CreateProfileViewMod
                                             }
                                     )
 
+                                    val profDropdownWidthDp = if (profItemWidthDp > 0.dp) profItemWidthDp.coerceAtMost(400.dp) else 280.dp
+                                    val profOffsetX = if (profItemWidthDp > 400.dp) (profItemWidthDp - 400.dp) / 2 else 0.dp
+
                                     DropdownMenu(
                                         expanded = isProfExpanded,
                                         onDismissRequest = { isProfExpanded = false },
+                                        offset = DpOffset(x = profOffsetX, y = 0.dp),
                                         modifier = Modifier
-                                            .fillMaxWidth(0.85f)
+                                            .width(profDropdownWidthDp)
                                             .border(
                                                 width = 1.dp,
                                                 color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f),
@@ -903,6 +624,314 @@ fun SocialsExtrasStep(state: CreateProfileState, viewModel: CreateProfileViewMod
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Text("+ Add Another Language")
+                    }
+                }
+            }
+        }
+
+        HorizontalDivider(
+            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f),
+            modifier = Modifier.padding(vertical = 8.dp)
+        )
+
+        // ================= SOCIAL LINKS SECTION =================
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Link,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
+                )
+                Text(
+                    text = "Social Links & Portfolios",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Add portfolio links (GitHub, LinkedIn, Portfolio, Behance, etc.).",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+
+            if (state.socialLinks.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(
+                            width = 1.dp,
+                            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f),
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                        .padding(24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "No social links added yet",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        val addLinkInteractionSource = remember { MutableInteractionSource() }
+                        val addLinkPressed by addLinkInteractionSource.collectIsPressedAsState()
+                        val addLinkScale by animateFloatAsState(if (addLinkPressed) 0.98f else 1f, label = "addLinkScale")
+
+                        Button(
+                            onClick = { viewModel.addSocialLink(SocialLink()) },
+                            interactionSource = addLinkInteractionSource,
+                            modifier = Modifier.graphicsLayer(scaleX = addLinkScale, scaleY = addLinkScale),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text("+ Add Social Link")
+                        }
+                    }
+                }
+            } else {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .animateContentSize(),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    state.socialLinks.forEachIndexed { index, link ->
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
+                            shape = RoundedCornerShape(16.dp),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                val platformInfo = remember(link.label) {
+                                    platformsList.find { it.name == link.label } ?: platformsList.last()
+                                }
+                                val platformIconPainter = if (platformInfo.iconResId != null) {
+                                    painterResource(id = platformInfo.iconResId)
+                                } else {
+                                    androidx.compose.ui.graphics.vector.rememberVectorPainter(image = platformInfo.defaultIcon)
+                                }
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(
+                                        modifier = Modifier.weight(1f),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        if (platformInfo.iconResId != null) {
+                                            Icon(
+                                                painter = platformIconPainter,
+                                                contentDescription = null,
+                                                tint = androidx.compose.ui.graphics.Color.Unspecified,
+                                                modifier = Modifier.size(18.dp).scale(platformInfo.scale)
+                                            )
+                                        } else {
+                                            Icon(
+                                                painter = platformIconPainter,
+                                                contentDescription = null,
+                                                tint = if (platformInfo.name == "Other Platform") MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary,
+                                                modifier = Modifier.size(18.dp).scale(platformInfo.scale)
+                                            )
+                                        }
+                                        Text(
+                                            text = if (link.label.isNotBlank()) link.label else "Link #${index + 1}",
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                            maxLines = 2,
+                                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                        )
+                                    }
+
+                                    val removeLinkInteractionSource = remember { MutableInteractionSource() }
+                                    val removeLinkPressed by removeLinkInteractionSource.collectIsPressedAsState()
+                                    val removeLinkScale by animateFloatAsState(if (removeLinkPressed) 0.98f else 1f, label = "removeLinkScale")
+
+                                    IconButton(
+                                        onClick = { viewModel.removeSocialLink(link) },
+                                        interactionSource = removeLinkInteractionSource,
+                                        modifier = Modifier
+                                            .size(28.dp)
+                                            .graphicsLayer(scaleX = removeLinkScale, scaleY = removeLinkScale)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Delete,
+                                            contentDescription = "Remove Link",
+                                            tint = MaterialTheme.colorScheme.error
+                                        )
+                                    }
+                                }
+
+                                HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
+
+                                var isExpanded by remember { mutableStateOf(false) }
+                                var itemWidth by remember { mutableStateOf(0) }
+                                val density = LocalDensity.current
+                                val itemWidthDp = with(density) { itemWidth.toDp() }
+
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .onGloballyPositioned { coordinates ->
+                                            itemWidth = coordinates.size.width
+                                        }
+                                ) {
+                                    val displayPlatformName = remember(link.label) {
+                                        val isPrefilled = platformsList.any { it.name == link.label && it.name != "Other Platform" }
+                                        if (isPrefilled) link.label else if (link.label.isBlank()) "" else "Other Platform"
+                                    }
+
+                                    NexaTextField(
+                                        value = displayPlatformName,
+                                        onValueChange = {},
+                                        label = "Platform / Website*",
+                                        placeholder = "Select Platform",
+                                        trailingIcon = {
+                                            Icon(
+                                                imageVector = if (isExpanded) Icons.Default.ArrowDropUp else Icons.Default.ArrowDropDown,
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        },
+                                        enabled = true,
+                                        readOnly = true,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+
+                                    Box(
+                                        modifier = Modifier
+                                            .align(Alignment.BottomCenter)
+                                            .fillMaxWidth()
+                                            .height(52.dp)
+                                            .clickable(
+                                                interactionSource = remember { MutableInteractionSource() },
+                                                indication = null
+                                            ) {
+                                                isExpanded = true
+                                            }
+                                    )
+
+                                    val dropdownWidthDp = if (itemWidthDp > 0.dp) itemWidthDp.coerceAtMost(400.dp) else 280.dp
+                                    val offsetX = if (itemWidthDp > 400.dp) (itemWidthDp - 400.dp) / 2 else 0.dp
+
+                                    DropdownMenu(
+                                        expanded = isExpanded,
+                                        onDismissRequest = { isExpanded = false },
+                                        offset = DpOffset(x = offsetX, y = 0.dp),
+                                        modifier = Modifier
+                                            .width(dropdownWidthDp)
+                                            .border(
+                                                width = 1.dp,
+                                                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f),
+                                                shape = RoundedCornerShape(16.dp)
+                                            )
+                                            .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(16.dp)),
+                                        shape = RoundedCornerShape(16.dp)
+                                    ) {
+                                        platformsList.forEach { pItem ->
+                                            val dIconPainter = if (pItem.iconResId != null) {
+                                                painterResource(id = pItem.iconResId)
+                                            } else {
+                                                androidx.compose.ui.graphics.vector.rememberVectorPainter(image = pItem.defaultIcon)
+                                            }
+                                            DropdownMenuItem(
+                                                leadingIcon = {
+                                                    if (pItem.iconResId != null) {
+                                                        Icon(
+                                                            painter = dIconPainter,
+                                                            contentDescription = null,
+                                                            tint = androidx.compose.ui.graphics.Color.Unspecified,
+                                                            modifier = Modifier.size(18.dp).scale(pItem.scale)
+                                                        )
+                                                    } else {
+                                                        Icon(
+                                                            painter = dIconPainter,
+                                                            contentDescription = null,
+                                                            tint = if (pItem.name == "Other Platform") MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary,
+                                                            modifier = Modifier.size(18.dp).scale(pItem.scale)
+                                                        )
+                                                    }
+                                                },
+                                                text = { Text(pItem.name, style = MaterialTheme.typography.bodyMedium) },
+                                                onClick = {
+                                                    isExpanded = false
+                                                    if (pItem.name == "Other Platform") {
+                                                        viewModel.updateSocialLink(link.id, link.copy(label = "Other"))
+                                                    } else {
+                                                        viewModel.updateSocialLink(link.id, link.copy(label = pItem.name))
+                                                    }
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
+
+                                val isOtherSelected = remember(link.label) {
+                                    link.label.isNotBlank() && platformsList.none { it.name == link.label && it.name != "Other Platform" }
+                                }
+                                if (isOtherSelected) {
+                                    NexaTextField(
+                                        value = if (link.label == "Other") "" else link.label,
+                                        onValueChange = { viewModel.updateSocialLink(link.id, link.copy(label = it)) },
+                                        label = "Other Platform Name*",
+                                        placeholder = "e.g. Product Hunt",
+                                        keyboardOptions = KeyboardOptions(
+                                            capitalization = KeyboardCapitalization.Words,
+                                            imeAction = ImeAction.Next
+                                        ),
+                                        singleLine = true,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
+
+                                NexaTextField(
+                                    value = link.url,
+                                    onValueChange = { viewModel.updateSocialLink(link.id, link.copy(url = it)) },
+                                    label = "Website URL*",
+                                    placeholder = "e.g. github.com/username",
+                                    keyboardOptions = KeyboardOptions(
+                                        capitalization = KeyboardCapitalization.None,
+                                        keyboardType = KeyboardType.Uri,
+                                        imeAction = ImeAction.Next
+                                    ),
+                                    singleLine = true,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    val addMoreLinkInteractionSource = remember { MutableInteractionSource() }
+                    val addMoreLinkPressed by addMoreLinkInteractionSource.collectIsPressedAsState()
+                    val addMoreLinkScale by animateFloatAsState(if (addMoreLinkPressed) 0.98f else 1f, label = "addMoreLinkScale")
+
+                    OutlinedButton(
+                        onClick = { viewModel.addSocialLink(SocialLink()) },
+                        interactionSource = addMoreLinkInteractionSource,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .graphicsLayer(scaleX = addMoreLinkScale, scaleY = addMoreLinkScale),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("+ Add Another Social Link")
                     }
                 }
             }

@@ -42,6 +42,7 @@ import org.koin.android.ext.android.inject
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.ui.platform.LocalConfiguration
 
 class MainActivity : ComponentActivity() {
     private val profileDeleteManager: ProfileDeleteManager by inject()
@@ -72,12 +73,14 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                // Commit pending deletion when the app goes to background / closes
+                // Commit pending deletion when the app goes to background / closes (but not on screen rotation/theme toggle)
                 val lifecycleOwner = LocalLifecycleOwner.current
                 DisposableEffect(lifecycleOwner) {
                     val observer = LifecycleEventObserver { _, event ->
                         if (event == Lifecycle.Event.ON_STOP || event == Lifecycle.Event.ON_DESTROY) {
-                            profileDeleteManager.commitPendingDelete()
+                            if (!this@MainActivity.isChangingConfigurations) {
+                                profileDeleteManager.commitPendingDelete()
+                            }
                         }
                     }
                     lifecycleOwner.lifecycle.addObserver(observer)
@@ -89,7 +92,14 @@ class MainActivity : ComponentActivity() {
                 // Dynamically offset the Snackbar to stay above the scrollable FAB on the Profiles screen
                 val isProfilesScreen = currentRoute?.startsWith(Screen.Profiles.route) == true
                 val isFabVisibleState by profileDeleteManager.isFabVisible.collectAsState()
-                val showFabOnScreen = isProfilesScreen && isFabVisibleState
+                
+                val configuration = LocalConfiguration.current
+                val isWideScreen = configuration.screenWidthDp >= 600
+                
+                // On wide screens (tablets or landscape phones), the centered snackbar (max 480dp)
+                // and the right-aligned FAB do not overlap horizontally. Thus, we only push the snackbar
+                // up when the screen is narrow (isWideScreen == false) and the FAB is visible.
+                val showFabOnScreen = isProfilesScreen && isFabVisibleState && !isWideScreen
 
                 val snackbarBottomPadding by animateDpAsState(
                     targetValue = if (showBottomBar) {

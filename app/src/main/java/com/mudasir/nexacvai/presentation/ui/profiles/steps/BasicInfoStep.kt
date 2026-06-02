@@ -53,41 +53,17 @@ fun BasicInfoStep(state: CreateProfileState, viewModel: CreateProfileViewModel) 
 
     if (showDobPicker) {
         key(showDobPicker) {
-            val datePickerState = rememberDatePickerState(
-                initialSelectedDateMillis = dateStringToMillis(state.dateOfBirth)
-            )
-            DatePickerDialog(
+            com.mudasir.nexacvai.presentation.ui.profiles.utils.NexaDatePicker(
+                initialDateMillis = com.mudasir.nexacvai.presentation.ui.profiles.utils.dateStringToMillis(state.dateOfBirth),
                 onDismissRequest = { showDobPicker = false },
-                confirmButton = {
-                    Button(
-                        onClick = {
-                            datePickerState.selectedDateMillis?.let { millis ->
-                                val dateStr = millisToDateString(millis, true)
-                                viewModel.updateBasicInfo(dateOfBirth = dateStr)
-                            }
-                            showDobPicker = false
-                        },
-                        shape = RoundedCornerShape(12.dp)
-                    ) { Text("OK") }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showDobPicker = false }) { Text("Cancel") }
-                },
-                shape = RoundedCornerShape(24.dp)
-            ) {
-                DatePicker(
-                    state = datePickerState,
-                    colors = DatePickerDefaults.colors(
-                        containerColor = MaterialTheme.colorScheme.surface,
-                        titleContentColor = MaterialTheme.colorScheme.onSurface,
-                        headlineContentColor = MaterialTheme.colorScheme.primary,
-                        selectedDayContainerColor = MaterialTheme.colorScheme.primary,
-                        selectedDayContentColor = MaterialTheme.colorScheme.onPrimary,
-                        todayContentColor = MaterialTheme.colorScheme.primary,
-                        todayDateBorderColor = MaterialTheme.colorScheme.primary
-                    )
-                )
-            }
+                onDateSelected = { millis ->
+                    if (millis != null) {
+                        val dateStr = com.mudasir.nexacvai.presentation.ui.profiles.utils.millisToDateString(millis, true)
+                        viewModel.updateBasicInfo(dateOfBirth = dateStr)
+                    }
+                    showDobPicker = false
+                }
+            )
         }
     }
 

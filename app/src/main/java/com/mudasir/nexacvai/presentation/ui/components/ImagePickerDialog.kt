@@ -23,7 +23,10 @@ fun ImagePickerDialog(
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .padding(horizontal = 24.dp)
+                .widthIn(max = 320.dp)
+                .fillMaxWidth()
         ) {
             Column(
                 modifier = Modifier.padding(24.dp),

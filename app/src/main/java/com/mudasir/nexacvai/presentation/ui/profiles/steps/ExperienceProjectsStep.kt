@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
@@ -38,6 +39,9 @@ fun ExperienceProjectsStep(state: CreateProfileState, viewModel: CreateProfileVi
     val focusManager = LocalFocusManager.current
     val calendar = remember { java.util.Calendar.getInstance() }
 
+    val includeDayExpMap = remember { mutableStateMapOf<String, Boolean>() }
+    val includeDayProjMap = remember { mutableStateMapOf<String, Boolean>() }
+
     // HOISTED DIALOG STATES FOR EXPERIENCES
     var activeStartCalendarExpId by remember { mutableStateOf<String?>(null) }
     var activeEndCalendarExpId by remember { mutableStateOf<String?>(null) }
@@ -54,84 +58,36 @@ fun ExperienceProjectsStep(state: CreateProfileState, viewModel: CreateProfileVi
     if (activeStartCalendarExpId != null) {
         val exp = state.experiences.find { it.id == activeStartCalendarExpId }
         if (exp != null) {
-            val showDay = exp.startDate.count { it == '/' } == 2 || exp.endDate.count { it == '/' } == 2
-            val datePickerState = rememberDatePickerState(
-                initialSelectedDateMillis = dateStringToMillis(exp.startDate)
-            )
-            DatePickerDialog(
+            val showDay = includeDayExpMap[exp.id] ?: (exp.startDate.count { it == '/' } == 2 || exp.endDate.count { it == '/' } == 2)
+            com.mudasir.nexacvai.presentation.ui.profiles.utils.NexaDatePicker(
+                initialDateMillis = dateStringToMillis(exp.startDate),
                 onDismissRequest = { activeStartCalendarExpId = null },
-                confirmButton = {
-                    Button(
-                        onClick = {
-                            datePickerState.selectedDateMillis?.let { millis ->
-                                val dateStr = millisToDateString(millis, showDay)
-                                viewModel.updateExperience(exp.id, exp.copy(startDate = dateStr))
-                            }
-                            activeStartCalendarExpId = null
-                        },
-                        shape = RoundedCornerShape(12.dp)
-                    ) { Text("OK") }
-                },
-                dismissButton = {
-                    TextButton(onClick = { activeStartCalendarExpId = null }) { Text("Cancel") }
-                },
-                shape = RoundedCornerShape(24.dp)
-            ) {
-                DatePicker(
-                    state = datePickerState,
-                    colors = DatePickerDefaults.colors(
-                        containerColor = MaterialTheme.colorScheme.surface,
-                        titleContentColor = MaterialTheme.colorScheme.onSurface,
-                        headlineContentColor = MaterialTheme.colorScheme.primary,
-                        selectedDayContainerColor = MaterialTheme.colorScheme.primary,
-                        selectedDayContentColor = MaterialTheme.colorScheme.onPrimary,
-                        todayContentColor = MaterialTheme.colorScheme.primary,
-                        todayDateBorderColor = MaterialTheme.colorScheme.primary
-                    )
-                )
-            }
+                onDateSelected = { millis ->
+                    if (millis != null) {
+                        val dateStr = millisToDateString(millis, showDay)
+                        viewModel.updateExperience(exp.id, exp.copy(startDate = dateStr))
+                    }
+                    activeStartCalendarExpId = null
+                }
+            )
         }
     }
 
     if (activeEndCalendarExpId != null) {
         val exp = state.experiences.find { it.id == activeEndCalendarExpId }
         if (exp != null) {
-            val showDay = exp.startDate.count { it == '/' } == 2 || exp.endDate.count { it == '/' } == 2
-            val datePickerState = rememberDatePickerState(
-                initialSelectedDateMillis = dateStringToMillis(exp.endDate)
-            )
-            DatePickerDialog(
+            val showDay = includeDayExpMap[exp.id] ?: (exp.startDate.count { it == '/' } == 2 || exp.endDate.count { it == '/' } == 2)
+            com.mudasir.nexacvai.presentation.ui.profiles.utils.NexaDatePicker(
+                initialDateMillis = dateStringToMillis(exp.endDate),
                 onDismissRequest = { activeEndCalendarExpId = null },
-                confirmButton = {
-                    Button(
-                        onClick = {
-                            datePickerState.selectedDateMillis?.let { millis ->
-                                val dateStr = millisToDateString(millis, showDay)
-                                viewModel.updateExperience(exp.id, exp.copy(endDate = dateStr))
-                            }
-                            activeEndCalendarExpId = null
-                        },
-                        shape = RoundedCornerShape(12.dp)
-                    ) { Text("OK") }
-                },
-                dismissButton = {
-                    TextButton(onClick = { activeEndCalendarExpId = null }) { Text("Cancel") }
-                },
-                shape = RoundedCornerShape(24.dp)
-            ) {
-                DatePicker(
-                    state = datePickerState,
-                    colors = DatePickerDefaults.colors(
-                        containerColor = MaterialTheme.colorScheme.surface,
-                        titleContentColor = MaterialTheme.colorScheme.onSurface,
-                        headlineContentColor = MaterialTheme.colorScheme.primary,
-                        selectedDayContainerColor = MaterialTheme.colorScheme.primary,
-                        selectedDayContentColor = MaterialTheme.colorScheme.onPrimary,
-                        todayContentColor = MaterialTheme.colorScheme.primary,
-                        todayDateBorderColor = MaterialTheme.colorScheme.primary
-                    )
-                )
-            }
+                onDateSelected = { millis ->
+                    if (millis != null) {
+                        val dateStr = millisToDateString(millis, showDay)
+                        viewModel.updateExperience(exp.id, exp.copy(endDate = dateStr))
+                    }
+                    activeEndCalendarExpId = null
+                }
+            )
         }
     }
 
@@ -173,84 +129,36 @@ fun ExperienceProjectsStep(state: CreateProfileState, viewModel: CreateProfileVi
     if (activeStartCalendarProjId != null) {
         val proj = state.projects.find { it.id == activeStartCalendarProjId }
         if (proj != null) {
-            val showDay = proj.startDate.count { it == '/' } == 2 || proj.endDate.count { it == '/' } == 2
-            val datePickerState = rememberDatePickerState(
-                initialSelectedDateMillis = dateStringToMillis(proj.startDate)
-            )
-            DatePickerDialog(
+            val showDay = includeDayProjMap[proj.id] ?: (proj.startDate.count { it == '/' } == 2 || proj.endDate.count { it == '/' } == 2)
+            com.mudasir.nexacvai.presentation.ui.profiles.utils.NexaDatePicker(
+                initialDateMillis = dateStringToMillis(proj.startDate),
                 onDismissRequest = { activeStartCalendarProjId = null },
-                confirmButton = {
-                    Button(
-                        onClick = {
-                            datePickerState.selectedDateMillis?.let { millis ->
-                                val dateStr = millisToDateString(millis, showDay)
-                                viewModel.updateProject(proj.id, proj.copy(startDate = dateStr))
-                            }
-                            activeStartCalendarProjId = null
-                        },
-                        shape = RoundedCornerShape(12.dp)
-                    ) { Text("OK") }
-                },
-                dismissButton = {
-                    TextButton(onClick = { activeStartCalendarProjId = null }) { Text("Cancel") }
-                },
-                shape = RoundedCornerShape(24.dp)
-            ) {
-                DatePicker(
-                    state = datePickerState,
-                    colors = DatePickerDefaults.colors(
-                        containerColor = MaterialTheme.colorScheme.surface,
-                        titleContentColor = MaterialTheme.colorScheme.onSurface,
-                        headlineContentColor = MaterialTheme.colorScheme.primary,
-                        selectedDayContainerColor = MaterialTheme.colorScheme.primary,
-                        selectedDayContentColor = MaterialTheme.colorScheme.onPrimary,
-                        todayContentColor = MaterialTheme.colorScheme.primary,
-                        todayDateBorderColor = MaterialTheme.colorScheme.primary
-                    )
-                )
-            }
+                onDateSelected = { millis ->
+                    if (millis != null) {
+                        val dateStr = millisToDateString(millis, showDay)
+                        viewModel.updateProject(proj.id, proj.copy(startDate = dateStr))
+                    }
+                    activeStartCalendarProjId = null
+                }
+            )
         }
     }
 
     if (activeEndCalendarProjId != null) {
         val proj = state.projects.find { it.id == activeEndCalendarProjId }
         if (proj != null) {
-            val showDay = proj.startDate.count { it == '/' } == 2 || proj.endDate.count { it == '/' } == 2
-            val datePickerState = rememberDatePickerState(
-                initialSelectedDateMillis = dateStringToMillis(proj.endDate)
-            )
-            DatePickerDialog(
+            val showDay = includeDayProjMap[proj.id] ?: (proj.startDate.count { it == '/' } == 2 || proj.endDate.count { it == '/' } == 2)
+            com.mudasir.nexacvai.presentation.ui.profiles.utils.NexaDatePicker(
+                initialDateMillis = dateStringToMillis(proj.endDate),
                 onDismissRequest = { activeEndCalendarProjId = null },
-                confirmButton = {
-                    Button(
-                        onClick = {
-                            datePickerState.selectedDateMillis?.let { millis ->
-                                val dateStr = millisToDateString(millis, showDay)
-                                viewModel.updateProject(proj.id, proj.copy(endDate = dateStr))
-                            }
-                            activeEndCalendarProjId = null
-                        },
-                        shape = RoundedCornerShape(12.dp)
-                    ) { Text("OK") }
-                },
-                dismissButton = {
-                    TextButton(onClick = { activeEndCalendarProjId = null }) { Text("Cancel") }
-                },
-                shape = RoundedCornerShape(24.dp)
-            ) {
-                DatePicker(
-                    state = datePickerState,
-                    colors = DatePickerDefaults.colors(
-                        containerColor = MaterialTheme.colorScheme.surface,
-                        titleContentColor = MaterialTheme.colorScheme.onSurface,
-                        headlineContentColor = MaterialTheme.colorScheme.primary,
-                        selectedDayContainerColor = MaterialTheme.colorScheme.primary,
-                        selectedDayContentColor = MaterialTheme.colorScheme.onPrimary,
-                        todayContentColor = MaterialTheme.colorScheme.primary,
-                        todayDateBorderColor = MaterialTheme.colorScheme.primary
-                    )
-                )
-            }
+                onDateSelected = { millis ->
+                    if (millis != null) {
+                        val dateStr = millisToDateString(millis, showDay)
+                        viewModel.updateProject(proj.id, proj.copy(endDate = dateStr))
+                    }
+                    activeEndCalendarProjId = null
+                }
+            )
         }
     }
 
@@ -463,12 +371,7 @@ fun ExperienceProjectsStep(state: CreateProfileState, viewModel: CreateProfileVi
                                 )
 
                                 // Dates Input Area
-                                var localIncludeDay by remember(exp.id) { mutableStateOf<Boolean?>(null) }
-                                val showDay by remember(localIncludeDay, exp.startDate, exp.endDate) {
-                                    derivedStateOf {
-                                        localIncludeDay ?: (exp.startDate.count { it == '/' } == 2 || exp.endDate.count { it == '/' } == 2)
-                                    }
-                                }
+                                val showDay = includeDayExpMap[exp.id] ?: (exp.startDate.count { it == '/' } == 2 || exp.endDate.count { it == '/' } == 2)
 
                                 Row(
                                     modifier = Modifier
@@ -478,9 +381,10 @@ fun ExperienceProjectsStep(state: CreateProfileState, viewModel: CreateProfileVi
                                             indication = null
                                         ) {
                                             focusManager.clearFocus()
-                                            localIncludeDay = !showDay
-                                            val newStart = if (!showDay) convertToDayFormat(exp.startDate) else convertToMonthFormat(exp.startDate)
-                                            val newEnd = if (!showDay) convertToDayFormat(exp.endDate) else convertToMonthFormat(exp.endDate)
+                                            val isChecked = !showDay
+                                            includeDayExpMap[exp.id] = isChecked
+                                            val newStart = if (isChecked) convertToDayFormat(exp.startDate) else convertToMonthFormat(exp.startDate)
+                                            val newEnd = if (isChecked) convertToDayFormat(exp.endDate) else convertToMonthFormat(exp.endDate)
                                             viewModel.updateExperience(exp.id, exp.copy(startDate = newStart, endDate = newEnd))
                                         },
                                     verticalAlignment = Alignment.CenterVertically,
@@ -490,7 +394,7 @@ fun ExperienceProjectsStep(state: CreateProfileState, viewModel: CreateProfileVi
                                         checked = showDay,
                                         onCheckedChange = { isChecked ->
                                             focusManager.clearFocus()
-                                            localIncludeDay = isChecked
+                                            includeDayExpMap[exp.id] = isChecked
                                             val newStart = if (isChecked) convertToDayFormat(exp.startDate) else convertToMonthFormat(exp.startDate)
                                             val newEnd = if (isChecked) convertToDayFormat(exp.endDate) else convertToMonthFormat(exp.endDate)
                                             viewModel.updateExperience(exp.id, exp.copy(startDate = newStart, endDate = newEnd))
@@ -806,12 +710,7 @@ fun ExperienceProjectsStep(state: CreateProfileState, viewModel: CreateProfileVi
                                 )
 
                                 // Dates Input Area
-                                var localIncludeDayProj by remember(proj.id) { mutableStateOf<Boolean?>(null) }
-                                val showDayProj by remember(localIncludeDayProj, proj.startDate, proj.endDate) {
-                                    derivedStateOf {
-                                        localIncludeDayProj ?: (proj.startDate.count { it == '/' } == 2 || proj.endDate.count { it == '/' } == 2)
-                                    }
-                                }
+                                val showDayProj = includeDayProjMap[proj.id] ?: (proj.startDate.count { it == '/' } == 2 || proj.endDate.count { it == '/' } == 2)
 
                                 Row(
                                     modifier = Modifier
@@ -821,9 +720,10 @@ fun ExperienceProjectsStep(state: CreateProfileState, viewModel: CreateProfileVi
                                             indication = null
                                         ) {
                                             focusManager.clearFocus()
-                                            localIncludeDayProj = !showDayProj
-                                            val newStart = if (!showDayProj) convertToDayFormat(proj.startDate) else convertToMonthFormat(proj.startDate)
-                                            val newEnd = if (!showDayProj) convertToDayFormat(proj.endDate) else convertToMonthFormat(proj.endDate)
+                                            val isChecked = !showDayProj
+                                            includeDayProjMap[proj.id] = isChecked
+                                            val newStart = if (isChecked) convertToDayFormat(proj.startDate) else convertToMonthFormat(proj.startDate)
+                                            val newEnd = if (isChecked) convertToDayFormat(proj.endDate) else convertToMonthFormat(proj.endDate)
                                             viewModel.updateProject(proj.id, proj.copy(startDate = newStart, endDate = newEnd))
                                         },
                                     verticalAlignment = Alignment.CenterVertically,
@@ -833,7 +733,7 @@ fun ExperienceProjectsStep(state: CreateProfileState, viewModel: CreateProfileVi
                                         checked = showDayProj,
                                         onCheckedChange = { isChecked ->
                                             focusManager.clearFocus()
-                                            localIncludeDayProj = isChecked
+                                            includeDayProjMap[proj.id] = isChecked
                                             val newStart = if (isChecked) convertToDayFormat(proj.startDate) else convertToMonthFormat(proj.startDate)
                                             val newEnd = if (isChecked) convertToDayFormat(proj.endDate) else convertToMonthFormat(proj.endDate)
                                             viewModel.updateProject(proj.id, proj.copy(startDate = newStart, endDate = newEnd))

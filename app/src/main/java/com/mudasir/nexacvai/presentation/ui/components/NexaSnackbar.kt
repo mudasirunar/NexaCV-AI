@@ -28,6 +28,7 @@ fun NexaSnackbar(
 ) {
     Surface(
         modifier = modifier
+            .widthIn(max = 480.dp)
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp),
         shape = RoundedCornerShape(12.dp),

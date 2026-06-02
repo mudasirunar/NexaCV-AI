@@ -26,6 +26,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalConfiguration
+import android.content.res.Configuration
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.lifecycle.Lifecycle
@@ -105,25 +107,41 @@ fun CreateProfileScreen(
         )
     }
 
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val isLandscapePhone = isLandscape && configuration.smallestScreenWidthDp < 600
+    val isImeVisible = WindowInsets.isImeVisible
+ 
     Scaffold(
         topBar = {
-            Column {
-                TopAppBar(
-                    title = { 
-                        Text(
-                            text = if (isEditing) "Edit Profile" else "Create Profile", 
-                            style = MaterialTheme.typography.titleMedium
-                        ) 
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = { handleBack() }) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.background
+            Column(
+                modifier = Modifier
+                    .statusBarsPadding()
+                    .animateContentSize(animationSpec = tween(250))
+            ) {
+                AnimatedVisibility(
+                    visible = !(isLandscapePhone && isImeVisible),
+                    enter = expandVertically(animationSpec = tween(250)) + fadeIn(tween(250)),
+                    exit = shrinkVertically(animationSpec = tween(250)) + fadeOut(tween(250))
+                ) {
+                    TopAppBar(
+                        title = { 
+                            Text(
+                                text = if (isEditing) "Edit Profile" else "Create Profile", 
+                                style = MaterialTheme.typography.titleMedium
+                            ) 
+                        },
+                        navigationIcon = {
+                            IconButton(onClick = { handleBack() }) {
+                                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                            }
+                        },
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = MaterialTheme.colorScheme.background
+                        ),
+                        windowInsets = WindowInsets(0.dp)
                     )
-                )
+                }
                 if (state.isLoading) {
                     LinearProgressIndicator(
                         modifier = Modifier.fillMaxWidth(),
@@ -138,6 +156,7 @@ fun CreateProfileScreen(
                         trackColor = MaterialTheme.colorScheme.surfaceVariant,
                     )
                 }
+                Spacer(modifier = Modifier.height(8.dp))
             }
         },
         bottomBar = {
@@ -277,16 +296,24 @@ fun CreateProfileScreen(
                                     Text("Next", style = MaterialTheme.typography.labelLarge)
                                 }
                             } else {
+                                val isSaveEnabled by remember(state.fullName, state.socialLinks, state.references, state.languages) {
+                                    derivedStateOf {
+                                        state.fullName.isNotBlank() &&
+                                        state.socialLinks.all { it.label.isNotBlank() && it.label != "Other" && it.url.isNotBlank() } &&
+                                        state.references.all { it.fullName.isNotBlank() && it.jobTitle.isNotBlank() && it.company.isNotBlank() } &&
+                                        state.languages.all { it.languageName.isNotBlank() && it.proficiency.isNotBlank() }
+                                    }
+                                }
                                 val saveInteractionSource = remember { MutableInteractionSource() }
                                 val savePressed by saveInteractionSource.collectIsPressedAsState()
                                 val saveScale by animateFloatAsState(if (savePressed) 0.98f else 1f, label = "saveScale")
                                 Button(
                                     onClick = {
-                                        if (state.fullName.isNotBlank() && !state.isSaving) {
+                                        if (isSaveEnabled && !state.isSaving) {
                                             viewModel.saveProfile()
                                         }
                                     },
-                                    enabled = state.fullName.isNotBlank(),
+                                    enabled = isSaveEnabled,
                                     interactionSource = saveInteractionSource,
                                     modifier = Modifier
                                         .height(38.dp)

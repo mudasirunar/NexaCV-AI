@@ -24,6 +24,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.window.DialogWindowProvider
@@ -141,6 +142,107 @@ fun UserProfileImageDialog(
                 }
             }
 
+            val configuration = LocalConfiguration.current
+            val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+            val isShortHeight = configuration.screenHeightDp < 500
+            val showSideBar = isLandscape && isShortHeight
+
+            val imageSize = if (showSideBar) 280.dp else 320.dp
+            val imageAlignment = Alignment.Center
+            val imagePadding = PaddingValues(0.dp)
+            val initialsTextSize = if (showSideBar) 100.sp else 120.sp
+
+            val editButton = @Composable {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier.clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        enabled = !isProcessingImage
+                    ) {
+                        showImageDialog = true
+                    }
+                ) {
+                    IconButton(
+                        onClick = { showImageDialog = true },
+                        modifier = Modifier
+                            .size(52.dp)
+                            .background(Color.White.copy(alpha = 0.12f), CircleShape)
+                            .border(BorderStroke(1.dp, Color.White.copy(alpha = 0.25f)), CircleShape),
+                        enabled = !isProcessingImage,
+                        colors = IconButtonDefaults.iconButtonColors(
+                            containerColor = Color.White.copy(alpha = 0.12f),
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Icon(
+                            imageVector = if (hasPhoto) Icons.Outlined.Edit else Icons.Outlined.Add,
+                            contentDescription = if (hasPhoto) "Edit Profile Photo" else "Add Profile Photo",
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    Text(
+                        text = if (hasPhoto) "Edit" else "Add",
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White.copy(alpha = 0.9f)
+                        )
+                    )
+                }
+            }
+
+            val removeButton = @Composable {
+                val removeAlpha = if (hasPhoto) 0.9f else 0.3f
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier.clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        enabled = hasPhoto && !isProcessingImage
+                    ) {
+                        if (hasPhoto) {
+                            showConfirmRemovePhoto = true
+                        }
+                    }
+                ) {
+                    IconButton(
+                        onClick = { showConfirmRemovePhoto = true },
+                        modifier = Modifier
+                            .size(52.dp)
+                            .background(Color.White.copy(alpha = if (hasPhoto) 0.12f else 0.05f), CircleShape)
+                            .border(BorderStroke(1.dp, Color.White.copy(alpha = if (hasPhoto) 0.25f else 0.1f)), CircleShape),
+                        enabled = hasPhoto && !isProcessingImage,
+                        colors = IconButtonDefaults.iconButtonColors(
+                            containerColor = Color.White.copy(alpha = if (hasPhoto) 0.12f else 0.05f),
+                            contentColor = if (hasPhoto) Color.White else Color.White.copy(alpha = 0.3f),
+                            disabledContainerColor = Color.White.copy(alpha = 0.05f),
+                            disabledContentColor = Color.White.copy(alpha = 0.3f)
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Delete,
+                            contentDescription = "Remove Profile Photo",
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    Text(
+                        text = "Remove",
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White.copy(alpha = removeAlpha)
+                        )
+                    )
+                }
+            }
+
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -157,8 +259,9 @@ fun UserProfileImageDialog(
                 // 1. Center Aligned Plain Circular Image Container (No overlapping controls)
                 Box(
                     modifier = Modifier
-                        .align(Alignment.Center)
-                        .size(320.dp)
+                        .align(imageAlignment)
+                        .padding(imagePadding)
+                        .size(imageSize)
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null
@@ -190,7 +293,7 @@ fun UserProfileImageDialog(
                                 style = MaterialTheme.typography.displayLarge.copy(
                                     fontWeight = FontWeight.Bold,
                                     color = colorPair.text,
-                                    fontSize = 120.sp
+                                    fontSize = initialsTextSize
                                 )
                             )
                         }
@@ -212,118 +315,59 @@ fun UserProfileImageDialog(
                     }
                 }
 
-                // 2. Bottom Center Aligned Action Controls with Vertical Gradient Scrim
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .fillMaxWidth()
-                        .height(180.dp)
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(
-                                    Color.Transparent,
-                                    Color.Black.copy(alpha = 0.75f)
-                                )
-                            )
-                        ),
-                    contentAlignment = Alignment.BottomCenter
-                ) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(48.dp),
-                        verticalAlignment = Alignment.CenterVertically,
+                // 2. Action Controls with Scrim (Right for sidebar, Bottom for standard)
+                if (showSideBar) {
+                    Box(
                         modifier = Modifier
-                            .padding(bottom = 24.dp)
-                            .wrapContentSize()
+                            .align(Alignment.CenterEnd)
+                            .fillMaxHeight()
+                            .width(110.dp)
+                            .background(
+                                Brush.horizontalGradient(
+                                    colors = listOf(
+                                        Color.Transparent,
+                                        Color.Black.copy(alpha = 0.55f)
+                                    )
+                                )
+                            ),
+                        contentAlignment = Alignment.Center
                     ) {
-                        // Add/Edit Action Column
                         Column(
+                            verticalArrangement = Arrangement.spacedBy(36.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center,
-                            modifier = Modifier.clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null,
-                                enabled = !isProcessingImage
-                            ) {
-                                showImageDialog = true
-                            }
+                            modifier = Modifier
+                                .padding(end = 16.dp)
+                                .wrapContentSize()
                         ) {
-                            IconButton(
-                                onClick = { showImageDialog = true },
-                                modifier = Modifier
-                                    .size(52.dp)
-                                    .background(Color.White.copy(alpha = 0.12f), CircleShape)
-                                    .border(BorderStroke(1.dp, Color.White.copy(alpha = 0.25f)), CircleShape),
-                                enabled = !isProcessingImage,
-                                colors = IconButtonDefaults.iconButtonColors(
-                                    containerColor = Color.White.copy(alpha = 0.12f),
-                                    contentColor = Color.White
-                                )
-                            ) {
-                                Icon(
-                                    imageVector = if (hasPhoto) Icons.Outlined.Edit else Icons.Outlined.Add,
-                                    contentDescription = if (hasPhoto) "Edit Profile Photo" else "Add Profile Photo",
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.height(6.dp))
-
-                            Text(
-                                text = if (hasPhoto) "Edit" else "Add",
-                                style = MaterialTheme.typography.labelLarge.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White.copy(alpha = 0.9f)
-                                )
-                            )
+                            editButton()
+                            removeButton()
                         }
-
-                        // Remove Action Column
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center,
-                            modifier = Modifier.clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null,
-                                enabled = hasPhoto && !isProcessingImage
-                            ) {
-                                if (hasPhoto) {
-                                    showConfirmRemovePhoto = true
-                                }
-                            }
+                    }
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .fillMaxWidth()
+                            .height(140.dp)
+                            .background(
+                                Brush.verticalGradient(
+                                    colors = listOf(
+                                        Color.Transparent,
+                                        Color.Black.copy(alpha = 0.55f)
+                                    )
+                                )
+                            ),
+                        contentAlignment = Alignment.BottomCenter
+                    ) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(48.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .padding(bottom = 16.dp)
+                                .wrapContentSize()
                         ) {
-                            val removeAlpha = if (hasPhoto) 0.9f else 0.3f
-                            val removeBgAlpha = if (hasPhoto) 0.12f else 0.05f
-                            
-                            IconButton(
-                                onClick = { showConfirmRemovePhoto = true },
-                                modifier = Modifier
-                                    .size(52.dp)
-                                    .background(Color.White.copy(alpha = if (hasPhoto) 0.12f else 0.05f), CircleShape)
-                                    .border(BorderStroke(1.dp, Color.White.copy(alpha = if (hasPhoto) 0.25f else 0.1f)), CircleShape),
-                                enabled = hasPhoto && !isProcessingImage,
-                                colors = IconButtonDefaults.iconButtonColors(
-                                    containerColor = Color.White.copy(alpha = if (hasPhoto) 0.12f else 0.05f),
-                                    contentColor = if (hasPhoto) Color.White else Color.White.copy(alpha = 0.3f),
-                                    disabledContainerColor = Color.White.copy(alpha = 0.05f),
-                                    disabledContentColor = Color.White.copy(alpha = 0.3f)
-                                )
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Outlined.Delete,
-                                    contentDescription = "Remove Profile Photo",
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.height(6.dp))
-
-                            Text(
-                                text = "Remove",
-                                style = MaterialTheme.typography.labelLarge.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White.copy(alpha = removeAlpha)
-                                )
-                            )
+                            editButton()
+                            removeButton()
                         }
                     }
                 }

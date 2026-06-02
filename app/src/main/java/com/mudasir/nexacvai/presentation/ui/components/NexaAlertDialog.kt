@@ -36,8 +36,9 @@ fun NexaAlertDialog(
             ),
             elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
             modifier = Modifier
+                .padding(horizontal = 24.dp)
+                .widthIn(max = 400.dp)
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp)
         ) {
             Column(
                 modifier = Modifier

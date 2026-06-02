@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
@@ -38,6 +39,9 @@ fun EducationCertsStep(state: CreateProfileState, viewModel: CreateProfileViewMo
     val focusManager = LocalFocusManager.current
     val calendar = remember { java.util.Calendar.getInstance() }
 
+    val includeDayEduMap = remember { mutableStateMapOf<String, Boolean>() }
+    val includeDayCertMap = remember { mutableStateMapOf<String, Boolean>() }
+
     // HOISTED DATE PICKER DIALOG STATES FOR EDUCATION
     var activeStartCalendarEduId by remember { mutableStateOf<String?>(null) }
     var activeEndCalendarEduId by remember { mutableStateOf<String?>(null) }
@@ -54,84 +58,36 @@ fun EducationCertsStep(state: CreateProfileState, viewModel: CreateProfileViewMo
     if (activeStartCalendarEduId != null) {
         val edu = state.educations.find { it.id == activeStartCalendarEduId }
         if (edu != null) {
-            val showDay = edu.startDate.count { it == '/' } == 2 || edu.endDate.count { it == '/' } == 2
-            val datePickerState = rememberDatePickerState(
-                initialSelectedDateMillis = dateStringToMillis(edu.startDate)
-            )
-            DatePickerDialog(
+            val showDay = includeDayEduMap[edu.id] ?: (edu.startDate.count { it == '/' } == 2 || edu.endDate.count { it == '/' } == 2)
+            com.mudasir.nexacvai.presentation.ui.profiles.utils.NexaDatePicker(
+                initialDateMillis = dateStringToMillis(edu.startDate),
                 onDismissRequest = { activeStartCalendarEduId = null },
-                confirmButton = {
-                    Button(
-                        onClick = {
-                            datePickerState.selectedDateMillis?.let { millis ->
-                                val dateStr = millisToDateString(millis, showDay)
-                                viewModel.updateEducation(edu.id, edu.copy(startDate = dateStr))
-                            }
-                            activeStartCalendarEduId = null
-                        },
-                        shape = RoundedCornerShape(12.dp)
-                    ) { Text("OK") }
-                },
-                dismissButton = {
-                    TextButton(onClick = { activeStartCalendarEduId = null }) { Text("Cancel") }
-                },
-                shape = RoundedCornerShape(24.dp)
-            ) {
-                DatePicker(
-                    state = datePickerState,
-                    colors = DatePickerDefaults.colors(
-                        containerColor = MaterialTheme.colorScheme.surface,
-                        titleContentColor = MaterialTheme.colorScheme.onSurface,
-                        headlineContentColor = MaterialTheme.colorScheme.primary,
-                        selectedDayContainerColor = MaterialTheme.colorScheme.primary,
-                        selectedDayContentColor = MaterialTheme.colorScheme.onPrimary,
-                        todayContentColor = MaterialTheme.colorScheme.primary,
-                        todayDateBorderColor = MaterialTheme.colorScheme.primary
-                    )
-                )
-            }
+                onDateSelected = { millis ->
+                    if (millis != null) {
+                        val dateStr = millisToDateString(millis, showDay)
+                        viewModel.updateEducation(edu.id, edu.copy(startDate = dateStr))
+                    }
+                    activeStartCalendarEduId = null
+                }
+            )
         }
     }
 
     if (activeEndCalendarEduId != null) {
         val edu = state.educations.find { it.id == activeEndCalendarEduId }
         if (edu != null) {
-            val showDay = edu.startDate.count { it == '/' } == 2 || edu.endDate.count { it == '/' } == 2
-            val datePickerState = rememberDatePickerState(
-                initialSelectedDateMillis = dateStringToMillis(edu.endDate)
-            )
-            DatePickerDialog(
+            val showDay = includeDayEduMap[edu.id] ?: (edu.startDate.count { it == '/' } == 2 || edu.endDate.count { it == '/' } == 2)
+            com.mudasir.nexacvai.presentation.ui.profiles.utils.NexaDatePicker(
+                initialDateMillis = dateStringToMillis(edu.endDate),
                 onDismissRequest = { activeEndCalendarEduId = null },
-                confirmButton = {
-                    Button(
-                        onClick = {
-                            datePickerState.selectedDateMillis?.let { millis ->
-                                val dateStr = millisToDateString(millis, showDay)
-                                viewModel.updateEducation(edu.id, edu.copy(endDate = dateStr))
-                            }
-                            activeEndCalendarEduId = null
-                        },
-                        shape = RoundedCornerShape(12.dp)
-                    ) { Text("OK") }
-                },
-                dismissButton = {
-                    TextButton(onClick = { activeEndCalendarEduId = null }) { Text("Cancel") }
-                },
-                shape = RoundedCornerShape(24.dp)
-            ) {
-                DatePicker(
-                    state = datePickerState,
-                    colors = DatePickerDefaults.colors(
-                        containerColor = MaterialTheme.colorScheme.surface,
-                        titleContentColor = MaterialTheme.colorScheme.onSurface,
-                        headlineContentColor = MaterialTheme.colorScheme.primary,
-                        selectedDayContainerColor = MaterialTheme.colorScheme.primary,
-                        selectedDayContentColor = MaterialTheme.colorScheme.onPrimary,
-                        todayContentColor = MaterialTheme.colorScheme.primary,
-                        todayDateBorderColor = MaterialTheme.colorScheme.primary
-                    )
-                )
-            }
+                onDateSelected = { millis ->
+                    if (millis != null) {
+                        val dateStr = millisToDateString(millis, showDay)
+                        viewModel.updateEducation(edu.id, edu.copy(endDate = dateStr))
+                    }
+                    activeEndCalendarEduId = null
+                }
+            )
         }
     }
 
@@ -173,84 +129,36 @@ fun EducationCertsStep(state: CreateProfileState, viewModel: CreateProfileViewMo
     if (activeStartCalendarCertId != null) {
         val cert = state.certifications.find { it.id == activeStartCalendarCertId }
         if (cert != null) {
-            val showDay = cert.issueDate.count { it == '/' } == 2 || cert.expiryDate.count { it == '/' } == 2
-            val datePickerState = rememberDatePickerState(
-                initialSelectedDateMillis = dateStringToMillis(cert.issueDate)
-            )
-            DatePickerDialog(
+            val showDay = includeDayCertMap[cert.id] ?: (cert.issueDate.count { it == '/' } == 2 || cert.expiryDate.count { it == '/' } == 2)
+            com.mudasir.nexacvai.presentation.ui.profiles.utils.NexaDatePicker(
+                initialDateMillis = dateStringToMillis(cert.issueDate),
                 onDismissRequest = { activeStartCalendarCertId = null },
-                confirmButton = {
-                    Button(
-                        onClick = {
-                            datePickerState.selectedDateMillis?.let { millis ->
-                                val dateStr = millisToDateString(millis, showDay)
-                                viewModel.updateCertification(cert.id, cert.copy(issueDate = dateStr))
-                            }
-                            activeStartCalendarCertId = null
-                        },
-                        shape = RoundedCornerShape(12.dp)
-                    ) { Text("OK") }
-                },
-                dismissButton = {
-                    TextButton(onClick = { activeStartCalendarCertId = null }) { Text("Cancel") }
-                },
-                shape = RoundedCornerShape(24.dp)
-            ) {
-                DatePicker(
-                    state = datePickerState,
-                    colors = DatePickerDefaults.colors(
-                        containerColor = MaterialTheme.colorScheme.surface,
-                        titleContentColor = MaterialTheme.colorScheme.onSurface,
-                        headlineContentColor = MaterialTheme.colorScheme.primary,
-                        selectedDayContainerColor = MaterialTheme.colorScheme.primary,
-                        selectedDayContentColor = MaterialTheme.colorScheme.onPrimary,
-                        todayContentColor = MaterialTheme.colorScheme.primary,
-                        todayDateBorderColor = MaterialTheme.colorScheme.primary
-                    )
-                )
-            }
+                onDateSelected = { millis ->
+                    if (millis != null) {
+                        val dateStr = millisToDateString(millis, showDay)
+                        viewModel.updateCertification(cert.id, cert.copy(issueDate = dateStr))
+                    }
+                    activeStartCalendarCertId = null
+                }
+            )
         }
     }
 
     if (activeEndCalendarCertId != null) {
         val cert = state.certifications.find { it.id == activeEndCalendarCertId }
         if (cert != null) {
-            val showDay = cert.issueDate.count { it == '/' } == 2 || cert.expiryDate.count { it == '/' } == 2
-            val datePickerState = rememberDatePickerState(
-                initialSelectedDateMillis = dateStringToMillis(cert.expiryDate)
-            )
-            DatePickerDialog(
+            val showDay = includeDayCertMap[cert.id] ?: (cert.issueDate.count { it == '/' } == 2 || cert.expiryDate.count { it == '/' } == 2)
+            com.mudasir.nexacvai.presentation.ui.profiles.utils.NexaDatePicker(
+                initialDateMillis = dateStringToMillis(cert.expiryDate),
                 onDismissRequest = { activeEndCalendarCertId = null },
-                confirmButton = {
-                    Button(
-                        onClick = {
-                            datePickerState.selectedDateMillis?.let { millis ->
-                                val dateStr = millisToDateString(millis, showDay)
-                                viewModel.updateCertification(cert.id, cert.copy(expiryDate = dateStr))
-                            }
-                            activeEndCalendarCertId = null
-                        },
-                        shape = RoundedCornerShape(12.dp)
-                    ) { Text("OK") }
-                },
-                dismissButton = {
-                    TextButton(onClick = { activeEndCalendarCertId = null }) { Text("Cancel") }
-                },
-                shape = RoundedCornerShape(24.dp)
-            ) {
-                DatePicker(
-                    state = datePickerState,
-                    colors = DatePickerDefaults.colors(
-                        containerColor = MaterialTheme.colorScheme.surface,
-                        titleContentColor = MaterialTheme.colorScheme.onSurface,
-                        headlineContentColor = MaterialTheme.colorScheme.primary,
-                        selectedDayContainerColor = MaterialTheme.colorScheme.primary,
-                        selectedDayContentColor = MaterialTheme.colorScheme.onPrimary,
-                        todayContentColor = MaterialTheme.colorScheme.primary,
-                        todayDateBorderColor = MaterialTheme.colorScheme.primary
-                    )
-                )
-            }
+                onDateSelected = { millis ->
+                    if (millis != null) {
+                        val dateStr = millisToDateString(millis, showDay)
+                        viewModel.updateCertification(cert.id, cert.copy(expiryDate = dateStr))
+                    }
+                    activeEndCalendarCertId = null
+                }
+            )
         }
     }
 
@@ -489,12 +397,7 @@ fun EducationCertsStep(state: CreateProfileState, viewModel: CreateProfileViewMo
                                 )
 
                                 // Dates Input Area
-                                var localIncludeDayEdu by remember(edu.id) { mutableStateOf<Boolean?>(null) }
-                                val showDayEdu by remember(localIncludeDayEdu, edu.startDate, edu.endDate) {
-                                    derivedStateOf {
-                                        localIncludeDayEdu ?: (edu.startDate.count { it == '/' } == 2 || edu.endDate.count { it == '/' } == 2)
-                                    }
-                                }
+                                val showDayEdu = includeDayEduMap[edu.id] ?: (edu.startDate.count { it == '/' } == 2 || edu.endDate.count { it == '/' } == 2)
 
                                 Row(
                                     modifier = Modifier
@@ -504,9 +407,10 @@ fun EducationCertsStep(state: CreateProfileState, viewModel: CreateProfileViewMo
                                             indication = null
                                         ) {
                                             focusManager.clearFocus()
-                                            localIncludeDayEdu = !showDayEdu
-                                            val newStart = if (!showDayEdu) convertToDayFormat(edu.startDate) else convertToMonthFormat(edu.startDate)
-                                            val newEnd = if (!showDayEdu) convertToDayFormat(edu.endDate) else convertToMonthFormat(edu.endDate)
+                                            val isChecked = !showDayEdu
+                                            includeDayEduMap[edu.id] = isChecked
+                                            val newStart = if (isChecked) convertToDayFormat(edu.startDate) else convertToMonthFormat(edu.startDate)
+                                            val newEnd = if (isChecked) convertToDayFormat(edu.endDate) else convertToMonthFormat(edu.endDate)
                                             viewModel.updateEducation(edu.id, edu.copy(startDate = newStart, endDate = newEnd))
                                         },
                                     verticalAlignment = Alignment.CenterVertically,
@@ -516,7 +420,7 @@ fun EducationCertsStep(state: CreateProfileState, viewModel: CreateProfileViewMo
                                         checked = showDayEdu,
                                         onCheckedChange = { isChecked ->
                                             focusManager.clearFocus()
-                                            localIncludeDayEdu = isChecked
+                                            includeDayEduMap[edu.id] = isChecked
                                             val newStart = if (isChecked) convertToDayFormat(edu.startDate) else convertToMonthFormat(edu.startDate)
                                             val newEnd = if (isChecked) convertToDayFormat(edu.endDate) else convertToMonthFormat(edu.endDate)
                                             viewModel.updateEducation(edu.id, edu.copy(startDate = newStart, endDate = newEnd))
@@ -793,12 +697,7 @@ fun EducationCertsStep(state: CreateProfileState, viewModel: CreateProfileViewMo
                                 )
 
                                 // Dates Input Area
-                                var localIncludeDayCert by remember(cert.id) { mutableStateOf<Boolean?>(null) }
-                                val showDayCert by remember(localIncludeDayCert, cert.issueDate, cert.expiryDate) {
-                                    derivedStateOf {
-                                        localIncludeDayCert ?: (cert.issueDate.count { it == '/' } == 2 || cert.expiryDate.count { it == '/' } == 2)
-                                    }
-                                }
+                                val showDayCert = includeDayCertMap[cert.id] ?: (cert.issueDate.count { it == '/' } == 2 || cert.expiryDate.count { it == '/' } == 2)
 
                                 Row(
                                     modifier = Modifier
@@ -808,9 +707,10 @@ fun EducationCertsStep(state: CreateProfileState, viewModel: CreateProfileViewMo
                                             indication = null
                                         ) {
                                             focusManager.clearFocus()
-                                            localIncludeDayCert = !showDayCert
-                                            val newStart = if (!showDayCert) convertToDayFormat(cert.issueDate) else convertToMonthFormat(cert.issueDate)
-                                            val newEnd = if (!showDayCert) convertToDayFormat(cert.expiryDate) else convertToMonthFormat(cert.expiryDate)
+                                            val isChecked = !showDayCert
+                                            includeDayCertMap[cert.id] = isChecked
+                                            val newStart = if (isChecked) convertToDayFormat(cert.issueDate) else convertToMonthFormat(cert.issueDate)
+                                            val newEnd = if (isChecked) convertToDayFormat(cert.expiryDate) else convertToMonthFormat(cert.expiryDate)
                                             viewModel.updateCertification(cert.id, cert.copy(issueDate = newStart, expiryDate = newEnd))
                                         },
                                     verticalAlignment = Alignment.CenterVertically,
@@ -820,7 +720,7 @@ fun EducationCertsStep(state: CreateProfileState, viewModel: CreateProfileViewMo
                                         checked = showDayCert,
                                         onCheckedChange = { isChecked ->
                                             focusManager.clearFocus()
-                                            localIncludeDayCert = isChecked
+                                            includeDayCertMap[cert.id] = isChecked
                                             val newStart = if (isChecked) convertToDayFormat(cert.issueDate) else convertToMonthFormat(cert.issueDate)
                                             val newEnd = if (isChecked) convertToDayFormat(cert.expiryDate) else convertToMonthFormat(cert.expiryDate)
                                             viewModel.updateCertification(cert.id, cert.copy(issueDate = newStart, expiryDate = newEnd))

@@ -10,6 +10,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -20,6 +22,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.Saver
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -27,6 +30,8 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalConfiguration
+import android.content.res.Configuration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -105,7 +110,7 @@ fun MonthYearPickerDialog(
     var selectedMonth by remember { mutableStateOf(initialMonth) }
     var selectedYear by remember { mutableStateOf(initialYear) }
     var isEditingYear by remember { mutableStateOf(false) }
-    var yearInputText by remember { mutableStateOf(selectedYear.toString()) }
+    var yearInputText by remember { mutableStateOf(androidx.compose.ui.text.input.TextFieldValue(text = selectedYear.toString(), selection = androidx.compose.ui.text.TextRange(selectedYear.toString().length))) }
     val focusRequester = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
 
@@ -122,8 +127,16 @@ fun MonthYearPickerDialog(
         }
     }
 
+    val configuration = LocalConfiguration.current
+    val isLandscapePhone = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE && configuration.smallestScreenWidthDp < 600
+
     AlertDialog(
         onDismissRequest = onDismissRequest,
+        properties = androidx.compose.ui.window.DialogProperties(decorFitsSystemWindows = !isLandscapePhone),
+        modifier = Modifier
+            .padding(horizontal = 24.dp)
+            .widthIn(max = 360.dp)
+            .fillMaxWidth(),
         confirmButton = {
             Button(
                 onClick = { onConfirm(selectedMonth, selectedYear) },
@@ -146,7 +159,9 @@ fun MonthYearPickerDialog(
         },
         text = {
             Column(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
@@ -158,7 +173,7 @@ fun MonthYearPickerDialog(
                 ) {
                     IconButton(onClick = { 
                         selectedYear-- 
-                        yearInputText = selectedYear.toString()
+                        yearInputText = androidx.compose.ui.text.input.TextFieldValue(text = selectedYear.toString(), selection = androidx.compose.ui.text.TextRange(selectedYear.toString().length))
                     }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowLeft, contentDescription = "Previous Year")
                     }
@@ -167,9 +182,9 @@ fun MonthYearPickerDialog(
                         androidx.compose.foundation.text.BasicTextField(
                             value = yearInputText,
                             onValueChange = { newValue ->
-                                if (newValue.length <= 4 && newValue.all { it.isDigit() }) {
+                                if (newValue.text.length <= 4 && newValue.text.all { it.isDigit() }) {
                                     yearInputText = newValue
-                                    val parsedYear = newValue.toIntOrNull()
+                                    val parsedYear = newValue.text.toIntOrNull()
                                     if (parsedYear != null && parsedYear in 1900..2100) {
                                         selectedYear = parsedYear
                                     }
@@ -187,7 +202,7 @@ fun MonthYearPickerDialog(
                             ),
                             keyboardActions = KeyboardActions(
                                 onDone = {
-                                    val parsedYear = yearInputText.toIntOrNull()
+                                    val parsedYear = yearInputText.text.toIntOrNull()
                                     if (parsedYear != null && parsedYear in 1900..2100) {
                                         selectedYear = parsedYear
                                     }
@@ -210,7 +225,7 @@ fun MonthYearPickerDialog(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             modifier = Modifier.clickable {
                                 isEditingYear = true
-                                yearInputText = selectedYear.toString()
+                                yearInputText = androidx.compose.ui.text.input.TextFieldValue(text = selectedYear.toString(), selection = androidx.compose.ui.text.TextRange(selectedYear.toString().length))
                             }
                         ) {
                             Text(
@@ -230,44 +245,51 @@ fun MonthYearPickerDialog(
                     
                     IconButton(onClick = { 
                         selectedYear++ 
-                        yearInputText = selectedYear.toString()
+                        yearInputText = androidx.compose.ui.text.input.TextFieldValue(text = selectedYear.toString(), selection = androidx.compose.ui.text.TextRange(selectedYear.toString().length))
                     }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowRight, contentDescription = "Next Year")
                     }
                 }
 
-                // Months Grid (3x4)
+                // Months Grid (Adaptive columns based on screen height/orientation)
+                val columns = if (isLandscapePhone) 4 else 3
+                val rows = if (isLandscapePhone) 3 else 4
+
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    for (row in 0 until 4) {
+                    for (row in 0 until rows) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            for (col in 0 until 3) {
-                                val monthIndex = row * 3 + col
-                                val isSelected = selectedMonth == monthIndex + 1
-                                Box(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .clip(RoundedCornerShape(10.dp))
-                                        .background(
-                                            if (isSelected) MaterialTheme.colorScheme.primary
-                                            else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                            for (col in 0 until columns) {
+                                val monthIndex = row * columns + col
+                                if (monthIndex < months.size) {
+                                    val isSelected = selectedMonth == monthIndex + 1
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .background(
+                                                if (isSelected) MaterialTheme.colorScheme.primary
+                                                else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                                            )
+                                            .clickable { selectedMonth = monthIndex + 1 }
+                                            .padding(vertical = if (isLandscapePhone) 6.dp else 10.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = months[monthIndex],
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                            color = if (isSelected) MaterialTheme.colorScheme.onPrimary
+                                            else MaterialTheme.colorScheme.onSurface
                                         )
-                                        .clickable { selectedMonth = monthIndex + 1 }
-                                        .padding(vertical = 10.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = months[monthIndex],
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                        color = if (isSelected) MaterialTheme.colorScheme.onPrimary
-                                        else MaterialTheme.colorScheme.onSurface
-                                    )
+                                    }
+                                } else {
+                                    Spacer(modifier = Modifier.weight(1f))
                                 }
                             }
                         }
@@ -373,97 +395,63 @@ fun millisToDateString(millis: Long, showDay: Boolean): String {
     return format.format(date)
 }
 
-fun formatSmartDateInput(input: String, showDay: Boolean): String {
-    if (input.isBlank() || input.equals("Present", ignoreCase = true)) return input
-    val digits = input.filter { it.isDigit() }
-    return if (showDay) {
-        // If the user converts a 6-digit date (MM/YYYY) like "122025", let's pad it to "01122025"
-        val raw = if (digits.length == 6) {
-            "01$digits"
-        } else {
-            digits
-        }
-        val limited = raw.take(8)
-        when {
-            limited.length <= 2 -> limited
-            limited.length <= 4 -> {
-                "${limited.substring(0, 2)}/${limited.substring(2)}"
-            }
-            else -> {
-                "${limited.substring(0, 2)}/${limited.substring(2, 4)}/${limited.substring(4)}"
-            }
-        }
-    } else {
-        // If the user converts an 8-digit date (DD/MM/YYYY) like "01122025", let's convert to "122025"
-        val raw = if (digits.length == 8) {
-            digits.substring(2) // skip the first 2 digits (day)
-        } else {
-            digits
-        }
-        val limited = raw.take(6)
-        if (limited.length <= 2) {
-            limited
-        } else {
-            "${limited.substring(0, 2)}/${limited.substring(2)}"
-        }
-    }
-}
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun NexaDatePicker(
+    initialDateMillis: Long?,
+    onDismissRequest: () -> Unit,
+    onDateSelected: (Long?) -> Unit
+) {
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = initialDateMillis
+    )
+    
+    val configuration = LocalConfiguration.current
+    val isLandscapePhone = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE && configuration.smallestScreenWidthDp < 600
 
-class DateVisualTransformation(private val showDay: Boolean) : VisualTransformation {
-    override fun filter(text: androidx.compose.ui.text.AnnotatedString): TransformedText {
-        // Only allow digits in the raw string for transformation
-        val raw = text.text.filter { it.isDigit() }
-        val formatted = if (showDay) {
-            val limited = raw.take(8)
-            when {
-                limited.length <= 2 -> limited
-                limited.length <= 4 -> "${limited.substring(0, 2)}/${limited.substring(2)}"
-                else -> "${limited.substring(0, 2)}/${limited.substring(2, 4)}/${limited.substring(4)}"
-            }
-        } else {
-            val limited = raw.take(6)
-            if (limited.length <= 2) limited else "${limited.substring(0, 2)}/${limited.substring(2)}"
-        }
-
-        val offsetMapping = object : OffsetMapping {
-            override fun originalToTransformed(offset: Int): Int {
-                val sanitized = offset.coerceIn(0, text.text.length)
-                val transformed = if (showDay) {
-                    when {
-                        sanitized <= 2 -> sanitized
-                        sanitized <= 4 -> sanitized + 1
-                        else -> sanitized + 2
-                    }
-                } else {
-                    when {
-                        sanitized <= 2 -> sanitized
-                        else -> sanitized + 1
-                    }
-                }
-                return transformed.coerceIn(0, formatted.length)
-            }
-
-            override fun transformedToOriginal(offset: Int): Int {
-                val sanitized = offset.coerceIn(0, formatted.length)
-                val original = if (showDay) {
-                    when {
-                        sanitized <= 2 -> sanitized
-                        sanitized <= 5 -> sanitized - 1
-                        else -> sanitized - 2
-                    }
-                } else {
-                    when {
-                        sanitized <= 2 -> sanitized
-                        else -> sanitized - 1
-                    }
-                }
-                return original.coerceIn(0, text.text.length)
-            }
-        }
-
-        return TransformedText(
-            text = androidx.compose.ui.text.AnnotatedString(formatted),
-            offsetMapping = offsetMapping
+    DatePickerDialog(
+        onDismissRequest = onDismissRequest,
+        properties = androidx.compose.ui.window.DialogProperties(decorFitsSystemWindows = !isLandscapePhone),
+        confirmButton = {
+            Button(
+                onClick = { onDateSelected(datePickerState.selectedDateMillis) },
+                shape = RoundedCornerShape(12.dp)
+            ) { Text("OK") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismissRequest) { Text("Cancel") }
+        },
+        shape = RoundedCornerShape(24.dp)
+    ) {
+        val colors = DatePickerDefaults.colors(
+            containerColor = MaterialTheme.colorScheme.surface,
+            titleContentColor = MaterialTheme.colorScheme.onSurface,
+            headlineContentColor = MaterialTheme.colorScheme.primary,
+            selectedDayContainerColor = MaterialTheme.colorScheme.primary,
+            selectedDayContentColor = MaterialTheme.colorScheme.onPrimary,
+            todayContentColor = MaterialTheme.colorScheme.primary,
+            todayDateBorderColor = MaterialTheme.colorScheme.primary
         )
+        if (isLandscapePhone) {
+            DatePicker(
+                state = datePickerState,
+                title = null,
+                headline = null,
+                showModeToggle = false,
+                colors = colors,
+                modifier = Modifier.verticalScroll(rememberScrollState())
+            )
+        } else {
+            DatePicker(
+                state = datePickerState,
+                showModeToggle = false,
+                colors = colors
+            )
+        }
     }
 }
+
+val NullableBooleanSaver = Saver<Boolean?, String>(
+    save = { it?.toString() ?: "null" },
+    restore = { if (it == "null") null else it.toBoolean() }
+)
