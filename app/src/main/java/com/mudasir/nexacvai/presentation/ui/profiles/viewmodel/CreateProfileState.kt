@@ -14,6 +14,9 @@ data class CreateProfileState(
     
     // Original Profile ID (if editing)
     val profileId: Long? = null,
+    
+    // Temporary session ID for unsaved profiles to isolate profile pictures
+    val tempSessionId: Long = -kotlin.math.abs(java.util.UUID.randomUUID().mostSignificantBits),
 
     // Step 1: Basic Information
     val fullName: String = "",

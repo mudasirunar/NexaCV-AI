@@ -73,7 +73,7 @@ fun BasicInfoStep(state: CreateProfileState, viewModel: CreateProfileViewModel) 
             uri?.let {
                 coroutineScope.launch {
                     isProcessingImage = true
-                    val compressedUri = ImageCompressionHelper.compressAndSaveProfilePicture(context, it, state.profileId ?: -1L)
+                    val compressedUri = ImageCompressionHelper.compressAndSaveProfilePicture(context, it, state.profileId ?: state.tempSessionId)
                     if (compressedUri != null) {
                         viewModel.updateBasicInfo(profilePictureUri = compressedUri)
                     }
@@ -90,7 +90,7 @@ fun BasicInfoStep(state: CreateProfileState, viewModel: CreateProfileViewModel) 
                 tempCameraUri?.let {
                     coroutineScope.launch {
                         isProcessingImage = true
-                        val compressedUri = ImageCompressionHelper.compressAndSaveProfilePicture(context, it, state.profileId ?: -1L)
+                        val compressedUri = ImageCompressionHelper.compressAndSaveProfilePicture(context, it, state.profileId ?: state.tempSessionId)
                         if (compressedUri != null) {
                             viewModel.updateBasicInfo(profilePictureUri = compressedUri)
                         }

@@ -54,7 +54,7 @@ object ImageCompressionHelper {
                     BitmapFactory.decodeStream(inputStream, null, options)
                 }
 
-                val maxDimension = 512
+                val maxDimension = 1200
                 var srcWidth = options.outWidth
                 var srcHeight = options.outHeight
 
@@ -108,7 +108,7 @@ object ImageCompressionHelper {
 
                 val outputFile = File(outputDir, "${filePrefix}${System.currentTimeMillis()}.jpg")
                 FileOutputStream(outputFile).use { outputStream ->
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 80, outputStream)
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 85, outputStream)
                 }
                 bitmap.recycle()
 

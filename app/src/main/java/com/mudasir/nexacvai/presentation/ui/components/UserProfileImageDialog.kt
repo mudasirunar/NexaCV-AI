@@ -20,6 +20,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -30,6 +31,10 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.window.DialogWindowProvider
 import androidx.core.view.WindowCompat
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -70,6 +75,22 @@ fun UserProfileImageDialog(
     var showImageDialog by remember { mutableStateOf(false) }
     var tempCameraUri by remember { mutableStateOf<Uri?>(null) }
     var showConfirmRemovePhoto by remember { mutableStateOf(false) }
+    var isSquareShape by remember(showFullScreenImage) { mutableStateOf(false) }
+    var imageAspectRatio by remember(profile.profilePictureUri) { mutableStateOf(1f) }
+    
+    var animatedAlpha by remember { mutableStateOf(0f) }
+    LaunchedEffect(showFullScreenImage) {
+        if (showFullScreenImage) {
+            animatedAlpha = 1f
+        } else {
+            animatedAlpha = 0f
+        }
+    }
+    val dialogAlpha by animateFloatAsState(
+        targetValue = animatedAlpha,
+        animationSpec = tween(durationMillis = 250),
+        label = "dialogAlpha"
+    )
 
     // Pick visual media launcher for gallery selection
     val galleryLauncher = rememberLauncherForActivityResult(
@@ -112,42 +133,71 @@ fun UserProfileImageDialog(
         val initials = remember(profile.fullName) { NameUtils.getInitials(profile.fullName.trim()) }
 
         Dialog(
-            onDismissRequest = onDismissFullScreen,
+            onDismissRequest = {
+                if (!isProcessingImage) {
+                    onDismissFullScreen()
+                }
+            },
             properties = androidx.compose.ui.window.DialogProperties(
                 usePlatformDefaultWidth = false,
-                dismissOnBackPress = true,
-                dismissOnClickOutside = true,
+                dismissOnBackPress = !isProcessingImage,
+                dismissOnClickOutside = !isProcessingImage,
                 decorFitsSystemWindows = false
             )
         ) {
             val view = LocalView.current
+            
+            // Synchronously configure the window properties immediately during composition
+            // of the first frame, preventing any 1-2 frame layout shift or gray background flicker.
             val dialogWindow = (view.parent as? DialogWindowProvider)?.window
-
-            LaunchedEffect(dialogWindow) {
-                dialogWindow?.let { window ->
-                    window.setLayout(
-                        android.view.WindowManager.LayoutParams.MATCH_PARENT,
-                        android.view.WindowManager.LayoutParams.MATCH_PARENT
-                    )
-                    window.setBackgroundDrawableResource(android.R.color.transparent)
-                    window.decorView.setPadding(0, 0, 0, 0)
-                    window.setFlags(
-                        android.view.WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
-                        android.view.WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
-                    )
-                    window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND)
-                    WindowCompat.setDecorFitsSystemWindows(window, false)
-                    window.statusBarColor = android.graphics.Color.TRANSPARENT
-                    window.navigationBarColor = android.graphics.Color.TRANSPARENT
-                }
+            if (dialogWindow != null) {
+                dialogWindow.setLayout(
+                    android.view.WindowManager.LayoutParams.MATCH_PARENT,
+                    android.view.WindowManager.LayoutParams.MATCH_PARENT
+                )
+                dialogWindow.setBackgroundDrawableResource(android.R.color.transparent)
+                dialogWindow.decorView.setPadding(0, 0, 0, 0)
+                dialogWindow.clearFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+                
+                // Clear translucent flags and enable draws system bar backgrounds to set transparent colors
+                dialogWindow.clearFlags(
+                    android.view.WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS or
+                    android.view.WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION
+                )
+                dialogWindow.addFlags(android.view.WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+                dialogWindow.statusBarColor = android.graphics.Color.TRANSPARENT
+                dialogWindow.navigationBarColor = android.graphics.Color.TRANSPARENT
+                
+                dialogWindow.setWindowAnimations(0) // Disable window manager zoom/fade animations
+                WindowCompat.setDecorFitsSystemWindows(dialogWindow, false)
             }
-
             val configuration = LocalConfiguration.current
             val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
             val isShortHeight = configuration.screenHeightDp < 500
             val showSideBar = isLandscape && isShortHeight
 
             val imageSize = if (showSideBar) 280.dp else 320.dp
+            val targetRadius = if (isSquareShape) 16.dp else (imageSize / 2)
+            val cornerRadius by animateDpAsState(
+                targetValue = targetRadius,
+                animationSpec = tween(durationMillis = 300),
+                label = "cornerRadius"
+            )
+            val imageShape = RoundedCornerShape(cornerRadius)
+            
+            val targetAspectRatio = if (isSquareShape) imageAspectRatio else 1f
+            val animatedAspectRatio by animateFloatAsState(
+                targetValue = targetAspectRatio,
+                animationSpec = tween(durationMillis = 300),
+                label = "aspectRatio"
+            )
+            
+            val containerBgColor by animateColorAsState(
+                targetValue = if (isSquareShape && hasPhoto) Color.Transparent else colorPair.background,
+                animationSpec = tween(durationMillis = 300),
+                label = "containerBgColor"
+            )
+            
             val imageAlignment = Alignment.Center
             val imagePadding = PaddingValues(0.dp)
             val initialsTextSize = if (showSideBar) 100.sp else 120.sp
@@ -246,6 +296,7 @@ fun UserProfileImageDialog(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
+                    .alpha(dialogAlpha)
                     .background(GlassOverlayBg)
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
@@ -261,20 +312,21 @@ fun UserProfileImageDialog(
                     modifier = Modifier
                         .align(imageAlignment)
                         .padding(imagePadding)
-                        .size(imageSize)
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null
-                        ) {
-                            // Consume clicks to avoid dismissing when tapping the image
-                        },
+                        .size(imageSize),
                     contentAlignment = Alignment.Center
                 ) {
                     Box(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .clip(CircleShape)
-                            .background(colorPair.background),
+                            .aspectRatio(animatedAspectRatio)
+                            .clip(imageShape)
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null
+                            ) {
+                                // Toggle shape on click
+                                isSquareShape = !isSquareShape
+                            }
+                            .background(containerBgColor),
                         contentAlignment = Alignment.Center
                     ) {
                         if (hasPhoto) {
@@ -285,7 +337,15 @@ fun UserProfileImageDialog(
                                     .build(),
                                 contentDescription = "Full Profile Picture",
                                 modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
+                                contentScale = ContentScale.Crop,
+                                onSuccess = { state ->
+                                    val drawable = state.result.drawable
+                                    val width = drawable.intrinsicWidth
+                                    val height = drawable.intrinsicHeight
+                                    if (width > 0 && height > 0) {
+                                        imageAspectRatio = width.toFloat() / height.toFloat()
+                                    }
+                                }
                             )
                         } else {
                             Text(
