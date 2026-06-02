@@ -358,6 +358,13 @@ class CreateProfileViewModel(
             return
         }
 
+        // If there are no unsaved changes, complete the action without writing to database or modifying timestamps
+        if (!hasUnsavedChanges()) {
+            _state.value = currentState.copy(isSaved = true)
+            isCurrentlySaving = false
+            return
+        }
+
         // Set isSaving synchronously before starting any asynchronous work
         _state.value = currentState.copy(isSaving = true, error = null)
 

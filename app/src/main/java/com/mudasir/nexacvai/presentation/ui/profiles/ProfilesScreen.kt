@@ -9,9 +9,11 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.Add
@@ -63,7 +65,7 @@ fun ProfilesScreen(
     val state by viewModel.state.collectAsState()
     val bottomSpacing = 80.dp
     var profileToDelete by remember { mutableStateOf<UserProfile?>(null) }
-    val listState = rememberLazyListState()
+    val gridState = rememberLazyGridState()
 
     val lastUndoneId by viewModel.profileDeleteManager.lastUndoneProfileId.collectAsState()
 
@@ -74,19 +76,19 @@ fun ProfilesScreen(
             val index = profiles.indexOfFirst { it.id == id }
             if (index != -1) {
                 kotlinx.coroutines.delay(200) // Wait for UI update and layout
-                val layoutInfo = listState.layoutInfo
+                val layoutInfo = gridState.layoutInfo
                 val visibleItems = layoutInfo.visibleItemsInfo
                 val itemInfo = visibleItems.find { it.key == id }
                 
                 val isVisuallyHidden = when {
                     itemInfo == null -> true
-                    itemInfo.offset < layoutInfo.viewportStartOffset -> true
-                    itemInfo.offset + (itemInfo.size / 2) > layoutInfo.viewportEndOffset -> true
+                    itemInfo.offset.y < layoutInfo.viewportStartOffset -> true
+                    itemInfo.offset.y + (itemInfo.size.height / 2) > layoutInfo.viewportEndOffset -> true
                     else -> false
                 }
                 
                 if (isVisuallyHidden) {
-                    listState.animateScrollToItem(index)
+                    gridState.animateScrollToItem(index)
                 }
             }
             viewModel.profileDeleteManager.clearLastUndoneProfileId()
@@ -184,19 +186,42 @@ fun ProfilesScreen(
         ) {
             when (screenMode) {
                 ProfilesScreenMode.Loading -> {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(
-                                start = 16.dp,
-                                top = 16.dp,
-                                end = 16.dp,
-                                bottom = bottomSpacing + 16.dp
-                            ),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        repeat(4) {
-                            ProfileCardSkeleton()
+                    val configuration = LocalConfiguration.current
+                    val isWideScreen = configuration.screenWidthDp >= 600
+                    if (isWideScreen) {
+                        LazyVerticalGrid(
+                            columns = GridCells.Fixed(2),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(
+                                    start = 16.dp,
+                                    top = 16.dp,
+                                    end = 16.dp,
+                                    bottom = bottomSpacing + 16.dp
+                                ),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                            userScrollEnabled = false
+                        ) {
+                            items(4) {
+                                ProfileCardSkeleton()
+                            }
+                        }
+                    } else {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(
+                                    start = 16.dp,
+                                    top = 16.dp,
+                                    end = 16.dp,
+                                    bottom = bottomSpacing + 16.dp
+                                ),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            repeat(4) {
+                                ProfileCardSkeleton()
+                            }
                         }
                     }
                 }
@@ -237,9 +262,14 @@ fun ProfilesScreen(
                     }
                 }
                 ProfilesScreenMode.Content -> {
-                    // List of Profiles
-                    LazyColumn(
-                        state = listState,
+                    val configuration = LocalConfiguration.current
+                    val isWideScreen = configuration.screenWidthDp >= 600
+                    val columns = if (isWideScreen) GridCells.Fixed(2) else GridCells.Fixed(1)
+
+                    // Grid/List of Profiles
+                    LazyVerticalGrid(
+                        columns = columns,
+                        state = gridState,
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(
                             start = 16.dp,
@@ -247,12 +277,13 @@ fun ProfilesScreen(
                             end = 16.dp,
                             bottom = 168.dp
                         ),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         items(state.profiles ?: emptyList(), key = { it.id }) { profile ->
                             UserProfileCard(
                                 profile = profile,
-                                onEditClick = { safeNavigate("${Screen.CreateProfile.route}?profileId=${profile.id}") },
+                                	onEditClick = { safeNavigate("${Screen.CreateProfile.route}?profileId=${profile.id}") },
                                 onDeleteClick = {
                                     profileToDelete = profile
                                 },
