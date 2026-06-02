@@ -92,9 +92,11 @@ fun NexaTextField(
             keyboardOptions
         }
 
-        // Use standard text keyboard layout when input restrictions are active to ensure high compatibility
-        if (onlyDigits || onlyDigitsAndPlus) {
-            options = options.copy(keyboardType = KeyboardType.Text)
+        // Use appropriate numeric/phone keyboard layout when input restrictions are active
+        if (onlyDigits) {
+            options = options.copy(keyboardType = KeyboardType.Number)
+        } else if (onlyDigitsAndPlus) {
+            options = options.copy(keyboardType = KeyboardType.Phone)
         }
 
         options
