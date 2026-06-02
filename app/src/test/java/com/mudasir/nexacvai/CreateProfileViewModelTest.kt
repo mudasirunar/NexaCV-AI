@@ -466,6 +466,36 @@ class CreateProfileViewModelTest {
         assertEquals("Database insert failed", state.error)
     }
 
+    @Test
+    fun testSaveProfile_noChanges_doesNotCallSaveUseCase() = runTest {
+        val existingProfile = UserProfile(
+            id = 42L,
+            fullName = "John Doe",
+            professionalTitle = "Android Developer",
+            updatedAt = 1000L
+        )
+        fakeRepository.profiles[42L] = existingProfile
+
+        val viewModel = createViewModel(42L)
+        testScheduler.advanceUntilIdle()
+
+        // Verify initial state has no unsaved changes
+        assertFalse(viewModel.hasUnsavedChanges())
+        
+        // Reset saved profiles tracking
+        val initialSize = fakeRepository.profiles.size
+
+        // Call saveProfile
+        viewModel.saveProfile()
+        testScheduler.advanceUntilIdle()
+
+        // State should transition to saved
+        assertTrue(viewModel.state.value.isSaved)
+
+        // The updatedAt timestamp in DB should remain exactly 1000L (unchanged)
+        assertEquals(1000L, fakeRepository.profiles[42L]?.updatedAt)
+    }
+
     class FakeUserProfileRepository : UserProfileRepository {
         val profiles = mutableMapOf<Long, UserProfile>()
         var nextId = 1L
