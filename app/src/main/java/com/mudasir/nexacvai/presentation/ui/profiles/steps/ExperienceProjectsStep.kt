@@ -370,6 +370,19 @@ fun ExperienceProjectsStep(state: CreateProfileState, viewModel: CreateProfileVi
                                     modifier = Modifier.fillMaxWidth()
                                 )
 
+                                NexaTextField(
+                                    value = exp.location,
+                                    onValueChange = { viewModel.updateExperience(exp.id, exp.copy(location = it)) },
+                                    label = "Location",
+                                    placeholder = "e.g. San Francisco, CA (or Remote)",
+                                    keyboardOptions = KeyboardOptions(
+                                        capitalization = KeyboardCapitalization.Words,
+                                        imeAction = ImeAction.Next
+                                    ),
+                                    singleLine = true,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+
                                 // Dates Input Area
                                 val showDay = includeDayExpMap[exp.id] ?: (exp.startDate.count { it == '/' } == 2 || exp.endDate.count { it == '/' } == 2)
 
@@ -709,8 +722,24 @@ fun ExperienceProjectsStep(state: CreateProfileState, viewModel: CreateProfileVi
                                     )
                                 )
 
+                                NexaTextField(
+                                    value = proj.projectLink,
+                                    onValueChange = { viewModel.updateProject(proj.id, proj.copy(projectLink = it)) },
+                                    label = "Project Link",
+                                    placeholder = "e.g. github.com/username/project",
+                                    leadingIcon = Icons.Default.Link,
+                                    keyboardOptions = KeyboardOptions(
+                                        capitalization = KeyboardCapitalization.None,
+                                        keyboardType = KeyboardType.Uri,
+                                        imeAction = ImeAction.Next
+                                    ),
+                                    singleLine = true,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+
                                 // Dates Input Area
                                 val showDayProj = includeDayProjMap[proj.id] ?: (proj.startDate.count { it == '/' } == 2 || proj.endDate.count { it == '/' } == 2)
+                                val isOngoingProj = proj.endDate.equals("Present", ignoreCase = true)
 
                                 Row(
                                     modifier = Modifier
@@ -756,10 +785,9 @@ fun ExperienceProjectsStep(state: CreateProfileState, viewModel: CreateProfileVi
                                     onLeadingIconClick = {
                                         if (showDayProj) activeStartCalendarProjId = proj.id else activeStartMonthYearProjId = proj.id
                                     },
+                                    imeAction = if (isOngoingProj) ImeAction.Done else ImeAction.Next,
                                     modifier = Modifier.fillMaxWidth()
                                 )
-
-                                val isOngoingProj = proj.endDate.equals("Present", ignoreCase = true)
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -799,57 +827,10 @@ fun ExperienceProjectsStep(state: CreateProfileState, viewModel: CreateProfileVi
                                         onLeadingIconClick = {
                                             if (showDayProj) activeEndCalendarProjId = proj.id else activeEndMonthYearProjId = proj.id
                                         },
+                                        imeAction = ImeAction.Done,
                                         modifier = Modifier.fillMaxWidth()
                                     )
                                 }
-
-                                NexaTextField(
-                                    value = proj.githubLink,
-                                    onValueChange = { viewModel.updateProject(proj.id, proj.copy(githubLink = it)) },
-                                    label = "GitHub Link",
-                                    placeholder = "e.g. github.com/username/project",
-                                    leadingIcon = Icons.Default.Link,
-                                    keyboardOptions = KeyboardOptions(
-                                        capitalization = KeyboardCapitalization.None,
-                                        keyboardType = KeyboardType.Uri,
-                                        imeAction = ImeAction.Next
-                                    ),
-                                    singleLine = true,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-
-                                NexaTextField(
-                                    value = proj.liveDemoLink,
-                                    onValueChange = { viewModel.updateProject(proj.id, proj.copy(liveDemoLink = it)) },
-                                    label = "Live Demo URL",
-                                    placeholder = "e.g. myproject.app",
-                                    leadingIcon = Icons.Default.Link,
-                                    keyboardOptions = KeyboardOptions(
-                                        capitalization = KeyboardCapitalization.None,
-                                        keyboardType = KeyboardType.Uri,
-                                        imeAction = ImeAction.Next
-                                    ),
-                                    singleLine = true,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-
-                                NexaTextField(
-                                    value = proj.playStoreLink,
-                                    onValueChange = { viewModel.updateProject(proj.id, proj.copy(playStoreLink = it)) },
-                                    label = "Play Store Link",
-                                    placeholder = "e.g. play.google.com/...",
-                                    leadingIcon = Icons.Default.Link,
-                                    keyboardOptions = KeyboardOptions(
-                                        capitalization = KeyboardCapitalization.None,
-                                        keyboardType = KeyboardType.Uri,
-                                        imeAction = ImeAction.Done
-                                    ),
-                                    keyboardActions = KeyboardActions(
-                                        onDone = { focusManager.clearFocus() }
-                                    ),
-                                    singleLine = true,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
                             }
                         }
                     }

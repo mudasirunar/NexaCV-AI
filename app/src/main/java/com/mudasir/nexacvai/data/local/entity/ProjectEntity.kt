@@ -22,13 +22,10 @@ data class ProjectEntity(
     val id: String,
     val profileId: Long,
     val projectName: String,
+    val roleInProject: String,
     val description: String,
     val technologiesUsed: List<String>,
-    val githubLink: String,
-    val liveDemoLink: String,
-    val playStoreLink: String,
-    val roleInProject: String,
+    val projectLink: String,
     val startDate: String,
-    val endDate: String,
-    val projectImagesUris: List<String>
+    val endDate: String
 )

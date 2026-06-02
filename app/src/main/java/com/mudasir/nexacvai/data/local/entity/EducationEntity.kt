@@ -24,9 +24,9 @@ data class EducationEntity(
     val degree: String,
     val fieldOfStudy: String,
     val instituteName: String,
+    val grade: String,
     val startDate: String,
     val endDate: String,
     val isCurrentlyStudying: Boolean,
-    val grade: String,
     val description: String
 )

@@ -1,11 +1,6 @@
 package com.mudasir.nexacvai.presentation.ui.components
 
 import androidx.compose.animation.*
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
@@ -21,7 +16,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.platform.LocalFocusManager
@@ -48,7 +42,8 @@ fun NexaDateTextField(
     onLeadingIconClick: (() -> Unit)? = null,
     isError: Boolean = false,
     errorMessage: String? = null,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    imeAction: ImeAction = ImeAction.Next
 ) {
     val density = LocalDensity.current
     val focusManager = LocalFocusManager.current
@@ -77,31 +72,6 @@ fun NexaDateTextField(
             )
         }
     }
-
-    // Styling colors
-    val outlineColor by animateColorAsState(
-        targetValue = when {
-            isError -> MaterialTheme.colorScheme.error
-            isFocused -> MaterialTheme.colorScheme.primary
-            else -> MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
-        },
-        animationSpec = tween(durationMillis = 150),
-        label = "outlineColor"
-    )
-    val borderThickness by animateDpAsState(
-        targetValue = if (isFocused || isError) 1.5.dp else 1.dp,
-        animationSpec = tween(durationMillis = 150),
-        label = "borderThickness"
-    )
-    val inputBackgroundColor by animateColorAsState(
-        targetValue = if (isFocused) {
-            MaterialTheme.colorScheme.surface
-        } else {
-            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
-        },
-        animationSpec = tween(durationMillis = 150),
-        label = "inputBackgroundColor"
-    )
 
     Column(
         modifier = modifier
@@ -142,31 +112,15 @@ fun NexaDateTextField(
             )
         }
 
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(inputBackgroundColor)
-                .border(
-                    width = borderThickness,
-                    color = outlineColor,
-                    shape = RoundedCornerShape(12.dp)
-                )
-                .padding(start = 14.dp, end = 14.dp),
-            contentAlignment = Alignment.CenterStart
-        ) {
-            androidx.compose.foundation.text.BasicTextField(
-                value = internalTfv,
-                onValueChange = { newTfv ->
-                    if (enabled) {
-                        // 1. If only cursor/selection changed, accept immediately without formatting
-                        val textChanged = newTfv.text != internalTfv.text
-                        if (!textChanged) {
-                            internalTfv = newTfv
-                            return@BasicTextField
-                        }
-
+        OutlinedTextField(
+            value = internalTfv,
+            onValueChange = { newTfv ->
+                if (enabled) {
+                    // 1. If only cursor/selection changed, accept immediately without formatting
+                    val textChanged = newTfv.text != internalTfv.text
+                    if (!textChanged) {
+                        internalTfv = newTfv
+                    } else {
                         // 2. Check if it's a special string like "Present" or "Does not expire"
                         val isSpecial = newTfv.text.equals("Present", ignoreCase = true) || 
                                         newTfv.text.equals("Does not expire", ignoreCase = true)
@@ -255,71 +209,73 @@ fun NexaDateTextField(
                             onValueChange(formatted)
                         }
                     }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 30.dp),
-                textStyle = TextStyle(
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontSize = 15.sp,
-                    fontFamily = MaterialTheme.typography.bodyLarge.fontFamily
-                ),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Number,
-                    imeAction = ImeAction.Next
-                ),
-                keyboardActions = KeyboardActions(
-                    onNext = { focusManager.moveFocus(FocusDirection.Next) }
-                ),
-                enabled = enabled,
-                interactionSource = interactionSource,
-                cursorBrush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.primary),
-                decorationBox = { innerTextField ->
-                    Box(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        if (value.isEmpty()) {
-                            Text(
-                                text = if (showDay) "DD/MM/YYYY" else "MM/YYYY",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
-                                fontSize = 15.sp
-                            )
-                        }
-                        innerTextField()
+                }
+            },
+            placeholder = {
+                Text(
+                    text = if (showDay) "DD/MM/YYYY" else "MM/YYYY",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                )
+            },
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Default.CalendarToday,
+                    contentDescription = "Select Date",
+                    modifier = Modifier
+                        .size(18.dp)
+                        .then(
+                            if (onLeadingIconClick != null) {
+                                Modifier.clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = null,
+                                    onClick = {
+                                        focusManager.clearFocus()
+                                        onLeadingIconClick()
+                                    }
+                                )
+                            } else Modifier
+                        ),
+                    tint = if (isError) {
+                        MaterialTheme.colorScheme.error
+                    } else if (isFocused) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
                     }
-                }
-            )
-
-            Icon(
-                imageVector = Icons.Default.CalendarToday,
-                contentDescription = "Select Date",
-                modifier = Modifier
-                    .size(18.dp)
-                    .align(Alignment.CenterStart)
-                    .then(
-                        if (onLeadingIconClick != null) {
-                            Modifier.clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null,
-                                onClick = {
-                                    focusManager.clearFocus()
-                                    onLeadingIconClick()
-                                }
-                            )
-                        } else Modifier
-                    ),
-                tint = if (isError) {
-                    MaterialTheme.colorScheme.error
-                } else if (isFocused) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
-                }
-            )
-        }
+                )
+            },
+            isError = isError,
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Number,
+                imeAction = imeAction
+            ),
+            keyboardActions = KeyboardActions(
+                onNext = { focusManager.moveFocus(FocusDirection.Next) },
+                onDone = { focusManager.clearFocus() }
+            ),
+            enabled = enabled,
+            interactionSource = interactionSource,
+            shape = RoundedCornerShape(12.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
+                disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.1f),
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f),
+                disabledBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
+                errorBorderColor = MaterialTheme.colorScheme.error,
+                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+            ),
+            textStyle = TextStyle(
+                color = MaterialTheme.colorScheme.onSurface,
+                fontSize = 15.sp,
+                fontFamily = MaterialTheme.typography.bodyLarge.fontFamily
+            ),
+            modifier = Modifier.fillMaxWidth()
+        )
 
         AnimatedVisibility(
             visible = isError && !errorMessage.isNullOrBlank(),

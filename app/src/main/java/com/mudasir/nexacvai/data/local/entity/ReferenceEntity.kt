@@ -27,6 +27,5 @@ data class ReferenceEntity(
     val email: String?,
     val phone: String?,
     val linkedInUrl: String?,
-    val notes: String?,
-    val includeInResume: Boolean
+    val notes: String?
 )

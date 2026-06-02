@@ -65,15 +65,11 @@ fun ExperienceEntity.toDomain(): Experience {
         id = id,
         jobTitle = jobTitle,
         companyName = companyName,
-        employmentType = employmentType,
-        workMode = workMode,
         location = location,
         startDate = startDate,
         endDate = endDate,
         isCurrentlyWorking = isCurrentlyWorking,
-        description = description,
-        achievements = achievements,
-        technologiesUsed = technologiesUsed
+        description = description
     )
 }
 
@@ -83,15 +79,11 @@ fun Experience.toEntity(profileId: Long): ExperienceEntity {
         profileId = profileId,
         jobTitle = jobTitle,
         companyName = companyName,
-        employmentType = employmentType,
-        workMode = workMode,
         location = location,
         startDate = startDate,
         endDate = endDate,
         isCurrentlyWorking = isCurrentlyWorking,
-        description = description,
-        achievements = achievements,
-        technologiesUsed = technologiesUsed
+        description = description
     )
 }
 
@@ -105,13 +97,10 @@ fun ProjectEntity.toDomain(): Project {
         projectName = projectName,
         description = description,
         technologiesUsed = technologiesUsed,
-        githubLink = githubLink,
-        liveDemoLink = liveDemoLink,
-        playStoreLink = playStoreLink,
+        projectLink = projectLink,
         roleInProject = roleInProject,
         startDate = startDate,
-        endDate = endDate,
-        projectImagesUris = projectImagesUris
+        endDate = endDate
     )
 }
 
@@ -122,13 +111,10 @@ fun Project.toEntity(profileId: Long): ProjectEntity {
         projectName = projectName,
         description = description,
         technologiesUsed = technologiesUsed,
-        githubLink = githubLink,
-        liveDemoLink = liveDemoLink,
-        playStoreLink = playStoreLink,
+        projectLink = projectLink,
         roleInProject = roleInProject,
         startDate = startDate,
-        endDate = endDate,
-        projectImagesUris = projectImagesUris
+        endDate = endDate
     )
 }
 
@@ -205,8 +191,7 @@ fun ReferenceEntity.toDomain(): Reference {
         email = email,
         phone = phone,
         linkedInUrl = linkedInUrl,
-        notes = notes,
-        includeInResume = includeInResume
+        notes = notes
     )
 }
 
@@ -220,8 +205,7 @@ fun Reference.toEntity(profileId: Long): ReferenceEntity {
         email = email,
         phone = phone,
         linkedInUrl = linkedInUrl,
-        notes = notes,
-        includeInResume = includeInResume
+        notes = notes
     )
 }
 

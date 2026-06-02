@@ -4,15 +4,11 @@ data class Experience(
     val id: String = java.util.UUID.randomUUID().toString(),
     val jobTitle: String = "",
     val companyName: String = "",
-    val employmentType: String = "", // Full-time, Part-time, Internship, Freelance
-    val workMode: String = "", // Remote, Hybrid, Onsite
     val location: String = "",
     val startDate: String = "", // MM/YYYY or DD/MM/YYYY
     val endDate: String = "",
     val isCurrentlyWorking: Boolean = false,
-    val description: String = "",
-    val achievements: String = "",
-    val technologiesUsed: List<String> = emptyList()
+    val description: String = ""
 )
 
 data class Education(
@@ -32,13 +28,10 @@ data class Project(
     val projectName: String = "",
     val description: String = "",
     val technologiesUsed: List<String> = emptyList(),
-    val githubLink: String = "",
-    val liveDemoLink: String = "",
-    val playStoreLink: String = "",
+    val projectLink: String = "",
     val roleInProject: String = "",
     val startDate: String = "",
-    val endDate: String = "",
-    val projectImagesUris: List<String> = emptyList()
+    val endDate: String = ""
 )
 
 data class Certification(
@@ -70,6 +63,5 @@ data class Reference(
     val email: String? = null,
     val phone: String? = null,
     val linkedInUrl: String? = null,
-    val notes: String? = null,
-    val includeInResume: Boolean = true
+    val notes: String? = null
 )

@@ -23,13 +23,9 @@ data class ExperienceEntity(
     val profileId: Long,
     val jobTitle: String,
     val companyName: String,
-    val employmentType: String,
-    val workMode: String,
     val location: String,
     val startDate: String,
     val endDate: String,
     val isCurrentlyWorking: Boolean,
-    val description: String,
-    val achievements: String,
-    val technologiesUsed: List<String>
+    val description: String
 )
