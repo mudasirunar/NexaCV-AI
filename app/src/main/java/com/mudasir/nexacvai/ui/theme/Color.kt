@@ -127,3 +127,9 @@ val IconColorProject = Color(0xFFCA8A04)   // Golden manila yellow/amber for Fol
 val IconColorCert = Color(0xFF059669)      // Vibrant emerald green for Verified badge
 val IconColorEmail = Color(0xFFEA4335)     // Gmail envelope red for mail icon
 val IconColorPhone = Color(0xFF16A34A)     // Vibrant green dialer for phone icon
+
+// 🎨 Custom Snackbar Colors
+val SnackbarBgDark = Color(0xFF1E293B)     // Premium dark slate/charcoal for dark mode snackbars
+val SnackbarTextDark = Color(0xFFF8FAFC)   // Warm white/off-white for dark mode text readability
+val SnackbarBgLight = Color(0xFFF1F5F9)    // Soft light slate/gray for light mode snackbars
+val SnackbarTextLight = Color(0xFF1E293B)  // Dark slate for light mode text readability

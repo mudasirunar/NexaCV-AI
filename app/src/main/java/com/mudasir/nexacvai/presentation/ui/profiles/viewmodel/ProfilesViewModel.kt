@@ -3,19 +3,20 @@ package com.mudasir.nexacvai.presentation.ui.profiles.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mudasir.nexacvai.domain.model.UserProfile
-import com.mudasir.nexacvai.domain.usecase.DeleteProfileUseCase
 import com.mudasir.nexacvai.domain.usecase.GetAllProfilesUseCase
 import com.mudasir.nexacvai.domain.usecase.SaveProfileUseCase
+import com.mudasir.nexacvai.presentation.ui.profiles.utils.ProfileDeleteManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 class ProfilesViewModel(
     private val getAllProfilesUseCase: GetAllProfilesUseCase,
-    private val deleteProfileUseCase: DeleteProfileUseCase,
-    private val saveProfileUseCase: SaveProfileUseCase
+    private val saveProfileUseCase: SaveProfileUseCase,
+    val profileDeleteManager: ProfileDeleteManager
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ProfilesState())
@@ -27,26 +28,33 @@ class ProfilesViewModel(
 
     private fun loadProfiles() {
         viewModelScope.launch {
-            getAllProfilesUseCase()
-                .catch { e ->
-                    _state.value = _state.value.copy(
-                        isLoading = false,
-                        error = e.message ?: "An unexpected error occurred"
-                    )
+            combine(
+                getAllProfilesUseCase(),
+                profileDeleteManager.pendingDeleteProfile
+            ) { profiles, pendingProfile ->
+                if (pendingProfile != null) {
+                    profiles.filter { it.id != pendingProfile.id }
+                } else {
+                    profiles
                 }
-                .collect { profiles ->
-                    _state.value = _state.value.copy(
-                        isLoading = false,
-                        profiles = profiles
-                    )
-                }
+            }
+            .catch { e ->
+                _state.value = _state.value.copy(
+                    isLoading = false,
+                    error = e.message ?: "An unexpected error occurred"
+                )
+            }
+            .collect { filteredProfiles ->
+                _state.value = _state.value.copy(
+                    isLoading = false,
+                    profiles = filteredProfiles
+                )
+            }
         }
     }
 
     fun deleteProfile(profile: UserProfile) {
-        viewModelScope.launch {
-            deleteProfileUseCase(profile)
-        }
+        profileDeleteManager.requestDelete(profile)
     }
 
     fun removeProfilePicture(profile: UserProfile) {

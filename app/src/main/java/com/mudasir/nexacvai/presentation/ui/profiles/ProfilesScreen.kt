@@ -23,6 +23,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -59,9 +61,37 @@ fun ProfilesScreen(
     viewModel: ProfilesViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsState()
-    val bottomInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
-    val bottomSpacing = remember(bottomInset) { 80.dp + bottomInset }
+    val bottomSpacing = 80.dp
     var profileToDelete by remember { mutableStateOf<UserProfile?>(null) }
+    val listState = rememberLazyListState()
+
+    val lastUndoneId by viewModel.profileDeleteManager.lastUndoneProfileId.collectAsState()
+
+    LaunchedEffect(lastUndoneId, state.profiles) {
+        val id = lastUndoneId
+        val profiles = state.profiles
+        if (id != null && profiles != null) {
+            val index = profiles.indexOfFirst { it.id == id }
+            if (index != -1) {
+                kotlinx.coroutines.delay(200) // Wait for UI update and layout
+                val layoutInfo = listState.layoutInfo
+                val visibleItems = layoutInfo.visibleItemsInfo
+                val itemInfo = visibleItems.find { it.key == id }
+                
+                val isVisuallyHidden = when {
+                    itemInfo == null -> true
+                    itemInfo.offset < layoutInfo.viewportStartOffset -> true
+                    itemInfo.offset + (itemInfo.size / 2) > layoutInfo.viewportEndOffset -> true
+                    else -> false
+                }
+                
+                if (isVisuallyHidden) {
+                    listState.animateScrollToItem(index)
+                }
+            }
+            viewModel.profileDeleteManager.clearLastUndoneProfileId()
+        }
+    }
 
     var lastClickTime by remember { mutableStateOf(0L) }
     val safeNavigate: (String) -> Unit = { route ->
@@ -73,6 +103,7 @@ fun ProfilesScreen(
     }
 
     var isFabVisible by remember { mutableStateOf(true) }
+
     val nestedScrollConnection = remember {
         object : NestedScrollConnection {
             override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
@@ -100,6 +131,23 @@ fun ProfilesScreen(
         }
     }
 
+    val isFabVisuallyShown by remember {
+        derivedStateOf {
+            isFabVisible && (screenMode == ProfilesScreenMode.Content || screenMode == ProfilesScreenMode.Empty)
+        }
+    }
+    
+    // Synchronize FAB visibility state with ProfileDeleteManager
+    LaunchedEffect(isFabVisuallyShown) {
+        viewModel.profileDeleteManager.setFabVisible(isFabVisuallyShown)
+    }
+    
+    DisposableEffect(Unit) {
+        onDispose {
+            viewModel.profileDeleteManager.setFabVisible(true)
+        }
+    }
+
     Scaffold(
         modifier = Modifier.nestedScroll(nestedScrollConnection),
         topBar = {
@@ -112,7 +160,7 @@ fun ProfilesScreen(
         },
         floatingActionButton = {
             AnimatedVisibility(
-                visible = isFabVisible,
+                visible = isFabVisuallyShown,
                 enter = slideInVertically(initialOffsetY = { it * 2 }) + fadeIn() + scaleIn(initialScale = 0.8f),
                 exit = slideOutVertically(targetOffsetY = { it * 2 }) + fadeOut() + scaleOut(targetScale = 0.8f)
             ) {
@@ -190,7 +238,6 @@ fun ProfilesScreen(
                 }
                 ProfilesScreenMode.Content -> {
                     // List of Profiles
-                    val listState = rememberLazyListState()
                     LazyColumn(
                         state = listState,
                         modifier = Modifier.fillMaxSize(),
@@ -198,7 +245,7 @@ fun ProfilesScreen(
                             start = 16.dp,
                             top = 16.dp,
                             end = 16.dp,
-                            bottom = bottomSpacing + 16.dp
+                            bottom = 168.dp
                         ),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
@@ -214,7 +261,8 @@ fun ProfilesScreen(
                                 },
                                 onPhotoSelected = { uri ->
                                     viewModel.updateProfilePicture(profile, uri)
-                                }
+                                },
+                                modifier = Modifier.animateItem()
                             )
                         }
                     }

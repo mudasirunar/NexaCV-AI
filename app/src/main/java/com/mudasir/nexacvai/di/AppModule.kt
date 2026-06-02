@@ -8,11 +8,15 @@ import com.mudasir.nexacvai.domain.repository.UserProfileRepository
 import com.mudasir.nexacvai.domain.usecase.*
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.ProfilesViewModel
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.CreateProfileViewModel
+import com.mudasir.nexacvai.presentation.ui.profiles.utils.ProfileDeleteManager
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 
 val appModule = module {
+    
+    // ProfileDeleteManager
+    single { ProfileDeleteManager(get()) }
     
     // DataStore
     single { AppSettingsManager(androidContext()) }

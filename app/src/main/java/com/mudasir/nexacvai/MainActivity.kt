@@ -29,8 +29,23 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
 import com.mudasir.nexacvai.presentation.navigation.BottomNavScreens
+import com.mudasir.nexacvai.presentation.navigation.Screen
+import com.mudasir.nexacvai.presentation.ui.profiles.utils.ProfileDeleteManager
+import com.mudasir.nexacvai.presentation.ui.components.NexaSnackbar
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import org.koin.android.ext.android.inject
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.asPaddingValues
 
 class MainActivity : ComponentActivity() {
+    private val profileDeleteManager: ProfileDeleteManager by inject()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
@@ -44,6 +59,51 @@ class MainActivity : ComponentActivity() {
                 val showBottomBar = currentRoute == null || BottomNavScreens.any {
                     currentRoute.startsWith(it.route) == true 
                 }
+
+                val pendingDeleteProfile by profileDeleteManager.pendingDeleteProfile.collectAsState()
+
+                // Commit pending deletion when navigating away from bottom nav screens (e.g. to creation/editing)
+                LaunchedEffect(currentRoute) {
+                    if (currentRoute != null) {
+                        val isBottomNavRoute = BottomNavScreens.any { currentRoute.startsWith(it.route) }
+                        if (!isBottomNavRoute) {
+                            profileDeleteManager.commitPendingDelete()
+                        }
+                    }
+                }
+
+                // Commit pending deletion when the app goes to background / closes
+                val lifecycleOwner = LocalLifecycleOwner.current
+                DisposableEffect(lifecycleOwner) {
+                    val observer = LifecycleEventObserver { _, event ->
+                        if (event == Lifecycle.Event.ON_STOP || event == Lifecycle.Event.ON_DESTROY) {
+                            profileDeleteManager.commitPendingDelete()
+                        }
+                    }
+                    lifecycleOwner.lifecycle.addObserver(observer)
+                    onDispose {
+                        lifecycleOwner.lifecycle.removeObserver(observer)
+                    }
+                }
+
+                // Dynamically offset the Snackbar to stay above the scrollable FAB on the Profiles screen
+                val isProfilesScreen = currentRoute?.startsWith(Screen.Profiles.route) == true
+                val isFabVisibleState by profileDeleteManager.isFabVisible.collectAsState()
+                val showFabOnScreen = isProfilesScreen && isFabVisibleState
+
+                val snackbarBottomPadding by animateDpAsState(
+                    targetValue = if (showBottomBar) {
+                        if (showFabOnScreen) {
+                            160.dp // Slightly reduced spacing above FAB (top of FAB is 152dp, giving an 8dp gap)
+                        } else {
+                            96.dp // 16dp spacing above bottom navigation bar (80dp)
+                        }
+                    } else {
+                        16.dp // 16dp spacing above screen bottom
+                    },
+                    animationSpec = tween(durationMillis = 250),
+                    label = "snackbarBottomPadding"
+                )
 
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
@@ -67,6 +127,32 @@ class MainActivity : ComponentActivity() {
                                 .offset(y = bottomBarOffset)
                         ) {
                             BottomNavigationBar(navController = navController)
+                        }
+
+                        // Custom animated Snackbar for profile deletion with Undo button
+                        AnimatedVisibility(
+                            visible = pendingDeleteProfile != null && showBottomBar,
+                            enter = slideInVertically(
+                                initialOffsetY = { it },
+                                animationSpec = tween(durationMillis = 250)
+                            ) + fadeIn(animationSpec = tween(durationMillis = 250)),
+                            exit = slideOutVertically(
+                                targetOffsetY = { it },
+                                animationSpec = tween(durationMillis = 200)
+                            ) + fadeOut(animationSpec = tween(durationMillis = 200)),
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .padding(bottom = snackbarBottomPadding)
+                        ) {
+                            pendingDeleteProfile?.let { profile ->
+                                NexaSnackbar(
+                                    message = "Profile \"${profile.fullName.ifBlank { "Untitled Profile" }}\" deleted",
+                                    actionLabel = "Undo",
+                                    onActionClick = {
+                                        profileDeleteManager.undoDelete()
+                                    }
+                                )
+                            }
                         }
                     }
                 }

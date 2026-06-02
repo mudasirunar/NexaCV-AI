@@ -23,7 +23,10 @@ private val DarkColorScheme = darkColorScheme(
     onSurface = DarkTextPrimary,
     onSurfaceVariant = DarkTextSecondary,
     outline = DarkBorder,
-    error = ErrorRed
+    error = ErrorRed,
+    inverseSurface = SnackbarBgDark,
+    inverseOnSurface = SnackbarTextDark,
+    inversePrimary = AccentBlue
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -39,7 +42,10 @@ private val LightColorScheme = lightColorScheme(
     onSurface = LightTextPrimary,
     onSurfaceVariant = LightTextSecondary,
     outline = LightBorder,
-    error = ErrorRed
+    error = ErrorRed,
+    inverseSurface = SnackbarBgLight,
+    inverseOnSurface = SnackbarTextLight,
+    inversePrimary = PrimaryBlue
 )
 
 @Composable
