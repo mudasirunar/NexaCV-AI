@@ -98,15 +98,7 @@ object ImageCompressionHelper {
                 // 5. Save bitmap to app's secure internal persistent folder
                 val outputDir = File(context.filesDir, "profile_pictures").apply { mkdirs() }
                 
-                // Clear any old picture of this specific profile to save disk space
-                val filePrefix = "profile_${profileId}_"
-                outputDir.listFiles()?.forEach { file ->
-                    if (file.name.startsWith(filePrefix)) {
-                        file.delete()
-                    }
-                }
-
-                val outputFile = File(outputDir, "${filePrefix}${System.currentTimeMillis()}.jpg")
+                val outputFile = File(outputDir, "profile_${profileId}_${System.currentTimeMillis()}.jpg")
                 FileOutputStream(outputFile).use { outputStream ->
                     bitmap.compress(Bitmap.CompressFormat.JPEG, 85, outputStream)
                 }

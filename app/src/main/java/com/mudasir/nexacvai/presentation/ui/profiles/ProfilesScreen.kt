@@ -75,7 +75,7 @@ fun ProfilesScreen(
         if (id != null && profiles != null) {
             val index = profiles.indexOfFirst { it.id == id }
             if (index != -1) {
-                kotlinx.coroutines.delay(200) // Wait for UI update and layout
+            kotlinx.coroutines.delay(200) // Wait for UI update and layout
                 val layoutInfo = gridState.layoutInfo
                 val visibleItems = layoutInfo.visibleItemsInfo
                 val itemInfo = visibleItems.find { it.key == id }
