@@ -21,6 +21,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -90,15 +91,14 @@ fun NexaTextField(
 
     // Local TextFieldValue state to maintain selection and composing state for 100% IME compatibility
     var textFieldValueState by remember {
-        mutableStateOf(TextFieldValue(text = value, selection = TextRange(value.length)))
+        mutableStateOf(TextFieldValue(text = value, selection = TextRange(0)))
     }
 
     // Keep local state in sync with external value updates during composition
-    // Explicitly places the cursor on the last letter when programmatic focus transitions happen (e.g. keyboard "Next")
     if (textFieldValueState.text != value) {
         textFieldValueState = textFieldValueState.copy(
             text = value,
-            selection = TextRange(value.length)
+            selection = TextRange(if (isFocused) value.length else 0)
         )
     }
 
@@ -257,7 +257,14 @@ fun NexaTextField(
             ),
             modifier = Modifier
                 .fillMaxWidth()
-                .onFocusChanged { isFocused = it.isFocused }
+                .onFocusChanged { focusState ->
+                    isFocused = focusState.isFocused
+                    if (focusState.isFocused && textFieldValueState.selection.start == 0) {
+                        textFieldValueState = textFieldValueState.copy(
+                            selection = TextRange(textFieldValueState.text.length)
+                        )
+                    }
+                }
                 .then(
                     if (contentType != null) {
                         Modifier.semantics { this.contentType = contentType }
