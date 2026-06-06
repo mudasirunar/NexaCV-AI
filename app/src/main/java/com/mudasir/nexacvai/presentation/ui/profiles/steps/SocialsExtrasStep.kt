@@ -1,20 +1,55 @@
 package com.mudasir.nexacvai.presentation.ui.profiles.steps
 
-import androidx.compose.animation.*
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.ArrowDropUp
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Public
+import androidx.compose.material.icons.filled.WorkspacePremium
+import androidx.compose.material3.Badge
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
@@ -22,29 +57,22 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.DpOffset
+import androidx.compose.ui.unit.dp
 import com.mudasir.nexacvai.domain.model.Language
-import com.mudasir.nexacvai.domain.model.SocialLink
 import com.mudasir.nexacvai.domain.model.Reference
+import com.mudasir.nexacvai.domain.model.SocialLink
 import com.mudasir.nexacvai.presentation.ui.profiles.components.NexaTextField
+import com.mudasir.nexacvai.presentation.ui.profiles.utils.SUPPORTED_PLATFORMS
+import com.mudasir.nexacvai.presentation.ui.profiles.utils.getSocialPlatformInfo
+import com.mudasir.nexacvai.presentation.ui.profiles.utils.isStandardPlatform
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.CreateProfileState
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.CreateProfileViewModel
-import androidx.compose.ui.res.painterResource
-import com.mudasir.nexacvai.R
-import com.mudasir.nexacvai.presentation.ui.profiles.utils.NexaCheckbox
-
-// Platform Item styling helper
-data class PlatformItem(
-    val name: String,
-    val iconResId: Int?,
-    val defaultIcon: androidx.compose.ui.graphics.vector.ImageVector,
-    val scale: Float = 1.0f
-)
 
 // CEFR proficiency helper
 data class ProficiencyLevel(
@@ -58,19 +86,7 @@ data class ProficiencyLevel(
 fun SocialsExtrasStep(state: CreateProfileState, viewModel: CreateProfileViewModel) {
     val focusManager = LocalFocusManager.current
 
-    // Platform definitions
-    val platformsList = remember {
-        listOf(
-            PlatformItem("LinkedIn", R.drawable.ic_linkedin, Icons.Default.Share, 1.2f),
-            PlatformItem("GitHub", R.drawable.ic_github, Icons.Default.Code, 1.0f),
-            PlatformItem("Behance", R.drawable.ic_behance, Icons.Default.Brush, 1.2f),
-            PlatformItem("Dribbble", R.drawable.ic_dribble, Icons.Default.Palette, 1.0f),
-            PlatformItem("Stack Overflow", R.drawable.ic_stackoverflow, Icons.Default.QuestionAnswer, 0.95f),
-            PlatformItem("X", R.drawable.ic_x, Icons.Default.AlternateEmail, 1.7f),
-            PlatformItem("Personal Portfolio", null, Icons.Default.Language, 1.0f),
-            PlatformItem("Other Platform", null, Icons.Default.Link, 1.0f)
-        )
-    }
+
 
     val proficiencyLevels = remember {
         listOf(
@@ -716,7 +732,7 @@ fun SocialsExtrasStep(state: CreateProfileState, viewModel: CreateProfileViewMod
                                 verticalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
                                 val platformInfo = remember(link.label) {
-                                    platformsList.find { it.name == link.label } ?: platformsList.last()
+                                    getSocialPlatformInfo(link.label)
                                 }
                                 val platformIconPainter = if (platformInfo.iconResId != null) {
                                     painterResource(id = platformInfo.iconResId)
@@ -745,7 +761,7 @@ fun SocialsExtrasStep(state: CreateProfileState, viewModel: CreateProfileViewMod
                                             Icon(
                                                 painter = platformIconPainter,
                                                 contentDescription = null,
-                                                tint = if (platformInfo.name == "Other Platform") MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary,
+                                                tint = if (isStandardPlatform(link.label)) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                                                 modifier = Modifier.size(18.dp).scale(platformInfo.scale)
                                             )
                                         }
@@ -793,8 +809,7 @@ fun SocialsExtrasStep(state: CreateProfileState, viewModel: CreateProfileViewMod
                                         }
                                 ) {
                                     val displayPlatformName = remember(link.label) {
-                                        val isPrefilled = platformsList.any { it.name == link.label && it.name != "Other Platform" }
-                                        if (isPrefilled) link.label else if (link.label.isBlank()) "" else "Other Platform"
+                                        if (isStandardPlatform(link.label)) link.label else if (link.label.isBlank()) "" else "Other Platform"
                                     }
 
                                     NexaTextField(
@@ -844,37 +859,38 @@ fun SocialsExtrasStep(state: CreateProfileState, viewModel: CreateProfileViewMod
                                             .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(16.dp)),
                                         shape = RoundedCornerShape(16.dp)
                                     ) {
-                                        platformsList.forEach { pItem ->
-                                            val dIconPainter = if (pItem.iconResId != null) {
-                                                painterResource(id = pItem.iconResId)
+                                        SUPPORTED_PLATFORMS.forEach { platformName ->
+                                            val pInfo = getSocialPlatformInfo(platformName)
+                                            val dIconPainter = if (pInfo.iconResId != null) {
+                                                painterResource(id = pInfo.iconResId)
                                             } else {
-                                                androidx.compose.ui.graphics.vector.rememberVectorPainter(image = pItem.defaultIcon)
+                                                androidx.compose.ui.graphics.vector.rememberVectorPainter(image = pInfo.defaultIcon)
                                             }
                                             DropdownMenuItem(
                                                 leadingIcon = {
-                                                    if (pItem.iconResId != null) {
+                                                    if (pInfo.iconResId != null) {
                                                         Icon(
                                                             painter = dIconPainter,
                                                             contentDescription = null,
                                                             tint = androidx.compose.ui.graphics.Color.Unspecified,
-                                                            modifier = Modifier.size(18.dp).scale(pItem.scale)
+                                                            modifier = Modifier.size(18.dp).scale(pInfo.scale)
                                                         )
                                                     } else {
                                                         Icon(
                                                             painter = dIconPainter,
                                                             contentDescription = null,
-                                                            tint = if (pItem.name == "Other Platform") MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary,
-                                                            modifier = Modifier.size(18.dp).scale(pItem.scale)
+                                                            tint = if (platformName == "Other Platform") MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary,
+                                                            modifier = Modifier.size(18.dp).scale(pInfo.scale)
                                                         )
                                                     }
                                                 },
-                                                text = { Text(pItem.name, style = MaterialTheme.typography.bodyMedium) },
+                                                text = { Text(platformName, style = MaterialTheme.typography.bodyMedium) },
                                                 onClick = {
                                                     isExpanded = false
-                                                    if (pItem.name == "Other Platform") {
+                                                    if (platformName == "Other Platform") {
                                                         viewModel.updateSocialLink(link.id, link.copy(label = "Other"))
                                                     } else {
-                                                        viewModel.updateSocialLink(link.id, link.copy(label = pItem.name))
+                                                        viewModel.updateSocialLink(link.id, link.copy(label = platformName))
                                                     }
                                                 }
                                             )
@@ -883,7 +899,7 @@ fun SocialsExtrasStep(state: CreateProfileState, viewModel: CreateProfileViewMod
                                 }
 
                                 val isOtherSelected = remember(link.label) {
-                                    link.label.isNotBlank() && platformsList.none { it.name == link.label && it.name != "Other Platform" }
+                                    link.label.isNotBlank() && !isStandardPlatform(link.label)
                                 }
                                 if (isOtherSelected) {
                                     NexaTextField(
@@ -963,7 +979,54 @@ fun SocialsExtrasStep(state: CreateProfileState, viewModel: CreateProfileViewMod
         }
         Spacer(modifier = Modifier.height(4.dp))
 
-        // Card 1: Volunteer Work
+        // Card 1: Hobbies & Interests
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Palette,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Text(
+                        text = "Hobbies & Interests",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
+                NexaTextField(
+                    value = state.hobbies,
+                    onValueChange = { viewModel.updateAdditionalInfo(hobbies = it) },
+                    label = "Hobbies & Interests",
+                    placeholder = "e.g. Photography, Reading Technical Blogs, Playing Football...",
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = false,
+                    minLines = 3,
+                    maxLines = 5,
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Sentences,
+                        imeAction = ImeAction.Next
+                    )
+                )
+            }
+        }
+
+        // Card 2: Volunteer Work
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -1010,7 +1073,7 @@ fun SocialsExtrasStep(state: CreateProfileState, viewModel: CreateProfileViewMod
             }
         }
 
-        // Card 2: Honors & Awards
+        // Card 3: Honors & Awards
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -1045,53 +1108,6 @@ fun SocialsExtrasStep(state: CreateProfileState, viewModel: CreateProfileViewMod
                     onValueChange = { viewModel.updateAdditionalInfo(awards = it) },
                     label = "Honors & Awards",
                     placeholder = "List key professional milestones, hackathon wins, or academic honors...",
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = false,
-                    minLines = 3,
-                    maxLines = 5,
-                    keyboardOptions = KeyboardOptions(
-                        capitalization = KeyboardCapitalization.Sentences,
-                        imeAction = ImeAction.Next
-                    )
-                )
-            }
-        }
-
-        // Card 3: Hobbies & Interests
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
-            shape = RoundedCornerShape(16.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Palette,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Text(
-                        text = "Hobbies & Interests",
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-
-                NexaTextField(
-                    value = state.hobbies,
-                    onValueChange = { viewModel.updateAdditionalInfo(hobbies = it) },
-                    label = "Hobbies & Interests",
-                    placeholder = "e.g. Photography, Reading Technical Blogs, Playing Football...",
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = false,
                     minLines = 3,
