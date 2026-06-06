@@ -30,6 +30,7 @@ import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.ui.focus.onFocusEvent
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -44,6 +45,9 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.autofill.ContentType
+import androidx.compose.ui.semantics.contentType
+import androidx.compose.ui.semantics.semantics
 
 /**
  * A highly-optimized, premium Material 3 Text Field component.
@@ -74,12 +78,15 @@ fun NexaTextField(
     onLeadingIconClick: (() -> Unit)? = null,
     maxInputLength: Int? = null,
     onlyDigits: Boolean = false,
-    onlyDigitsAndPlus: Boolean = false
+    onlyDigitsAndPlus: Boolean = false,
+    contentType: ContentType? = null
 ) {
     val density = LocalDensity.current
     val focusManager = LocalFocusManager.current
     val bringIntoViewRequester = remember { BringIntoViewRequester() }
     val coroutineScope = rememberCoroutineScope()
+
+    var isFocused by remember { mutableStateOf(false) }
 
     // Local TextFieldValue state to maintain selection and composing state for 100% IME compatibility
     var textFieldValueState by remember {
@@ -190,7 +197,7 @@ fun NexaTextField(
                     val updatedTfv = newTfv.copy(text = filteredText, selection = finalSelection)
                     textFieldValueState = updatedTfv
 
-                    if (filteredText != value) {
+                    if (filteredText != value && isFocused) {
                         onValueChange(filteredText)
                     }
                 }
@@ -248,7 +255,14 @@ fun NexaTextField(
                 focusedTextColor = MaterialTheme.colorScheme.onSurface,
                 unfocusedTextColor = MaterialTheme.colorScheme.onSurface
             ),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .onFocusChanged { isFocused = it.isFocused }
+                .then(
+                    if (contentType != null) {
+                        Modifier.semantics { this.contentType = contentType }
+                    } else Modifier
+                )
         )
 
         // Animated error message

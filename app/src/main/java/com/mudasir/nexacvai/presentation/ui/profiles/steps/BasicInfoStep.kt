@@ -39,6 +39,7 @@ import com.mudasir.nexacvai.presentation.ui.profiles.createImageFileUri
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.CreateProfileState
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.CreateProfileViewModel
 import com.mudasir.nexacvai.presentation.ui.profiles.utils.*
+import androidx.compose.ui.autofill.ContentType
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -264,32 +265,35 @@ fun BasicInfoStep(state: CreateProfileState, viewModel: CreateProfileViewModel) 
             if (index > 0) {
                 Spacer(modifier = Modifier.height(12.dp))
             }
-            NexaTextField(
-                value = email,
-                onValueChange = { viewModel.updateEmail(index, it) },
-                label = if (index == 0) "Primary Email" else "Email ${index + 1}",
-                placeholder = "Enter email address",
-                leadingIcon = Icons.Default.Email,
-                trailingIcon = if (index > 0) {
-                    {
-                        IconButton(onClick = { viewModel.removeEmailField(index) }) {
-                            Icon(
-                                imageVector = Icons.Default.Delete,
-                                contentDescription = "Remove Email",
-                                tint = MaterialTheme.colorScheme.error,
-                                modifier = Modifier.size(20.dp)
-                            )
+            key("email_$index") {
+                NexaTextField(
+                    value = email,
+                    onValueChange = { viewModel.updateEmail(index, it) },
+                    label = if (index == 0) "Primary Email" else "Email ${index + 1}",
+                    placeholder = "Enter email address",
+                    leadingIcon = Icons.Default.Email,
+                    trailingIcon = if (index > 0) {
+                        {
+                            IconButton(onClick = { viewModel.removeEmailField(index) }) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = "Remove Email",
+                                    tint = MaterialTheme.colorScheme.error,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
                         }
-                    }
-                } else null,
-                keyboardOptions = KeyboardOptions(
-                    capitalization = KeyboardCapitalization.None,
-                    keyboardType = KeyboardType.Email,
-                    imeAction = ImeAction.Next
-                ),
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
+                    } else null,
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.None,
+                        keyboardType = KeyboardType.Email,
+                        imeAction = ImeAction.Next
+                    ),
+                    contentType = if (index == 0) ContentType.EmailAddress else ContentType("secondaryEmailAddress"),
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+            }
         }
         if (state.emails.size < 3) {
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
@@ -307,32 +311,35 @@ fun BasicInfoStep(state: CreateProfileState, viewModel: CreateProfileViewModel) 
                 Spacer(modifier = Modifier.height(12.dp))
             }
             val isLastPhone = index == state.phones.lastIndex
-            NexaTextField(
-                value = phone,
-                onValueChange = { viewModel.updatePhone(index, it) },
-                label = if (index == 0) "Primary Phone" else "Phone ${index + 1}",
-                placeholder = "Enter phone number",
-                leadingIcon = Icons.Default.Phone,
-                trailingIcon = if (index > 0) {
-                    {
-                        IconButton(onClick = { viewModel.removePhoneField(index) }) {
-                            Icon(
-                                imageVector = Icons.Default.Delete,
-                                contentDescription = "Remove Phone",
-                                tint = MaterialTheme.colorScheme.error,
-                                modifier = Modifier.size(20.dp)
-                            )
+            key("phone_$index") {
+                NexaTextField(
+                    value = phone,
+                    onValueChange = { viewModel.updatePhone(index, it) },
+                    label = if (index == 0) "Primary Phone" else "Phone ${index + 1}",
+                    placeholder = "Enter phone number",
+                    leadingIcon = Icons.Default.Phone,
+                    trailingIcon = if (index > 0) {
+                        {
+                            IconButton(onClick = { viewModel.removePhoneField(index) }) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = "Remove Phone",
+                                    tint = MaterialTheme.colorScheme.error,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
                         }
-                    }
-                } else null,
-                keyboardOptions = KeyboardOptions(
-                    capitalization = KeyboardCapitalization.None,
-                    keyboardType = KeyboardType.Phone,
-                    imeAction = ImeAction.Next
-                ),
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
+                    } else null,
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.None,
+                        keyboardType = KeyboardType.Phone,
+                        imeAction = ImeAction.Next
+                    ),
+                    contentType = if (index == 0) ContentType.PhoneNumber else ContentType("secondaryPhoneNumber"),
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+            }
         }
         if (state.phones.size < 3) {
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
