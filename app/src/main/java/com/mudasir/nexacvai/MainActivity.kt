@@ -43,6 +43,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.unit.IntOffset
 
 class MainActivity : ComponentActivity() {
     private val profileDeleteManager: ProfileDeleteManager by inject()
@@ -152,7 +153,12 @@ class MainActivity : ComponentActivity() {
                             ) + fadeOut(animationSpec = tween(durationMillis = 200)),
                             modifier = Modifier
                                 .align(Alignment.BottomCenter)
-                                .padding(bottom = snackbarBottomPadding)
+                                .offset {
+                                    IntOffset(
+                                        x = 0,
+                                        y = -snackbarBottomPadding.roundToPx()
+                                    )
+                                }
                         ) {
                             pendingDeleteProfile?.let { profile ->
                                 NexaSnackbar(
