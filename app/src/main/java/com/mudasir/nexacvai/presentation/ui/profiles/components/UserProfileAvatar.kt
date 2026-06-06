@@ -1,4 +1,4 @@
-package com.mudasir.nexacvai.presentation.ui.components
+package com.mudasir.nexacvai.presentation.ui.profiles.components
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background

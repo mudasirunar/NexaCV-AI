@@ -37,9 +37,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.mudasir.nexacvai.presentation.navigation.Screen
-import com.mudasir.nexacvai.presentation.ui.components.UserProfileCard
-import com.mudasir.nexacvai.presentation.ui.components.ProfileCardSkeleton
-import com.mudasir.nexacvai.presentation.ui.components.NexaAlertDialog
+import com.mudasir.nexacvai.presentation.ui.profiles.components.UserProfileCard
+import com.mudasir.nexacvai.presentation.ui.profiles.components.ProfileCardSkeleton
+import com.mudasir.nexacvai.presentation.ui.profiles.components.NexaAlertDialog
 import org.koin.androidx.compose.koinViewModel
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.*
 import com.mudasir.nexacvai.domain.model.UserProfile
@@ -283,7 +283,8 @@ fun ProfilesScreen(
                         items(state.profiles ?: emptyList(), key = { it.id }) { profile ->
                             UserProfileCard(
                                 profile = profile,
-                                	onEditClick = { safeNavigate("${Screen.CreateProfile.route}?profileId=${profile.id}") },
+                                onCardClick = { safeNavigate("${Screen.ViewProfile.route}?profileId=${profile.id}") },
+                                onEditClick = { safeNavigate("${Screen.CreateProfile.route}?profileId=${profile.id}") },
                                 onDeleteClick = {
                                     profileToDelete = profile
                                 },

@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.DpOffset
 import com.mudasir.nexacvai.domain.model.Language
 import com.mudasir.nexacvai.domain.model.SocialLink
 import com.mudasir.nexacvai.domain.model.Reference
-import com.mudasir.nexacvai.presentation.ui.components.NexaTextField
+import com.mudasir.nexacvai.presentation.ui.profiles.components.NexaTextField
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.CreateProfileState
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.CreateProfileViewModel
 import androidx.compose.ui.res.painterResource

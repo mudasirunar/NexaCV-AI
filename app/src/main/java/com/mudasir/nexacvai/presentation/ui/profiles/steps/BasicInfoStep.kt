@@ -31,9 +31,9 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import kotlinx.coroutines.launch
-import com.mudasir.nexacvai.presentation.ui.components.ImagePickerDialog
-import com.mudasir.nexacvai.presentation.ui.components.NexaTextField
-import com.mudasir.nexacvai.presentation.ui.components.NexaDateTextField
+import com.mudasir.nexacvai.presentation.ui.profiles.components.ImagePickerDialog
+import com.mudasir.nexacvai.presentation.ui.profiles.components.NexaTextField
+import com.mudasir.nexacvai.presentation.ui.profiles.components.NexaDateTextField
 import androidx.compose.foundation.shape.RoundedCornerShape
 import com.mudasir.nexacvai.presentation.ui.profiles.createImageFileUri
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.CreateProfileState

@@ -1,4 +1,4 @@
-package com.mudasir.nexacvai.presentation.ui.components
+package com.mudasir.nexacvai.presentation.ui.profiles.components
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult

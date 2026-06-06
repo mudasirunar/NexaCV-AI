@@ -1,4 +1,4 @@
-package com.mudasir.nexacvai.presentation.ui.components
+package com.mudasir.nexacvai.presentation.ui.profiles.components
 
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
