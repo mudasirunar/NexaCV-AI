@@ -8,6 +8,7 @@ import com.mudasir.nexacvai.domain.repository.UserProfileRepository
 import com.mudasir.nexacvai.domain.usecase.*
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.ProfilesViewModel
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.CreateProfileViewModel
+import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.ViewProfileViewModel
 import com.mudasir.nexacvai.presentation.ui.profiles.utils.ProfileDeleteManager
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
@@ -47,5 +48,6 @@ val appModule = module {
     // ViewModels
     viewModel { ProfilesViewModel(get(), get(), get()) }
     viewModel { CreateProfileViewModel(get(), get(), get()) }
+    viewModel { ViewProfileViewModel(get(), get(), get()) }
 }
 

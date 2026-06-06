@@ -22,6 +22,7 @@ sealed class Screen(
     
     // Sub-screens (Not in bottom nav)
     object CreateProfile : Screen("create_profile", "Create Profile", Icons.Default.Person, parentRoute = "profiles")
+    object ViewProfile : Screen("view_profile", "View Profile", Icons.Default.Person, parentRoute = "profiles")
 }
 
 val BottomNavScreens = listOf(
@@ -38,5 +39,6 @@ val AllScreens = listOf(
     Screen.Generate,
     Screen.History,
     Screen.Settings,
-    Screen.CreateProfile
+    Screen.CreateProfile,
+    Screen.ViewProfile
 )

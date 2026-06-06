@@ -21,6 +21,7 @@ import com.mudasir.nexacvai.presentation.ui.history.HistoryScreen
 import com.mudasir.nexacvai.presentation.ui.home.HomeScreen
 import com.mudasir.nexacvai.presentation.ui.profiles.CreateProfileScreen
 import com.mudasir.nexacvai.presentation.ui.profiles.ProfilesScreen
+import com.mudasir.nexacvai.presentation.ui.profiles.ViewProfileScreen
 import com.mudasir.nexacvai.presentation.ui.settings.SettingsScreen
 
 // Shared transition durations for consistent, snappy navigation feel
@@ -117,6 +118,15 @@ fun AppNavHost(
             })
         ) {
             CreateProfileScreen(navController = navController)
+        }
+        composable(
+            route = "${Screen.ViewProfile.route}?profileId={profileId}",
+            arguments = listOf(navArgument("profileId") { 
+                type = NavType.LongType
+                defaultValue = -1L 
+            })
+        ) {
+            ViewProfileScreen(navController = navController)
         }
     }
 }

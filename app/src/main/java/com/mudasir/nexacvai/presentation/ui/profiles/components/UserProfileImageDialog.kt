@@ -65,8 +65,9 @@ fun UserProfileImageDialog(
     onDismissFullScreen: () -> Unit,
     profile: UserProfile,
     colorPair: AvatarColorPair,
-    onPhotoSelected: (String) -> Unit,
-    onRemovePhotoClick: () -> Unit
+    onPhotoSelected: (String) -> Unit = {},
+    onRemovePhotoClick: () -> Unit = {},
+    isReadOnly: Boolean = false
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -376,58 +377,60 @@ fun UserProfileImageDialog(
                 }
 
                 // 2. Action Controls with Scrim (Right for sidebar, Bottom for standard)
-                if (showSideBar) {
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.CenterEnd)
-                            .fillMaxHeight()
-                            .width(110.dp)
-                            .background(
-                                Brush.horizontalGradient(
-                                    colors = listOf(
-                                        Color.Transparent,
-                                        Color.Black.copy(alpha = 0.55f)
-                                    )
-                                )
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(36.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
+                if (!isReadOnly) {
+                    if (showSideBar) {
+                        Box(
                             modifier = Modifier
-                                .padding(end = 16.dp)
-                                .wrapContentSize()
+                                .align(Alignment.CenterEnd)
+                                .fillMaxHeight()
+                                .width(110.dp)
+                                .background(
+                                    Brush.horizontalGradient(
+                                        colors = listOf(
+                                            Color.Transparent,
+                                            Color.Black.copy(alpha = 0.55f)
+                                        )
+                                    )
+                                ),
+                            contentAlignment = Alignment.Center
                         ) {
-                            editButton()
-                            removeButton()
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(36.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier
+                                    .padding(end = 16.dp)
+                                    .wrapContentSize()
+                            ) {
+                                editButton()
+                                removeButton()
+                            }
                         }
-                    }
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .fillMaxWidth()
-                            .height(140.dp)
-                            .background(
-                                Brush.verticalGradient(
-                                    colors = listOf(
-                                        Color.Transparent,
-                                        Color.Black.copy(alpha = 0.55f)
-                                    )
-                                )
-                            ),
-                        contentAlignment = Alignment.BottomCenter
-                    ) {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(48.dp),
-                            verticalAlignment = Alignment.CenterVertically,
+                    } else {
+                        Box(
                             modifier = Modifier
-                                .padding(bottom = 16.dp)
-                                .wrapContentSize()
+                                .align(Alignment.BottomCenter)
+                                .fillMaxWidth()
+                                .height(140.dp)
+                                .background(
+                                    Brush.verticalGradient(
+                                        colors = listOf(
+                                            Color.Transparent,
+                                            Color.Black.copy(alpha = 0.55f)
+                                        )
+                                    )
+                                ),
+                            contentAlignment = Alignment.BottomCenter
                         ) {
-                            editButton()
-                            removeButton()
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(48.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .padding(bottom = 16.dp)
+                                    .wrapContentSize()
+                            ) {
+                                editButton()
+                                removeButton()
+                            }
                         }
                     }
                 }
