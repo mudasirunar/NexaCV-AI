@@ -1,6 +1,7 @@
 package com.mudasir.nexacvai
 
 import android.os.Bundle
+import androidx.activity.compose.BackHandler
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -55,13 +56,14 @@ class MainActivity : ComponentActivity() {
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = navBackStackEntry?.destination?.route
                 
-                val showBottomBar = currentRoute == null || BottomNavScreens.any {
+                val isSelectionModeActive by profileDeleteManager.isSelectionModeActive.collectAsState()
+                
+                val showBottomBar = (currentRoute == null || BottomNavScreens.any {
                     currentRoute.startsWith(it.route) == true 
-                }
+                }) && !isSelectionModeActive
 
-                val pendingDeleteProfile by profileDeleteManager.pendingDeleteProfile.collectAsState()
+                val pendingDeleteProfiles by profileDeleteManager.pendingDeleteProfiles.collectAsState()
 
-                // Commit pending deletion when navigating away from bottom nav screens (e.g. to creation/editing)
                 LaunchedEffect(currentRoute) {
                     if (currentRoute != null) {
                         val isBottomNavRoute = BottomNavScreens.any { currentRoute.startsWith(it.route) }
@@ -71,7 +73,6 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                // Commit pending deletion when the app goes to background / closes (but not on screen rotation/theme toggle)
                 val lifecycleOwner = LocalLifecycleOwner.current
                 DisposableEffect(lifecycleOwner) {
                     val observer = LifecycleEventObserver { _, event ->
@@ -87,27 +88,22 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                // Dynamically offset the Snackbar to stay above the scrollable FAB on the Profiles screen
                 val isProfilesScreen = currentRoute?.startsWith(Screen.Profiles.route) == true
                 val isFabVisibleState by profileDeleteManager.isFabVisible.collectAsState()
                 
                 val configuration = LocalConfiguration.current
                 val isWideScreen = configuration.screenWidthDp >= 600
-                
-                // On wide screens (tablets or landscape phones), the centered snackbar (max 480dp)
-                // and the right-aligned FAB do not overlap horizontally. Thus, we only push the snackbar
-                // up when the screen is narrow (isWideScreen == false) and the FAB is visible.
                 val showFabOnScreen = isProfilesScreen && isFabVisibleState && !isWideScreen
 
                 val snackbarBottomPadding by animateDpAsState(
                     targetValue = if (showBottomBar) {
                         if (showFabOnScreen) {
-                            160.dp // Slightly reduced spacing above FAB (top of FAB is 152dp, giving an 8dp gap)
+                            160.dp
                         } else {
-                            96.dp // 16dp spacing above bottom navigation bar (80dp)
+                            96.dp
                         }
                     } else {
-                        16.dp // 16dp spacing above screen bottom
+                        16.dp
                     },
                     animationSpec = tween(durationMillis = 250),
                     label = "snackbarBottomPadding"
@@ -137,9 +133,8 @@ class MainActivity : ComponentActivity() {
                             BottomNavigationBar(navController = navController)
                         }
 
-                        // Custom animated Snackbar for profile deletion with Undo button
                         AnimatedVisibility(
-                            visible = pendingDeleteProfile != null && showBottomBar,
+                            visible = pendingDeleteProfiles.isNotEmpty() && showBottomBar,
                             enter = slideInVertically(
                                 initialOffsetY = { it },
                                 animationSpec = tween(durationMillis = 250)
@@ -157,9 +152,15 @@ class MainActivity : ComponentActivity() {
                                     )
                                 }
                         ) {
-                            pendingDeleteProfile?.let { profile ->
+                            if (pendingDeleteProfiles.isNotEmpty()) {
+                                val message = if (pendingDeleteProfiles.size == 1) {
+                                    val profile = pendingDeleteProfiles.first()
+                                    "Profile \"${profile.fullName.ifBlank { "Untitled Profile" }}\" deleted"
+                                } else {
+                                    "${pendingDeleteProfiles.size} profiles deleted"
+                                }
                                 NexaSnackbar(
-                                    message = "Profile \"${profile.fullName.ifBlank { "Untitled Profile" }}\" deleted",
+                                    message = message,
                                     actionLabel = "Undo",
                                     onActionClick = {
                                         profileDeleteManager.undoDelete()
@@ -168,11 +169,10 @@ class MainActivity : ComponentActivity() {
                             }
                         }
 
-                        // Custom animated global export status toast
                         val exportState by profileExportManager.exportState.collectAsState()
                         val exportError by profileExportManager.exportError.collectAsState()
 
-                        val isSnackbarVisible = pendingDeleteProfile != null && showBottomBar
+                        val isSnackbarVisible = pendingDeleteProfiles.isNotEmpty() && showBottomBar
                         val targetToastPadding = if (isSnackbarVisible) {
                             snackbarBottomPadding + 64.dp
                         } else {
@@ -198,6 +198,10 @@ class MainActivity : ComponentActivity() {
                                     )
                                 }
                         )
+
+                        BackHandler(enabled = isSelectionModeActive) {
+                            profileDeleteManager.setSelectionModeActive(false)
+                        }
                     }
                 }
             }

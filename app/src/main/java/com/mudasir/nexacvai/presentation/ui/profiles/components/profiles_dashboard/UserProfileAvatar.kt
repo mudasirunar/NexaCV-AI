@@ -34,7 +34,8 @@ fun UserProfileAvatar(
     initials: String,
     completionProgress: Float,
     onAvatarClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isInSelectionMode: Boolean = false
 ) {
     Box(
         modifier = modifier.size(68.dp),
@@ -56,7 +57,6 @@ fun UserProfileAvatar(
             val arcSize = 60.dp.toPx()
             val topLeftOffset = (size.width - arcSize) / 2
 
-            // Draw background track
             drawCircle(
                 color = outlineColor,
                 radius = arcSize / 2,
@@ -64,7 +64,6 @@ fun UserProfileAvatar(
                 style = Stroke(width = strokeWidth)
             )
 
-            // Draw progress arc (fully connected solid path, no hardcoded colors)
             if (completionProgress > 0f) {
                 val sweepAngle = 360f * completionProgress
                 drawArc(
@@ -82,13 +81,15 @@ fun UserProfileAvatar(
             }
         }
 
-        // PFP (60dp x 60dp) centered inside 68dp box to remove gap spacing
+        // PFP (60dp x 60dp) centered inside 68dp box
         Box(
             modifier = Modifier
                 .size(60.dp)
                 .clip(CircleShape)
                 .background(colorPair.background)
-                .clickable { onAvatarClick() },
+                .then(
+                    if (isInSelectionMode) Modifier else Modifier.clickable { onAvatarClick() }
+                ),
             contentAlignment = Alignment.Center
         ) {
             if (profile.profilePictureUri != null) {

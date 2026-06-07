@@ -30,5 +30,9 @@ data class ProfilesState(
     val exportingProfile: UserProfile? = null,
     val showExportConfirm: Boolean = false,
     val exportState: ExportProgressState = ExportProgressState.Idle,
-    val exportError: String? = null
+    val exportError: String? = null,
+    
+    // Selection States
+    val isSelectionMode: Boolean = false,
+    val selectedProfileIds: Set<Long> = emptySet()
 )

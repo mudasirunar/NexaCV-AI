@@ -38,16 +38,31 @@ class ProfilesViewModel(
 
     init {
         loadProfiles()
+        observeSelectionMode()
+    }
+
+    private fun observeSelectionMode() {
+        viewModelScope.launch {
+            profileDeleteManager.isSelectionModeActive.collect { active ->
+                if (!active && _state.value.isSelectionMode) {
+                    _state.value = _state.value.copy(
+                        isSelectionMode = false,
+                        selectedProfileIds = emptySet()
+                    )
+                }
+            }
+        }
     }
 
     private fun loadProfiles() {
         viewModelScope.launch {
             combine(
                 getAllProfilesUseCase(),
-                profileDeleteManager.pendingDeleteProfile
-            ) { profiles, pendingProfile ->
-                if (pendingProfile != null) {
-                    profiles.filter { it.id != pendingProfile.id }
+                profileDeleteManager.pendingDeleteProfiles
+            ) { profiles, pendingList ->
+                val pendingIds = pendingList.map { it.id }.toSet()
+                if (pendingIds.isNotEmpty()) {
+                    profiles.filter { it.id !in pendingIds }
                 } else {
                     profiles
                 }
@@ -69,6 +84,61 @@ class ProfilesViewModel(
 
     fun deleteProfile(profile: UserProfile) {
         profileDeleteManager.requestDelete(profile)
+    }
+
+    fun enterSelectionMode(initialProfileId: Long? = null) {
+        profileDeleteManager.setSelectionModeActive(true)
+        val selection = if (initialProfileId != null) setOf(initialProfileId) else emptySet()
+        _state.value = _state.value.copy(
+            isSelectionMode = true,
+            selectedProfileIds = selection
+        )
+    }
+
+    fun exitSelectionMode() {
+        profileDeleteManager.setSelectionModeActive(false)
+        _state.value = _state.value.copy(
+            isSelectionMode = false,
+            selectedProfileIds = emptySet()
+        )
+    }
+
+    fun toggleSelection(profileId: Long) {
+        val currentSelected = _state.value.selectedProfileIds.toMutableSet()
+        if (currentSelected.contains(profileId)) {
+            currentSelected.remove(profileId)
+        } else {
+            currentSelected.add(profileId)
+        }
+        
+        if (currentSelected.isEmpty()) {
+            exitSelectionMode()
+        } else {
+            _state.value = _state.value.copy(selectedProfileIds = currentSelected)
+        }
+    }
+
+    fun toggleSelectAll() {
+        val allProfiles = _state.value.profiles ?: emptyList()
+        val allIds = allProfiles.map { it.id }.toSet()
+        val currentSelected = _state.value.selectedProfileIds
+        
+        if (currentSelected.size == allIds.size) {
+            _state.value = _state.value.copy(selectedProfileIds = emptySet())
+        } else {
+            _state.value = _state.value.copy(selectedProfileIds = allIds)
+        }
+    }
+
+    fun deleteSelectedProfiles() {
+        val selectedIds = _state.value.selectedProfileIds
+        if (selectedIds.isEmpty()) return
+        
+        val allProfiles = _state.value.profiles ?: emptyList()
+        val profilesToDelete = allProfiles.filter { it.id in selectedIds }
+        
+        exitSelectionMode()
+        profileDeleteManager.requestDelete(profilesToDelete)
     }
 
     fun removeProfilePicture(profile: UserProfile) {
@@ -193,12 +263,10 @@ class ProfilesViewModel(
                     )
                 }
 
-                // 2. Save parent profile and nested structures in database
                 val savedId = withContext(Dispatchers.IO) {
                     importProfileUseCase(profileToSave)
                 }
 
-                // 3. Port/save profile picture if present
                 if (data.hasPicture && data.pictureBytes != null) {
                     val localUri = withContext(Dispatchers.IO) {
                         ProfileImportExportHelper.saveImportedProfilePicture(
@@ -208,7 +276,6 @@ class ProfilesViewModel(
                         )
                     }
                     if (localUri != null) {
-                        // Update profile picture uri in database
                         val updatedProfile = profileToSave.copy(
                             id = savedId,
                             profilePictureUri = localUri
@@ -219,13 +286,10 @@ class ProfilesViewModel(
                     }
                 }
 
-                // Ensure minimum 1-second progress visibility for a satisfying UX.
-                // If import took less than 1s, wait the remaining time. If it took longer, no extra delay.
                 val elapsed = System.currentTimeMillis() - startTime
                 val remainingDelay = (1000L - elapsed).coerceAtLeast(0L)
                 if (remainingDelay > 0) kotlinx.coroutines.delay(remainingDelay)
 
-                // 4. Update state to success
                 _state.value = _state.value.copy(
                     importState = ImportProgressState.Success,
                     newlyImportedProfileId = savedId

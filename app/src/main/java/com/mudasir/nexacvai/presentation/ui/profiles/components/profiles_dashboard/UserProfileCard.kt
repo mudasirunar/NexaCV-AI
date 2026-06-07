@@ -1,16 +1,16 @@
 package com.mudasir.nexacvai.presentation.ui.profiles.components.profiles_dashboard
 
-import com.mudasir.nexacvai.presentation.ui.profiles.components.UserProfileImageDialog
-
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.BorderStroke
@@ -18,7 +18,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -37,8 +36,6 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Phone
-import com.mudasir.nexacvai.R
-import androidx.compose.ui.res.painterResource
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.RadioButtonUnchecked
 import androidx.compose.material3.Card
@@ -56,27 +53,23 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.mudasir.nexacvai.domain.model.UserProfile
+import com.mudasir.nexacvai.R
 import com.mudasir.nexacvai.core.utils.DateTimeUtils
-import com.mudasir.nexacvai.presentation.ui.components.NexaAlertDialog
 import com.mudasir.nexacvai.core.utils.NameUtils
+import com.mudasir.nexacvai.domain.model.UserProfile
+import com.mudasir.nexacvai.presentation.ui.components.NexaAlertDialog
+import com.mudasir.nexacvai.presentation.ui.profiles.components.UserProfileImageDialog
 import com.mudasir.nexacvai.ui.theme.AvatarColorPairs
 import com.mudasir.nexacvai.ui.theme.IconColorEmail
 import com.mudasir.nexacvai.ui.theme.IconColorPhone
 
-/**
- * A highly-optimized, premium Material 3 User Profile Card component.
- *
- * Refactored to adhere strictly to:
- * - Keep Composable files under 500 lines rule.
- * - RULE 8 (Strict Clean Architecture package modularity).
- * - Zero hardcoded Color(...) structures.
- */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun UserProfileCard(
@@ -87,7 +80,10 @@ fun UserProfileCard(
     onExportClick: () -> Unit,
     onRemovePhotoClick: () -> Unit,
     onPhotoSelected: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isSelected: Boolean = false,
+    isInSelectionMode: Boolean = false,
+    onCardLongClick: () -> Unit = {}
 ) {
     var isPressed by remember { mutableStateOf(false) }
     var showFullScreenImage by remember { mutableStateOf(false) }
@@ -155,8 +151,11 @@ fun UserProfileCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .graphicsLayer(scaleX = scale, scaleY = scale)
-            .pointerInput(profile.id) {
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .pointerInput(profile.id, isInSelectionMode) {
                 detectTapGestures(
                     onPress = {
                         isPressed = true
@@ -166,13 +165,30 @@ fun UserProfileCard(
                             isPressed = false
                         }
                     },
-                    onTap = { onCardClick() }
+                    onLongPress = {
+                        onCardLongClick()
+                    },
+                    onTap = {
+                        onCardClick()
+                    }
                 )
             },
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = if (isSelected) {
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.04f)
+                    .compositeOver(MaterialTheme.colorScheme.surface)
+            } else {
+                MaterialTheme.colorScheme.surface
+            }
         ),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+        border = BorderStroke(
+            width = if (isSelected) 2.dp else 1.dp,
+            color = if (isSelected) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.outline
+            }
+        ),
         shape = RoundedCornerShape(14.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
@@ -192,7 +208,8 @@ fun UserProfileCard(
                     colorPair = colorPair,
                     initials = initials,
                     completionProgress = completionProgress,
-                    onAvatarClick = { showFullScreenImage = true }
+                    onAvatarClick = { showFullScreenImage = true },
+                    isInSelectionMode = isInSelectionMode
                 )
 
                 Spacer(modifier = Modifier.width(12.dp))
@@ -219,7 +236,23 @@ fun UserProfileCard(
                             modifier = Modifier.weight(1f)
                         )
                         
-                        if (profile.socialLinks.isNotEmpty()) {
+                        if (isInSelectionMode) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Icon(
+                                imageVector = if (isSelected) {
+                                    Icons.Default.CheckCircle
+                                } else {
+                                    Icons.Outlined.RadioButtonUnchecked
+                                },
+                                contentDescription = if (isSelected) "Selected" else "Not Selected",
+                                tint = if (isSelected) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                                },
+                                modifier = Modifier.size(24.dp)
+                            )
+                        } else if (profile.socialLinks.isNotEmpty()) {
                             Spacer(modifier = Modifier.width(8.dp))
                             UserProfileSocialLinks(
                                 socialLinks = profile.socialLinks
@@ -370,152 +403,170 @@ fun UserProfileCard(
                 }
             }
 
-            // SECTION 3: CONTEXT CONTROL LAYER (Bottom Row)
-            HorizontalDivider(
-                modifier = Modifier.padding(vertical = 12.dp),
-                thickness = 1.dp,
-                color = MaterialTheme.colorScheme.outline
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                // Left Aligned: Relative Update Time & Completion
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Text(
-                        text = relativeTimeText,
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+            AnimatedVisibility(
+                visible = !isInSelectionMode,
+                enter = expandVertically(
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessLow
                     )
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        modifier = Modifier.clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
-                            onClick = { showCompletionDialog = true }
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Info,
-                            contentDescription = "Completion Info",
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(14.dp)
-                        )
-                        Text(
-                            text = "${(completionProgress * 100).toInt()}% Complete",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        )
-                    }
-                }
+                ) + fadeIn(animationSpec = tween(150)),
+                exit = shrinkVertically(
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioNoBouncy,
+                        stiffness = Spring.StiffnessLow
+                    )
+                ) + fadeOut(animationSpec = tween(150))
+            ) {
+                Column {
+                    // SECTION 3: CONTEXT CONTROL LAYER (Bottom Row)
+                    HorizontalDivider(
+                        modifier = Modifier.padding(vertical = 12.dp),
+                        thickness = 1.dp,
+                        color = MaterialTheme.colorScheme.outline
+                    )
 
-                // Right Aligned: Expandable Action Controls
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    AnimatedVisibility(
-                        visible = areControlsVisible,
-                        enter = fadeIn(animationSpec = tween(200)) + 
-                                slideInHorizontally(
-                                    animationSpec = spring(
-                                        dampingRatio = Spring.DampingRatioLowBouncy,
-                                        stiffness = Spring.StiffnessMedium
-                                    ),
-                                    initialOffsetX = { it }
-                                ) +
-                                scaleIn(
-                                    animationSpec = spring(
-                                        dampingRatio = Spring.DampingRatioLowBouncy,
-                                        stiffness = Spring.StiffnessMedium
-                                    ),
-                                    initialScale = 0.6f
-                                ),
-                        exit = fadeOut(animationSpec = tween(150)) + 
-                                slideOutHorizontally(
-                                    animationSpec = spring(
-                                        dampingRatio = Spring.DampingRatioNoBouncy,
-                                        stiffness = Spring.StiffnessMedium
-                                    ),
-                                    targetOffsetX = { it }
-                                ) +
-                                scaleOut(
-                                    animationSpec = tween(150),
-                                    targetScale = 0.6f
-                                )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
+                        // Left Aligned: Relative Update Time & Completion
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Text(
+                                text = relativeTimeText,
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                modifier = Modifier.clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = null,
+                                    onClick = { showCompletionDialog = true }
+                                )
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Info,
+                                    contentDescription = "Completion Info",
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Text(
+                                    text = "${(completionProgress * 100).toInt()}% Complete",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                )
+                            }
+                        }
+
+                        // Right Aligned: Expandable Action Controls
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            IconButton(
-                                onClick = onDeleteClick,
-                                modifier = Modifier.size(36.dp)
+                            AnimatedVisibility(
+                                visible = areControlsVisible,
+                                enter = fadeIn(animationSpec = tween(200)) + 
+                                        slideInHorizontally(
+                                            animationSpec = spring(
+                                                dampingRatio = Spring.DampingRatioLowBouncy,
+                                                stiffness = Spring.StiffnessMedium
+                                            ),
+                                            initialOffsetX = { it }
+                                        ) +
+                                        scaleIn(
+                                            animationSpec = spring(
+                                                dampingRatio = Spring.DampingRatioLowBouncy,
+                                                stiffness = Spring.StiffnessMedium
+                                            ),
+                                            initialScale = 0.6f
+                                        ),
+                                exit = fadeOut(animationSpec = tween(150)) + 
+                                        slideOutHorizontally(
+                                            animationSpec = spring(
+                                                dampingRatio = Spring.DampingRatioNoBouncy,
+                                                stiffness = Spring.StiffnessMedium
+                                            ),
+                                            targetOffsetX = { it }
+                                        ) +
+                                        scaleOut(
+                                            animationSpec = tween(150),
+                                            targetScale = 0.6f
+                                        )
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.Delete,
-                                    contentDescription = "Delete Profile",
-                                    tint = MaterialTheme.colorScheme.error,
-                                    modifier = Modifier.size(20.dp)
-                                )
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    IconButton(
+                                        onClick = onDeleteClick,
+                                        modifier = Modifier.size(36.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Delete,
+                                            contentDescription = "Delete Profile",
+                                            tint = MaterialTheme.colorScheme.error,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+
+                                    IconButton(
+                                        onClick = onEditClick,
+                                        modifier = Modifier.size(36.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Edit,
+                                            contentDescription = "Edit Profile",
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+
+                                    IconButton(
+                                        onClick = onExportClick,
+                                        modifier = Modifier.size(36.dp)
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.ic_export),
+                                            contentDescription = "Export Profile",
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                }
                             }
 
-                            IconButton(
-                                onClick = onEditClick,
-                                modifier = Modifier.size(36.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Edit,
-                                    contentDescription = "Edit Profile",
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
+                            // Rotating Menu Toggle Button
+                            val rotationAngle by animateFloatAsState(
+                                targetValue = if (areControlsVisible) 90f else 0f,
+                                animationSpec = spring(
+                                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                                    stiffness = Spring.StiffnessMedium
+                                ),
+                                label = "toggleButtonRotation"
+                            )
 
                             IconButton(
-                                onClick = onExportClick,
-                                modifier = Modifier.size(36.dp)
+                                onClick = { areControlsVisible = !areControlsVisible },
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .graphicsLayer { rotationZ = rotationAngle }
                             ) {
                                 Icon(
-                                    painter = painterResource(id = R.drawable.ic_export),
-                                    contentDescription = "Export Profile",
-                                    tint = MaterialTheme.colorScheme.primary,
+                                    imageVector = Icons.Default.MoreVert,
+                                    contentDescription = "Toggle Actions",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.size(20.dp)
                                 )
                             }
                         }
-                    }
-
-                    // Rotating Menu Toggle Button
-                    val rotationAngle by animateFloatAsState(
-                        targetValue = if (areControlsVisible) 90f else 0f,
-                        animationSpec = spring(
-                            dampingRatio = Spring.DampingRatioMediumBouncy,
-                            stiffness = Spring.StiffnessMedium
-                        ),
-                        label = "toggleButtonRotation"
-                    )
-
-                    IconButton(
-                        onClick = { areControlsVisible = !areControlsVisible },
-                        modifier = Modifier
-                            .size(36.dp)
-                            .graphicsLayer { rotationZ = rotationAngle }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.MoreVert,
-                            contentDescription = "Toggle Actions",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(20.dp)
-                        )
                     }
                 }
             }
@@ -627,7 +678,7 @@ private fun formatExperienceText(experience: String): String {
     val trimmed = experience.trim()
     if (trimmed.isBlank()) return ""
     
-    // 1. Decode prefix strings and map them cleanly
+    // Decode prefix strings and map them cleanly
     val (selectedType, rawVal) = when {
         trimmed.startsWith("FRESH", ignoreCase = true) -> "Fresh" to ""
         trimmed.startsWith("MONTHS:", ignoreCase = true) -> "Months" to trimmed.substringAfter("MONTHS:")
@@ -642,11 +693,10 @@ private fun formatExperienceText(experience: String): String {
     
     val valueTrimmed = rawVal.trim()
     
-    // 2. Format based on type
+    // Format based on type
     return when (selectedType) {
         "Fresh" -> "📊 Fresh Candidate"
         "Months" -> {
-            // Strip any legacy/qualifying text if present, only parse the number
             val numberOnly = valueTrimmed.filter { it.isDigit() }
             val count = numberOnly.toIntOrNull()
             if (count == null || count <= 0) {
@@ -658,7 +708,6 @@ private fun formatExperienceText(experience: String): String {
                     val plusStr = if (hasPlus) "+" else ""
                     "📊 $count$plusStr $unit Experience"
                 } else {
-                    // Smart Month-to-Year Formatting:
                     val years = count / 12
                     val remainder = count % 12
                     val isPlural = years > 1 || remainder > 0 || hasPlus
@@ -682,7 +731,6 @@ private fun formatExperienceText(experience: String): String {
             }
         }
         else -> {
-            // Custom or fallback
             if (valueTrimmed.isBlank()) "" else "📊 $valueTrimmed Experience"
         }
     }

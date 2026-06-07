@@ -1,57 +1,82 @@
 package com.mudasir.nexacvai.presentation.ui.profiles
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.*
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.mudasir.nexacvai.presentation.navigation.Screen
-import com.mudasir.nexacvai.presentation.ui.profiles.components.profiles_dashboard.UserProfileCard
-import com.mudasir.nexacvai.presentation.ui.profiles.components.profiles_dashboard.ProfileCardSkeleton
-import com.mudasir.nexacvai.presentation.ui.components.NexaAlertDialog
-import org.koin.androidx.compose.koinViewModel
-import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.*
 import com.mudasir.nexacvai.domain.model.UserProfile
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
+import com.mudasir.nexacvai.presentation.navigation.Screen
+import com.mudasir.nexacvai.presentation.ui.components.NexaAlertDialog
 import com.mudasir.nexacvai.presentation.ui.profiles.components.ImportExportBottomSheet
 import com.mudasir.nexacvai.presentation.ui.profiles.components.ImportExportSheetContent
-import androidx.compose.foundation.border
-import androidx.compose.ui.platform.LocalContext
-import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.ImportProgressState
+import com.mudasir.nexacvai.presentation.ui.profiles.components.profiles_dashboard.ProfileCardSkeleton
+import com.mudasir.nexacvai.presentation.ui.profiles.components.profiles_dashboard.ProfileSelectionBottomBar
+import com.mudasir.nexacvai.presentation.ui.profiles.components.profiles_dashboard.UserProfileCard
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.DuplicateResolution
-import androidx.compose.material.icons.filled.MoreVert
+import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.ImportProgressState
+import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.ProfilesViewModel
+import org.koin.androidx.compose.koinViewModel
 
 
 /**
@@ -113,7 +138,7 @@ fun ProfilesScreen(
         if (id != null && profiles != null) {
             val index = profiles.indexOfFirst { it.id == id }
             if (index != -1) {
-            kotlinx.coroutines.delay(200) // Wait for UI update and layout
+            kotlinx.coroutines.delay(200)
                 val layoutInfo = gridState.layoutInfo
                 val visibleItems = layoutInfo.visibleItemsInfo
                 val itemInfo = visibleItems.find { it.key == id }
@@ -139,10 +164,16 @@ fun ProfilesScreen(
         }
     }
 
+    LaunchedEffect(state.profiles) {
+        if (state.profiles?.isEmpty() == true) {
+            gridState.scrollToItem(0)
+        }
+    }
+
     var lastClickTime by remember { mutableStateOf(0L) }
     val safeNavigate: (String) -> Unit = { route ->
         val currentTime = System.currentTimeMillis()
-        if (currentTime - lastClickTime > 800L) { // 800ms debounce
+        if (currentTime - lastClickTime > 800L) {
             lastClickTime = currentTime
             navController.navigate(route)
         }
@@ -153,7 +184,6 @@ fun ProfilesScreen(
     val nestedScrollConnection = remember {
         object : NestedScrollConnection {
             override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-                // Hide FAB on scroll down, show on scroll up
                 if (available.y < -10) {
                     isFabVisible = false
                 } else if (available.y > 10) {
@@ -164,7 +194,6 @@ fun ProfilesScreen(
         }
     }
 
-    // Derive a simple enum key for Crossfade — prevents full-state triggering
     val screenMode by remember {
         derivedStateOf {
             val profiles = state.profiles
@@ -179,11 +208,10 @@ fun ProfilesScreen(
 
     val isFabVisuallyShown by remember {
         derivedStateOf {
-            isFabVisible && (screenMode == ProfilesScreenMode.Content || screenMode == ProfilesScreenMode.Empty)
+            isFabVisible && (screenMode == ProfilesScreenMode.Content || screenMode == ProfilesScreenMode.Empty) && !state.isSelectionMode
         }
     }
     
-    // Synchronize FAB visibility state with ProfileDeleteManager
     LaunchedEffect(isFabVisuallyShown) {
         viewModel.profileDeleteManager.setFabVisible(isFabVisuallyShown)
     }
@@ -197,45 +225,75 @@ fun ProfilesScreen(
     Scaffold(
         modifier = Modifier.nestedScroll(nestedScrollConnection),
         topBar = {
-            var isMenuExpanded by remember { mutableStateOf(false) }
-            TopAppBar(
-                title = { Text("Profiles", style = MaterialTheme.typography.titleMedium) },
-                actions = {
-                    Box {
-                        IconButton(onClick = { isMenuExpanded = true }) {
+            if (state.isSelectionMode) {
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = "${state.selectedProfileIds.size} Selected",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = { viewModel.exitSelectionMode() }) {
                             Icon(
-                                imageVector = Icons.Default.MoreVert,
-                                contentDescription = "More Options",
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Exit Selection Mode",
                                 tint = MaterialTheme.colorScheme.onSurface
                             )
                         }
-                        DropdownMenu(
-                            expanded = isMenuExpanded,
-                            onDismissRequest = { isMenuExpanded = false },
-                            shape = RoundedCornerShape(12.dp),
-                            containerColor = MaterialTheme.colorScheme.surface,
-                            modifier = Modifier
-                                .width(180.dp)
-                                .border(
-                                    width = 1.dp,
-                                    color = MaterialTheme.colorScheme.outlineVariant,
-                                    shape = RoundedCornerShape(12.dp)
-                                )
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text("Import Profile") },
-                                onClick = {
-                                    isMenuExpanded = false
-                                    importLauncher.launch(arrayOf("*/*"))
-                                }
-                            )
-                        }
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background
+                    )
                 )
-            )
+            } else {
+                var isMenuExpanded by remember { mutableStateOf(false) }
+                TopAppBar(
+                    title = { Text("Profiles", style = MaterialTheme.typography.titleMedium) },
+                    actions = {
+                        Box {
+                            IconButton(onClick = { isMenuExpanded = true }) {
+                                Icon(
+                                    imageVector = Icons.Default.MoreVert,
+                                    contentDescription = "More Options",
+                                    tint = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                            DropdownMenu(
+                                expanded = isMenuExpanded,
+                                onDismissRequest = { isMenuExpanded = false },
+                                shape = RoundedCornerShape(12.dp),
+                                containerColor = MaterialTheme.colorScheme.surface,
+                                modifier = Modifier
+                                    .width(180.dp)
+                                    .border(
+                                        width = 1.dp,
+                                        color = MaterialTheme.colorScheme.outlineVariant,
+                                        shape = RoundedCornerShape(12.dp)
+                                    )
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("Import Profile") },
+                                    onClick = {
+                                        isMenuExpanded = false
+                                        importLauncher.launch(arrayOf("*/*"))
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Select Profiles") },
+                                    onClick = {
+                                        isMenuExpanded = false
+                                        viewModel.enterSelectionMode()
+                                    }
+                                )
+                            }
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background
+                    )
+                )
+            }
         },
         floatingActionButton = {
             AnimatedVisibility(
@@ -310,7 +368,6 @@ fun ProfilesScreen(
                     )
                 }
                 ProfilesScreenMode.Empty -> {
-                    // Empty State
                     Column(
                         modifier = Modifier
                             .align(Alignment.Center)
@@ -343,7 +400,6 @@ fun ProfilesScreen(
                     val isWideScreen = configuration.screenWidthDp >= 600
                     val columns = if (isWideScreen) GridCells.Fixed(2) else GridCells.Fixed(1)
 
-                    // Grid/List of Profiles
                     LazyVerticalGrid(
                         columns = columns,
                         state = gridState,
@@ -360,7 +416,13 @@ fun ProfilesScreen(
                         items(state.profiles ?: emptyList(), key = { it.id }) { profile ->
                             UserProfileCard(
                                 profile = profile,
-                                onCardClick = { safeNavigate("${Screen.ViewProfile.route}?profileId=${profile.id}") },
+                                onCardClick = {
+                                    if (state.isSelectionMode) {
+                                        viewModel.toggleSelection(profile.id)
+                                    } else {
+                                        safeNavigate("${Screen.ViewProfile.route}?profileId=${profile.id}")
+                                    }
+                                },
                                 onEditClick = { safeNavigate("${Screen.CreateProfile.route}?profileId=${profile.id}") },
                                 onDeleteClick = {
                                     profileToDelete = profile
@@ -374,7 +436,21 @@ fun ProfilesScreen(
                                 onPhotoSelected = { uri ->
                                     viewModel.updateProfilePicture(profile, uri)
                                 },
-                                modifier = Modifier.animateItem()
+                                isSelected = state.selectedProfileIds.contains(profile.id),
+                                isInSelectionMode = state.isSelectionMode,
+                                onCardLongClick = {
+                                    if (!state.isSelectionMode) {
+                                        viewModel.enterSelectionMode(profile.id)
+                                    }
+                                },
+                                modifier = Modifier.animateItem(
+                                    fadeInSpec = tween(durationMillis = 250),
+                                    fadeOutSpec = tween(durationMillis = 200),
+                                    placementSpec = spring(
+                                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                                        stiffness = Spring.StiffnessMediumLow
+                                    )
+                                )
                             )
                         }
                     }
@@ -397,7 +473,6 @@ fun ProfilesScreen(
                 )
             }
 
-            // Export Confirmation Bottom Sheet
             if (state.showExportConfirm && state.exportingProfile != null) {
                 val pToExport = state.exportingProfile!!
                 ImportExportBottomSheet(
@@ -411,7 +486,6 @@ fun ProfilesScreen(
                 )
             }
 
-            // Import Flow Bottom Sheet (Duplicate → Importing → Success)
             if (state.importState != ImportProgressState.Idle) {
                 val sheetContent = when (state.importState) {
                     ImportProgressState.DuplicateSelection -> {
@@ -448,7 +522,14 @@ fun ProfilesScreen(
                 }
             }
 
-
+            ProfileSelectionBottomBar(
+                isSelectionModeActive = state.isSelectionMode,
+                selectedProfileIds = state.selectedProfileIds,
+                allProfiles = state.profiles ?: emptyList(),
+                onToggleSelectAll = { viewModel.toggleSelectAll() },
+                onDeleteSelected = { viewModel.deleteSelectedProfiles() },
+                modifier = Modifier.align(Alignment.BottomCenter)
+            )
         }
     }
 }
