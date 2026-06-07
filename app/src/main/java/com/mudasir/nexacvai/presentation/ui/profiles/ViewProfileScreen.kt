@@ -181,7 +181,16 @@ fun ViewProfileScreen(
         ) {
             when {
                 state.isLoading -> {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                    var showSkeleton by remember { mutableStateOf(false) }
+                    LaunchedEffect(Unit) {
+                        // Wait for the 300ms navigation transition to finish before rendering the heavy skeleton
+                        kotlinx.coroutines.delay(300)
+                        showSkeleton = true
+                    }
+                    
+                    if (showSkeleton) {
+                        ViewProfileSkeleton()
+                    }
                 }
                 state.error != null -> {
                     Column(
