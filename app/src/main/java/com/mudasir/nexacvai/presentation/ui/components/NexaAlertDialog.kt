@@ -1,4 +1,4 @@
-package com.mudasir.nexacvai.presentation.ui.profiles.components
+package com.mudasir.nexacvai.presentation.ui.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape

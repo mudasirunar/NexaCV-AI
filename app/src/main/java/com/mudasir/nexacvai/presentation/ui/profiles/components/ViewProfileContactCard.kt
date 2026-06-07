@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.mudasir.nexacvai.domain.model.UserProfile
-import com.mudasir.nexacvai.presentation.ui.profiles.utils.NameUtils
+import com.mudasir.nexacvai.core.utils.NameUtils
 import com.mudasir.nexacvai.ui.theme.AvatarColorPair
 import com.mudasir.nexacvai.ui.theme.AvatarColorPairs
 

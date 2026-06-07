@@ -27,8 +27,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.mudasir.nexacvai.domain.model.Experience
 import com.mudasir.nexacvai.domain.model.Project
-import com.mudasir.nexacvai.presentation.ui.profiles.components.NexaTextField
-import com.mudasir.nexacvai.presentation.ui.profiles.components.NexaDateTextField
+import com.mudasir.nexacvai.presentation.ui.components.NexaTextField
+import com.mudasir.nexacvai.presentation.ui.components.NexaDateTextField
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.CreateProfileState
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.CreateProfileViewModel
 import com.mudasir.nexacvai.presentation.ui.profiles.utils.*

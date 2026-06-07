@@ -38,7 +38,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mudasir.nexacvai.domain.model.SocialLink
-import com.mudasir.nexacvai.presentation.ui.profiles.utils.getSocialPlatformInfo
+import com.mudasir.nexacvai.core.utils.getSocialPlatformInfo
 
 /**
  * Grouped social links display component for profile cards.

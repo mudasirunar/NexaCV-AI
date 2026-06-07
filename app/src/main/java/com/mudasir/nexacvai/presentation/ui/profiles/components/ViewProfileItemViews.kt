@@ -7,7 +7,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
-import com.mudasir.nexacvai.presentation.ui.profiles.utils.getSocialPlatformInfo
+import com.mudasir.nexacvai.core.utils.getSocialPlatformInfo
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape

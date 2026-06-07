@@ -67,10 +67,10 @@ import androidx.compose.ui.unit.dp
 import com.mudasir.nexacvai.domain.model.Language
 import com.mudasir.nexacvai.domain.model.Reference
 import com.mudasir.nexacvai.domain.model.SocialLink
-import com.mudasir.nexacvai.presentation.ui.profiles.components.NexaTextField
-import com.mudasir.nexacvai.presentation.ui.profiles.utils.SUPPORTED_PLATFORMS
-import com.mudasir.nexacvai.presentation.ui.profiles.utils.getSocialPlatformInfo
-import com.mudasir.nexacvai.presentation.ui.profiles.utils.isStandardPlatform
+import com.mudasir.nexacvai.presentation.ui.components.NexaTextField
+import com.mudasir.nexacvai.core.utils.SUPPORTED_PLATFORMS
+import com.mudasir.nexacvai.core.utils.getSocialPlatformInfo
+import com.mudasir.nexacvai.core.utils.isStandardPlatform
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.CreateProfileState
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.CreateProfileViewModel
 

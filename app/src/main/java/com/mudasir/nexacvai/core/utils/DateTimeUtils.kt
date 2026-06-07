@@ -1,4 +1,4 @@
-package com.mudasir.nexacvai.presentation.ui.profiles.utils
+package com.mudasir.nexacvai.core.utils
 
 import java.text.SimpleDateFormat
 import java.util.Date

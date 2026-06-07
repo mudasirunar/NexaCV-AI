@@ -58,8 +58,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.mudasir.nexacvai.domain.model.UserProfile
-import com.mudasir.nexacvai.presentation.ui.profiles.utils.DateTimeUtils
-import com.mudasir.nexacvai.presentation.ui.profiles.utils.NameUtils
+import com.mudasir.nexacvai.core.utils.DateTimeUtils
+import com.mudasir.nexacvai.presentation.ui.components.NexaAlertDialog
+import com.mudasir.nexacvai.core.utils.NameUtils
 import com.mudasir.nexacvai.ui.theme.AvatarColorPairs
 import com.mudasir.nexacvai.ui.theme.IconColorEmail
 import com.mudasir.nexacvai.ui.theme.IconColorPhone

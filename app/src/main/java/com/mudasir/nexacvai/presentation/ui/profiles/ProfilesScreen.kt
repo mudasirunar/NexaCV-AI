@@ -39,7 +39,7 @@ import androidx.navigation.NavController
 import com.mudasir.nexacvai.presentation.navigation.Screen
 import com.mudasir.nexacvai.presentation.ui.profiles.components.UserProfileCard
 import com.mudasir.nexacvai.presentation.ui.profiles.components.ProfileCardSkeleton
-import com.mudasir.nexacvai.presentation.ui.profiles.components.NexaAlertDialog
+import com.mudasir.nexacvai.presentation.ui.components.NexaAlertDialog
 import org.koin.androidx.compose.koinViewModel
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.*
 import com.mudasir.nexacvai.domain.model.UserProfile

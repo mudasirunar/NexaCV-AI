@@ -43,8 +43,9 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.mudasir.nexacvai.domain.model.UserProfile
 import com.mudasir.nexacvai.presentation.ui.profiles.createImageFileUri
-import com.mudasir.nexacvai.presentation.ui.profiles.utils.ImageCompressionHelper
-import com.mudasir.nexacvai.presentation.ui.profiles.utils.NameUtils
+import com.mudasir.nexacvai.core.utils.ImageCompressionHelper
+import com.mudasir.nexacvai.core.utils.NameUtils
+import com.mudasir.nexacvai.presentation.ui.components.NexaAlertDialog
 import com.mudasir.nexacvai.ui.theme.*
 import kotlinx.coroutines.launch
 

@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.dp
 import com.mudasir.nexacvai.presentation.navigation.BottomNavScreens
 import com.mudasir.nexacvai.presentation.navigation.Screen
 import com.mudasir.nexacvai.presentation.ui.profiles.utils.ProfileDeleteManager
-import com.mudasir.nexacvai.presentation.ui.profiles.components.NexaSnackbar
+import com.mudasir.nexacvai.presentation.ui.components.NexaSnackbar
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect

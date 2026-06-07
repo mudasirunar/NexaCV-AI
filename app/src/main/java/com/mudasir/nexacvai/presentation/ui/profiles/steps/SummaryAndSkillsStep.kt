@@ -21,7 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
-import com.mudasir.nexacvai.presentation.ui.profiles.components.NexaTextField
+import com.mudasir.nexacvai.presentation.ui.components.NexaTextField
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.CreateProfileState
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.CreateProfileViewModel
 
@@ -91,10 +91,7 @@ fun SummaryStep(state: CreateProfileState, viewModel: CreateProfileViewModel) {
                     maxLines = 10,
                     keyboardOptions = KeyboardOptions(
                         capitalization = KeyboardCapitalization.Sentences,
-                        imeAction = ImeAction.Done
-                    ),
-                    keyboardActions = KeyboardActions(
-                        onDone = { focusManager.clearFocus() }
+                        imeAction = ImeAction.Default
                     )
                 )
             }

@@ -21,7 +21,8 @@ import androidx.navigation.NavController
 import com.mudasir.nexacvai.domain.model.*
 import com.mudasir.nexacvai.presentation.navigation.Screen
 import com.mudasir.nexacvai.presentation.ui.profiles.components.*
-import com.mudasir.nexacvai.presentation.ui.profiles.utils.NameUtils
+import com.mudasir.nexacvai.presentation.ui.components.NexaAlertDialog
+import com.mudasir.nexacvai.core.utils.NameUtils
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.ViewProfileViewModel
 import com.mudasir.nexacvai.ui.theme.*
 import org.koin.androidx.compose.koinViewModel

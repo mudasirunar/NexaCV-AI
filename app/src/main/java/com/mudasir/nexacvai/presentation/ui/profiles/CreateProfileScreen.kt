@@ -34,7 +34,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import com.mudasir.nexacvai.presentation.ui.profiles.components.BasicInfoSkeleton
-import com.mudasir.nexacvai.presentation.ui.profiles.components.NexaAlertDialog
+import com.mudasir.nexacvai.presentation.ui.components.NexaAlertDialog
 import org.koin.androidx.compose.koinViewModel
 import com.mudasir.nexacvai.presentation.ui.profiles.steps.*
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.*

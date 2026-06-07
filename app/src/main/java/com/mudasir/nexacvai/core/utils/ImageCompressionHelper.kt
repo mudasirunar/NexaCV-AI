@@ -1,4 +1,4 @@
-package com.mudasir.nexacvai.presentation.ui.profiles.utils
+package com.mudasir.nexacvai.core.utils
 
 import android.content.Context
 import android.graphics.Bitmap
@@ -19,9 +19,16 @@ object ImageCompressionHelper {
      *
      * @param context Android context
      * @param sourceUri Camera or gallery URI to process
+     * @param subDirectory Subdirectory name under context.filesDir (e.g., "profile_pictures")
+     * @param fileName Target file name (e.g., "profile_123.jpg")
      * @return Path to the local compressed image, or null if processing fails
      */
-    suspend fun compressAndSaveProfilePicture(context: Context, sourceUri: Uri, profileId: Long = 0L): String? {
+    suspend fun compressAndSaveImage(
+        context: Context,
+        sourceUri: Uri,
+        subDirectory: String,
+        fileName: String
+    ): String? {
         return withContext(Dispatchers.IO) {
             try {
                 val contentResolver = context.contentResolver
@@ -96,9 +103,8 @@ object ImageCompressionHelper {
                 }
 
                 // 5. Save bitmap to app's secure internal persistent folder
-                val outputDir = File(context.filesDir, "profile_pictures").apply { mkdirs() }
-                
-                val outputFile = File(outputDir, "profile_${profileId}_${System.currentTimeMillis()}.jpg")
+                val outputDir = File(context.filesDir, subDirectory).apply { mkdirs() }
+                val outputFile = File(outputDir, fileName)
                 FileOutputStream(outputFile).use { outputStream ->
                     bitmap.compress(Bitmap.CompressFormat.JPEG, 85, outputStream)
                 }
@@ -111,5 +117,21 @@ object ImageCompressionHelper {
                 null
             }
         }
+    }
+
+    /**
+     * Convenience method specifically for profile pictures.
+     */
+    suspend fun compressAndSaveProfilePicture(
+        context: Context,
+        sourceUri: Uri,
+        profileId: Long = 0L
+    ): String? {
+        return compressAndSaveImage(
+            context = context,
+            sourceUri = sourceUri,
+            subDirectory = "profile_pictures",
+            fileName = "profile_${profileId}_${System.currentTimeMillis()}.jpg"
+        )
     }
 }

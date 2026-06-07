@@ -1,4 +1,4 @@
-package com.mudasir.nexacvai.presentation.ui.profiles.utils
+package com.mudasir.nexacvai.core.utils
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
