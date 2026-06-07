@@ -37,8 +37,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.mudasir.nexacvai.presentation.navigation.Screen
-import com.mudasir.nexacvai.presentation.ui.profiles.components.UserProfileCard
-import com.mudasir.nexacvai.presentation.ui.profiles.components.ProfileCardSkeleton
+import com.mudasir.nexacvai.presentation.ui.profiles.components.profiles_dashboard.UserProfileCard
+import com.mudasir.nexacvai.presentation.ui.profiles.components.profiles_dashboard.ProfileCardSkeleton
 import com.mudasir.nexacvai.presentation.ui.components.NexaAlertDialog
 import org.koin.androidx.compose.koinViewModel
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.*

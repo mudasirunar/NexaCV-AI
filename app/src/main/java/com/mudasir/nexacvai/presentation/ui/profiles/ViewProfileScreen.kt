@@ -20,7 +20,8 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.mudasir.nexacvai.domain.model.*
 import com.mudasir.nexacvai.presentation.navigation.Screen
-import com.mudasir.nexacvai.presentation.ui.profiles.components.*
+import com.mudasir.nexacvai.presentation.ui.profiles.components.view_profile.*
+import com.mudasir.nexacvai.presentation.ui.profiles.components.UserProfileImageDialog
 import com.mudasir.nexacvai.presentation.ui.components.NexaAlertDialog
 import com.mudasir.nexacvai.core.utils.NameUtils
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.ViewProfileViewModel

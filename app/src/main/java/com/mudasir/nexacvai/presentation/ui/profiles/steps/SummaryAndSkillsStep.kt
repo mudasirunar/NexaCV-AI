@@ -3,6 +3,8 @@ package com.mudasir.nexacvai.presentation.ui.profiles.steps
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
@@ -22,16 +24,18 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import com.mudasir.nexacvai.presentation.ui.components.NexaTextField
-import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.CreateProfileState
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.CreateProfileViewModel
+import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.SummaryStepState
 
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun SummaryStep(state: CreateProfileState, viewModel: CreateProfileViewModel) {
+fun SummaryStep(state: SummaryStepState, viewModel: CreateProfileViewModel) {
     val focusManager = LocalFocusManager.current
     
     Column(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         // Step Title

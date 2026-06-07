@@ -1,4 +1,4 @@
-package com.mudasir.nexacvai.presentation.ui.profiles.components
+package com.mudasir.nexacvai.presentation.ui.profiles.components.profiles_dashboard
 
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -21,15 +21,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.unit.dp
 
-/**
- * A shimmer skeleton placeholder matching the layout of [UserProfileCard].
- *
- * Renders a realistic card skeleton with a smooth left-to-right shine animation.
- * Sections mimic: Avatar circle, name line, title line, contact row,
- * social-link dots, stat pills, skill chips, divider, and action buttons.
- *
- * Uses only theme color scheme tokens — zero hardcoded Color(...).
- */
 @Composable
 fun ProfileCardSkeleton(modifier: Modifier = Modifier) {
     val shimmerColors = listOf(

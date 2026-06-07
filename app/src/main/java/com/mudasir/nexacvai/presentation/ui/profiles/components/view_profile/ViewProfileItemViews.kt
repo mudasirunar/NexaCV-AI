@@ -1,4 +1,4 @@
-package com.mudasir.nexacvai.presentation.ui.profiles.components
+package com.mudasir.nexacvai.presentation.ui.profiles.components.view_profile
 
 import android.content.Context
 import android.content.Intent

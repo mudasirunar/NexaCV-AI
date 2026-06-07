@@ -33,7 +33,7 @@ import androidx.core.content.FileProvider
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
-import com.mudasir.nexacvai.presentation.ui.profiles.components.BasicInfoSkeleton
+import com.mudasir.nexacvai.presentation.ui.profiles.components.create_profile.BasicInfoSkeleton
 import com.mudasir.nexacvai.presentation.ui.components.NexaAlertDialog
 import org.koin.androidx.compose.koinViewModel
 import com.mudasir.nexacvai.presentation.ui.profiles.steps.*
@@ -54,6 +54,54 @@ fun CreateProfileScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val isEditing = state.profileId != null
+
+    val basicInfoState = remember(state.fullName, state.professionalTitle, state.emails, state.phones, state.dateOfBirth, state.address, state.yearsOfExperience, state.profilePictureUri, state.profileId, state.tempSessionId) {
+        BasicInfoStepState(
+            fullName = state.fullName,
+            professionalTitle = state.professionalTitle,
+            emails = state.emails,
+            phones = state.phones,
+            dateOfBirth = state.dateOfBirth,
+            address = state.address,
+            yearsOfExperience = state.yearsOfExperience,
+            profilePictureUri = state.profilePictureUri,
+            profileId = state.profileId,
+            tempSessionId = state.tempSessionId
+        )
+    }
+
+    val summaryState = remember(state.professionalSummary, state.skills, state.currentSkillInput) {
+        SummaryStepState(
+            professionalSummary = state.professionalSummary,
+            skills = state.skills,
+            currentSkillInput = state.currentSkillInput
+        )
+    }
+
+    val expProjState = remember(state.experiences, state.projects) {
+        ExperienceProjectsStepState(
+            experiences = state.experiences,
+            projects = state.projects
+        )
+    }
+
+    val eduCertState = remember(state.educations, state.certifications) {
+        EducationCertsStepState(
+            educations = state.educations,
+            certifications = state.certifications
+        )
+    }
+
+    val socialsState = remember(state.socialLinks, state.languages, state.references, state.hobbies, state.volunteerWork, state.awards) {
+        SocialsExtrasStepState(
+            socialLinks = state.socialLinks,
+            languages = state.languages,
+            references = state.references,
+            hobbies = state.hobbies,
+            volunteerWork = state.volunteerWork,
+            awards = state.awards
+        )
+    }
 
     // Navigate back when saved successfully
     LaunchedEffect(state.isSaved) {
@@ -361,43 +409,40 @@ fun CreateProfileScreen(
                 AnimatedContent(
                     targetState = state.currentStep,
                     transitionSpec = {
-                        val enterDuration = 200
-                        val exitDuration = 200
+                        val enterDuration = 250
+                        val exitDuration = 250
                         if (targetState > initialState) {
                             (slideInHorizontally(
                                 animationSpec = tween(enterDuration, easing = androidx.compose.animation.core.LinearOutSlowInEasing)
-                            ) { width -> width / 4 } + fadeIn(tween(enterDuration))) togetherWith
+                            ) { width -> width } + fadeIn(tween(enterDuration))) togetherWith
                             (slideOutHorizontally(
                                 animationSpec = tween(exitDuration, easing = androidx.compose.animation.core.FastOutLinearInEasing)
-                            ) { width -> -width / 4 } + fadeOut(tween(exitDuration)))
+                            ) { width -> -width } + fadeOut(tween(exitDuration)))
                         } else {
                             (slideInHorizontally(
                                 animationSpec = tween(enterDuration, easing = androidx.compose.animation.core.LinearOutSlowInEasing)
-                            ) { width -> -width / 4 } + fadeIn(tween(enterDuration))) togetherWith
+                            ) { width -> -width } + fadeIn(tween(enterDuration))) togetherWith
                             (slideOutHorizontally(
                                 animationSpec = tween(exitDuration, easing = androidx.compose.animation.core.FastOutLinearInEasing)
-                            ) { width -> width / 4 } + fadeOut(tween(exitDuration)))
+                            ) { width -> width } + fadeOut(tween(exitDuration)))
                         } using SizeTransform(clip = false)
                     },
                     modifier = Modifier.fillMaxSize(),
                     label = "StepTransition"
                 ) { step ->
-                    Column(
+                    Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .verticalScroll(rememberScrollState())
-                            .padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                            .padding(16.dp)
                     ) {
                         when (step) {
-                            0 -> BasicInfoStep(state, viewModel)
-                            1 -> SummaryStep(state, viewModel)
-                            2 -> ExperienceProjectsStep(state, viewModel)
-                            3 -> EducationCertsStep(state, viewModel)
-                            4 -> SocialsExtrasStep(state, viewModel)
+                            0 -> BasicInfoStep(basicInfoState, viewModel)
+                            1 -> SummaryStep(summaryState, viewModel)
+                            2 -> ExperienceProjectsStep(expProjState, viewModel)
+                            3 -> EducationCertsStep(eduCertState, viewModel)
+                            4 -> SocialsExtrasStep(socialsState, viewModel)
                             else -> {}
                         }
-                        Spacer(modifier = Modifier.height(24.dp))
                     }
                 }
             }

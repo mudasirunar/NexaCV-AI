@@ -6,6 +6,8 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -37,14 +39,14 @@ import com.mudasir.nexacvai.presentation.ui.components.NexaDateTextField
 import com.mudasir.nexacvai.core.utils.ImageCompressionHelper
 import androidx.compose.foundation.shape.RoundedCornerShape
 import com.mudasir.nexacvai.presentation.ui.profiles.createImageFileUri
-import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.CreateProfileState
+import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.BasicInfoStepState
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.CreateProfileViewModel
 import com.mudasir.nexacvai.presentation.ui.profiles.utils.*
 import androidx.compose.ui.autofill.ContentType
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BasicInfoStep(state: CreateProfileState, viewModel: CreateProfileViewModel) {
+fun BasicInfoStep(state: BasicInfoStepState, viewModel: CreateProfileViewModel) {
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
     val coroutineScope = rememberCoroutineScope()
@@ -119,7 +121,7 @@ fun BasicInfoStep(state: CreateProfileState, viewModel: CreateProfileViewModel) 
         )
     }
 
-    Column(modifier = Modifier.fillMaxWidth()) {
+    Column(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
         Text(
             text = "Step 1: Basic Information",
             style = MaterialTheme.typography.titleSmall,

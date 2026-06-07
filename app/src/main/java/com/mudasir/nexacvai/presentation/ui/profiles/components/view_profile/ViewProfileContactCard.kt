@@ -1,4 +1,4 @@
-package com.mudasir.nexacvai.presentation.ui.profiles.components
+package com.mudasir.nexacvai.presentation.ui.profiles.components.view_profile
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -26,7 +26,6 @@ import coil.request.ImageRequest
 import com.mudasir.nexacvai.domain.model.UserProfile
 import com.mudasir.nexacvai.core.utils.NameUtils
 import com.mudasir.nexacvai.ui.theme.AvatarColorPair
-import com.mudasir.nexacvai.ui.theme.AvatarColorPairs
 
 @Composable
 fun ProfileHeaderSection(

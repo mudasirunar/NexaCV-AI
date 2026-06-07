@@ -1,4 +1,6 @@
-package com.mudasir.nexacvai.presentation.ui.profiles.components
+package com.mudasir.nexacvai.presentation.ui.profiles.components.profiles_dashboard
+
+import com.mudasir.nexacvai.presentation.ui.profiles.components.UserProfileImageDialog
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
@@ -123,7 +125,6 @@ fun UserProfileCard(
 
     val primaryEmail = remember(profile.emails) { profile.emails.firstOrNull() ?: "" }
     val primaryPhone = remember(profile.phones) { profile.phones.firstOrNull() ?: "" }
-    // Full email is rendered directly; no masking applied
 
     val completionDetails = remember(profile) {
         val hasBasicInfo = profile.fullName.isNotBlank() &&
@@ -436,17 +437,17 @@ fun UserProfileCard(
                                     initialScale = 0.6f
                                 ),
                         exit = fadeOut(animationSpec = tween(150)) + 
-                               slideOutHorizontally(
-                                   animationSpec = spring(
-                                       dampingRatio = Spring.DampingRatioNoBouncy,
-                                       stiffness = Spring.StiffnessMedium
-                                   ),
-                                   targetOffsetX = { it }
-                               ) +
-                               scaleOut(
-                                   animationSpec = tween(150),
-                                   targetScale = 0.6f
-                               )
+                                slideOutHorizontally(
+                                    animationSpec = spring(
+                                        dampingRatio = Spring.DampingRatioNoBouncy,
+                                        stiffness = Spring.StiffnessMedium
+                                    ),
+                                    targetOffsetX = { it }
+                                ) +
+                                scaleOut(
+                                    animationSpec = tween(150),
+                                    targetScale = 0.6f
+                                )
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -506,7 +507,7 @@ fun UserProfileCard(
         }
     }
 
-    // Fullscreen interactive circular PFP Viewer Dialog (Extracted & Non-hardcoded)
+    // Fullscreen interactive circular PFP Viewer Dialog
     UserProfileImageDialog(
         showFullScreenImage = showFullScreenImage,
         onDismissFullScreen = { showFullScreenImage = false },

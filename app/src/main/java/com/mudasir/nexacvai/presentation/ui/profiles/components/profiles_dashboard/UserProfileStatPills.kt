@@ -1,4 +1,4 @@
-package com.mudasir.nexacvai.presentation.ui.profiles.components
+package com.mudasir.nexacvai.presentation.ui.profiles.components.profiles_dashboard
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
