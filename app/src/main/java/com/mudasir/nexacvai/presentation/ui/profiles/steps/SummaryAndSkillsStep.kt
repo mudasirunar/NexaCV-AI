@@ -2,6 +2,7 @@ package com.mudasir.nexacvai.presentation.ui.profiles.steps
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -30,28 +31,24 @@ import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.SummaryStepState
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun SummaryStep(state: SummaryStepState, viewModel: CreateProfileViewModel) {
-    val focusManager = LocalFocusManager.current
-    
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
-        // Step Title
         Text(
             text = "Step 2: Summary & Skills",
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.primary
         )
 
-        // Card 1: Professional Summary
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surface
             ),
-            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
             shape = RoundedCornerShape(16.dp),
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
         ) {
@@ -101,13 +98,12 @@ fun SummaryStep(state: SummaryStepState, viewModel: CreateProfileViewModel) {
             }
         }
 
-        // Card 2: Core Skills
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surface
             ),
-            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
             shape = RoundedCornerShape(16.dp),
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
         ) {
@@ -141,7 +137,6 @@ fun SummaryStep(state: SummaryStepState, viewModel: CreateProfileViewModel) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
-                // Professional Guidance Banner (Dynamic)
                 AnimatedVisibility(
                     visible = state.skills.size < 1,
                     enter = fadeIn(animationSpec = tween(durationMillis = 300)) + expandVertically(animationSpec = tween(durationMillis = 300)),
@@ -151,7 +146,7 @@ fun SummaryStep(state: SummaryStepState, viewModel: CreateProfileViewModel) {
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(10.dp),
                         color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f),
-                        border = androidx.compose.foundation.BorderStroke(
+                        border = BorderStroke(
                             width = 1.dp,
                             color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
                         )
@@ -216,7 +211,7 @@ fun SummaryStep(state: SummaryStepState, viewModel: CreateProfileViewModel) {
                         enabled = state.currentSkillInput.isNotBlank(),
                         interactionSource = skillInteractionSource,
                         modifier = Modifier
-                            .padding(top = 22.dp) // Align with input field box (excluding its label)
+                            .padding(top = 22.dp)
                             .graphicsLayer(scaleX = buttonScale, scaleY = buttonScale),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary,
@@ -249,7 +244,7 @@ fun SummaryStep(state: SummaryStepState, viewModel: CreateProfileViewModel) {
                                 ),
                                 shape = RoundedCornerShape(10.dp),
                                 color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
-                                border = androidx.compose.foundation.BorderStroke(
+                                border = BorderStroke(
                                     width = 1.dp,
                                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
                                 )
@@ -263,7 +258,10 @@ fun SummaryStep(state: SummaryStepState, viewModel: CreateProfileViewModel) {
                                         text = skill,
                                         style = MaterialTheme.typography.bodyMedium,
                                         fontWeight = FontWeight.Medium,
-                                        color = MaterialTheme.colorScheme.primary
+                                        color = MaterialTheme.colorScheme.primary,
+                                        maxLines = 1,
+                                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                                        modifier = Modifier.weight(1f, fill = false)
                                     )
                                     Icon(
                                         imageVector = Icons.Default.Close,
@@ -291,5 +289,7 @@ fun SummaryStep(state: SummaryStepState, viewModel: CreateProfileViewModel) {
                 }
             }
         }
+        
+        Spacer(modifier = Modifier.height(12.dp))
     }
 }

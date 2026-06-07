@@ -1,43 +1,96 @@
 package com.mudasir.nexacvai.presentation.ui.profiles
 
 import android.content.Context
+import android.content.res.Configuration
 import android.net.Uri
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.*
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.isImeVisible
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Save
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalConfiguration
-import android.content.res.Configuration
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
-import com.mudasir.nexacvai.presentation.ui.profiles.components.create_profile.BasicInfoSkeleton
 import com.mudasir.nexacvai.presentation.ui.components.NexaAlertDialog
+import com.mudasir.nexacvai.presentation.ui.profiles.components.create_profile.BasicInfoSkeleton
+import com.mudasir.nexacvai.presentation.ui.profiles.steps.BasicInfoStep
+import com.mudasir.nexacvai.presentation.ui.profiles.steps.EducationCertsStep
+import com.mudasir.nexacvai.presentation.ui.profiles.steps.ExperienceProjectsStep
+import com.mudasir.nexacvai.presentation.ui.profiles.steps.SocialsExtrasStep
+import com.mudasir.nexacvai.presentation.ui.profiles.steps.SummaryStep
+import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.BasicInfoStepState
+import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.CreateProfileViewModel
+import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.EducationCertsStepState
+import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.ExperienceProjectsStepState
+import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.SocialsExtrasStepState
+import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.SummaryStepState
 import org.koin.androidx.compose.koinViewModel
-import com.mudasir.nexacvai.presentation.ui.profiles.steps.*
-import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.*
 import java.io.File
 
 fun Context.createImageFileUri(): Uri {
@@ -103,7 +156,6 @@ fun CreateProfileScreen(
         )
     }
 
-    // Navigate back when saved successfully
     LaunchedEffect(state.isSaved) {
         if (state.isSaved) {
             navController.popBackStack()
@@ -151,7 +203,7 @@ fun CreateProfileScreen(
                 navController.popBackStack()
             },
             dismissLabel = "Cancel",
-            isDestructive = true
+            isDestructive = false
         )
     }
 
@@ -209,49 +261,44 @@ fun CreateProfileScreen(
         },
         bottomBar = {
             Surface(
-                modifier = Modifier.imePadding(),
+                modifier = Modifier
+                    .imePadding()
+                    .then(
+                        if (WindowInsets.isImeVisible) Modifier else Modifier.navigationBarsPadding()
+                    ),
                 color = MaterialTheme.colorScheme.surface,
-                tonalElevation = 8.dp,
-                shadowElevation = 16.dp
+                tonalElevation = 0.dp,
+                shadowElevation = 0.dp
             ) {
                 Column {
-                    HorizontalDivider(
-                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f),
-                        thickness = 1.dp
-                    )
+                    Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f), thickness = 1.dp)
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 10.dp)
-                            .then(
-                                if (WindowInsets.isImeVisible) Modifier else Modifier.navigationBarsPadding()
-                            ),
+                            .padding(horizontal = 16.dp, vertical = 10.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Left Column: Back button
-                        Box(
-                            modifier = Modifier.weight(1f),
-                            contentAlignment = Alignment.CenterStart
-                        ) {
-                            if (state.currentStep > 0) {
-                                val backInteractionSource = remember { MutableInteractionSource() }
-                                val backPressed by backInteractionSource.collectIsPressedAsState()
-                                val backScale by animateFloatAsState(if (backPressed) 0.98f else 1f, label = "backScale")
-                                OutlinedButton(
-                                    onClick = { viewModel.previousStep() },
-                                    interactionSource = backInteractionSource,
-                                    modifier = Modifier
-                                        .height(38.dp)
-                                        .graphicsLayer(scaleX = backScale, scaleY = backScale),
-                                    shape = RoundedCornerShape(12.dp),
-                                    contentPadding = PaddingValues(horizontal = 12.dp)
-                                ) {
-                                    Text("Back", style = MaterialTheme.typography.labelLarge)
-                                }
+                    Box(
+                        modifier = Modifier.weight(1f),
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        if (state.currentStep > 0) {
+                            val backInteractionSource = remember { MutableInteractionSource() }
+                            val backPressed by backInteractionSource.collectIsPressedAsState()
+                            val backScale by animateFloatAsState(if (backPressed) 0.98f else 1f, label = "backScale")
+                            OutlinedButton(
+                                onClick = { viewModel.previousStep() },
+                                interactionSource = backInteractionSource,
+                                modifier = Modifier
+                                    .height(38.dp)
+                                    .graphicsLayer(scaleX = backScale, scaleY = backScale),
+                                shape = RoundedCornerShape(12.dp),
+                                contentPadding = PaddingValues(horizontal = 12.dp)
+                            ) {
+                                Text("Back", style = MaterialTheme.typography.labelLarge)
                             }
                         }
-
-                        // Center Column: Save Midway button
+                    }
                         Box(
                             modifier = Modifier.weight(1.2f),
                             contentAlignment = Alignment.Center
@@ -309,7 +356,6 @@ fun CreateProfileScreen(
                             }
                         }
 
-                        // Right Column: Next / Final Save button
                         Box(
                             modifier = Modifier.weight(1f),
                             contentAlignment = Alignment.CenterEnd
@@ -393,7 +439,6 @@ fun CreateProfileScreen(
                 .padding(paddingValues)
         ) {
             if (state.isLoading) {
-                // Only shown when editing an existing profile (loading from Room).
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
@@ -403,7 +448,6 @@ fun CreateProfileScreen(
                     )
                 }
             } else if (!isTransitionComplete) {
-                // Render a lightweight static skeleton to avoid blank screens during transition
                 BasicInfoSkeleton()
             } else {
                 AnimatedContent(
@@ -413,17 +457,17 @@ fun CreateProfileScreen(
                         val exitDuration = 250
                         if (targetState > initialState) {
                             (slideInHorizontally(
-                                animationSpec = tween(enterDuration, easing = androidx.compose.animation.core.LinearOutSlowInEasing)
+                                animationSpec = tween(enterDuration, easing = LinearOutSlowInEasing)
                             ) { width -> width } + fadeIn(tween(enterDuration))) togetherWith
                             (slideOutHorizontally(
-                                animationSpec = tween(exitDuration, easing = androidx.compose.animation.core.FastOutLinearInEasing)
+                                animationSpec = tween(exitDuration, easing = FastOutLinearInEasing)
                             ) { width -> -width } + fadeOut(tween(exitDuration)))
                         } else {
                             (slideInHorizontally(
-                                animationSpec = tween(enterDuration, easing = androidx.compose.animation.core.LinearOutSlowInEasing)
+                                animationSpec = tween(enterDuration, easing = LinearOutSlowInEasing)
                             ) { width -> -width } + fadeIn(tween(enterDuration))) togetherWith
                             (slideOutHorizontally(
-                                animationSpec = tween(exitDuration, easing = androidx.compose.animation.core.FastOutLinearInEasing)
+                                animationSpec = tween(exitDuration, easing = FastOutLinearInEasing)
                             ) { width -> width } + fadeOut(tween(exitDuration)))
                         } using SizeTransform(clip = false)
                     },
@@ -433,7 +477,7 @@ fun CreateProfileScreen(
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(16.dp)
+                            .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 0.dp)
                     ) {
                         when (step) {
                             0 -> BasicInfoStep(basicInfoState, viewModel)
