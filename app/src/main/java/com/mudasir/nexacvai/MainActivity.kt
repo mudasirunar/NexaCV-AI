@@ -21,17 +21,16 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
 import com.mudasir.nexacvai.presentation.navigation.BottomNavScreens
 import com.mudasir.nexacvai.presentation.navigation.Screen
 import com.mudasir.nexacvai.presentation.ui.profiles.utils.ProfileDeleteManager
+import com.mudasir.nexacvai.presentation.ui.profiles.utils.ProfileExportManager
 import com.mudasir.nexacvai.presentation.ui.components.NexaSnackbar
+import com.mudasir.nexacvai.presentation.ui.profiles.components.NexaExportToast
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -39,14 +38,12 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import org.koin.android.ext.android.inject
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.IntOffset
 
 class MainActivity : ComponentActivity() {
     private val profileDeleteManager: ProfileDeleteManager by inject()
+    private val profileExportManager: ProfileExportManager by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
@@ -170,6 +167,37 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                         }
+
+                        // Custom animated global export status toast
+                        val exportState by profileExportManager.exportState.collectAsState()
+                        val exportError by profileExportManager.exportError.collectAsState()
+
+                        val isSnackbarVisible = pendingDeleteProfile != null && showBottomBar
+                        val targetToastPadding = if (isSnackbarVisible) {
+                            snackbarBottomPadding + 64.dp
+                        } else {
+                            if (showBottomBar) 96.dp else 16.dp
+                        }
+
+                        val toastBottomPadding by animateDpAsState(
+                            targetValue = targetToastPadding,
+                            animationSpec = tween(durationMillis = 250),
+                            label = "toastBottomPadding"
+                        )
+
+                        NexaExportToast(
+                            exportState = exportState,
+                            errorMessage = exportError,
+                            onDismiss = { profileExportManager.dismissExportProgress() },
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .offset {
+                                    IntOffset(
+                                        x = 0,
+                                        y = -toastBottomPadding.roundToPx()
+                                    )
+                                }
+                        )
                     }
                 }
             }

@@ -133,3 +133,7 @@ val SnackbarBgDark = Color(0xFF1E293B)     // Premium dark slate/charcoal for da
 val SnackbarTextDark = Color(0xFFF8FAFC)   // Warm white/off-white for dark mode text readability
 val SnackbarBgLight = Color(0xFFF1F5F9)    // Soft light slate/gray for light mode snackbars
 val SnackbarTextLight = Color(0xFF1E293B)  // Dark slate for light mode text readability
+
+// 📦 Import/Export Bottom Sheet Icon Tints
+val SheetIconSuccessGreen = Color(0xFF22C55E)  // Green check for import success state
+val SheetIconWarningAmber = Color(0xFFF59E0B)  // Amber warning for duplicate conflicts

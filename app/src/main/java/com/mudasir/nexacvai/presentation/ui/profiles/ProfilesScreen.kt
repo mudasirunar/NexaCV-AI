@@ -1,7 +1,6 @@
 package com.mudasir.nexacvai.presentation.ui.profiles
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.Crossfade
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -44,6 +43,15 @@ import org.koin.androidx.compose.koinViewModel
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.*
 import com.mudasir.nexacvai.domain.model.UserProfile
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import com.mudasir.nexacvai.presentation.ui.profiles.components.ImportExportBottomSheet
+import com.mudasir.nexacvai.presentation.ui.profiles.components.ImportExportSheetContent
+import androidx.compose.foundation.border
+import androidx.compose.ui.platform.LocalContext
+import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.ImportProgressState
+import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.DuplicateResolution
+import androidx.compose.material.icons.filled.MoreVert
 
 
 /**
@@ -63,9 +71,39 @@ fun ProfilesScreen(
     viewModel: ProfilesViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsState()
+    val context = LocalContext.current
     val bottomSpacing = 80.dp
     var profileToDelete by remember { mutableStateOf<UserProfile?>(null) }
     val gridState = rememberLazyGridState()
+
+    val exportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/octet-stream"),
+        onResult = { uri ->
+            uri?.let {
+                viewModel.exportProfileToUri(
+                    context = context,
+                    uri = it
+                )
+            } ?: run {
+                viewModel.dismissExportConfirm()
+            }
+        }
+    )
+
+    val importLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument(),
+        onResult = { uri ->
+            uri?.let {
+                viewModel.startImport(
+                    context = context,
+                    uri = it,
+                    onError = { errorMessage ->
+                        android.widget.Toast.makeText(context, errorMessage, android.widget.Toast.LENGTH_LONG).show()
+                    }
+                )
+            }
+        }
+    )
 
     val lastUndoneId by viewModel.profileDeleteManager.lastUndoneProfileId.collectAsState()
 
@@ -92,6 +130,12 @@ fun ProfilesScreen(
                 }
             }
             viewModel.profileDeleteManager.clearLastUndoneProfileId()
+        }
+    }
+
+    LaunchedEffect(state.importState) {
+        if (state.importState == ImportProgressState.Success) {
+            gridState.scrollToItem(0)
         }
     }
 
@@ -153,8 +197,41 @@ fun ProfilesScreen(
     Scaffold(
         modifier = Modifier.nestedScroll(nestedScrollConnection),
         topBar = {
+            var isMenuExpanded by remember { mutableStateOf(false) }
             TopAppBar(
                 title = { Text("Profiles", style = MaterialTheme.typography.titleMedium) },
+                actions = {
+                    Box {
+                        IconButton(onClick = { isMenuExpanded = true }) {
+                            Icon(
+                                imageVector = Icons.Default.MoreVert,
+                                contentDescription = "More Options",
+                                tint = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = isMenuExpanded,
+                            onDismissRequest = { isMenuExpanded = false },
+                            shape = RoundedCornerShape(12.dp),
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            modifier = Modifier
+                                .width(180.dp)
+                                .border(
+                                    width = 1.dp,
+                                    color = MaterialTheme.colorScheme.outlineVariant,
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Import Profile") },
+                                onClick = {
+                                    isMenuExpanded = false
+                                    importLauncher.launch(arrayOf("*/*"))
+                                }
+                            )
+                        }
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
                 )
@@ -288,6 +365,9 @@ fun ProfilesScreen(
                                 onDeleteClick = {
                                     profileToDelete = profile
                                 },
+                                onExportClick = {
+                                    viewModel.selectProfileForExport(profile)
+                                },
                                 onRemovePhotoClick = {
                                     viewModel.removeProfilePicture(profile)
                                 },
@@ -316,6 +396,59 @@ fun ProfilesScreen(
                     isDestructive = true
                 )
             }
+
+            // Export Confirmation Bottom Sheet
+            if (state.showExportConfirm && state.exportingProfile != null) {
+                val pToExport = state.exportingProfile!!
+                ImportExportBottomSheet(
+                    content = ImportExportSheetContent.ExportConfirm(pToExport),
+                    onExportConfirm = {
+                        viewModel.hideExportDialog()
+                        val fileName = "${pToExport.fullName.trim().replace("\\s+".toRegex(), "_")}_profile.nexacv"
+                        exportLauncher.launch(fileName)
+                    },
+                    onDismiss = { viewModel.dismissExportConfirm() }
+                )
+            }
+
+            // Import Flow Bottom Sheet (Duplicate → Importing → Success)
+            if (state.importState != ImportProgressState.Idle) {
+                val sheetContent = when (state.importState) {
+                    ImportProgressState.DuplicateSelection -> {
+                        val duplicateProfile = state.importedProfileData?.profile
+                        val existingProfile = state.profiles?.find { it.id == duplicateProfile?.id }
+                        if (duplicateProfile != null) {
+                            ImportExportSheetContent.DuplicateFound(
+                                importedProfile = duplicateProfile,
+                                existingName = existingProfile?.fullName ?: "Existing Profile"
+                            )
+                        } else null
+                    }
+                    ImportProgressState.Importing -> ImportExportSheetContent.Importing
+                    ImportProgressState.Success -> ImportExportSheetContent.ImportSuccess(
+                        profileName = state.importedProfileData?.profile?.fullName ?: ""
+                    )
+                    ImportProgressState.Idle -> null
+                }
+
+                if (sheetContent != null) {
+                    ImportExportBottomSheet(
+                        content = sheetContent,
+                        onKeepBoth = { viewModel.executeImport(context, DuplicateResolution.KeepBoth) },
+                        onOverwrite = { viewModel.executeImport(context, DuplicateResolution.Overwrite) },
+                        onViewProfile = {
+                            val importedId = state.newlyImportedProfileId
+                            viewModel.cancelImport()
+                            if (importedId != null) {
+                                safeNavigate("${Screen.ViewProfile.route}?profileId=$importedId")
+                            }
+                        },
+                        onDismiss = { viewModel.cancelImport() }
+                    )
+                }
+            }
+
+
         }
     }
 }

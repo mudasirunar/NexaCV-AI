@@ -37,7 +37,7 @@ fun NexaAlertDialog(
             elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
             modifier = Modifier
                 .padding(horizontal = 24.dp)
-                .widthIn(max = 400.dp)
+                .widthIn(max = 480.dp)
                 .fillMaxWidth()
         ) {
             Column(
@@ -72,51 +72,58 @@ fun NexaAlertDialog(
                     content()
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                val showButtons = dismissLabel != null || confirmLabel.isNotBlank()
+                if (showButtons) {
+                    Spacer(modifier = Modifier.height(24.dp))
 
-                // Actions Button Bar (Dismiss on left, Confirm on right)
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    if (dismissLabel != null) {
-                        TextButton(
-                            onClick = onDismissRequest,
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.textButtonColors(
-                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                            ),
-                            modifier = Modifier.height(40.dp)
-                        ) {
-                            Text(
-                                text = dismissLabel,
-                                style = MaterialTheme.typography.labelLarge.copy(
-                                    fontWeight = FontWeight.Bold
-                                )
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(12.dp))
-                    }
-
-                    val buttonContainerColor = MaterialTheme.colorScheme.primary
-                    val buttonContentColor = MaterialTheme.colorScheme.onPrimary
-
-                    Button(
-                        onClick = onConfirm,
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = buttonContainerColor,
-                            contentColor = buttonContentColor
-                        ),
-                        modifier = Modifier.height(40.dp)
+                    // Actions Button Bar (Dismiss on left, Confirm on right)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = confirmLabel,
-                            style = MaterialTheme.typography.labelLarge.copy(
-                                fontWeight = FontWeight.Bold
-                            )
-                        )
+                        if (dismissLabel != null) {
+                            TextButton(
+                                onClick = onDismissRequest,
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.textButtonColors(
+                                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                ),
+                                modifier = Modifier.height(40.dp)
+                            ) {
+                                Text(
+                                    text = dismissLabel,
+                                    style = MaterialTheme.typography.labelLarge.copy(
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                )
+                            }
+                        }
+
+                        if (confirmLabel.isNotBlank()) {
+                            if (dismissLabel != null) {
+                                Spacer(modifier = Modifier.width(12.dp))
+                            }
+                            val buttonContainerColor = MaterialTheme.colorScheme.primary
+                            val buttonContentColor = MaterialTheme.colorScheme.onPrimary
+
+                            Button(
+                                onClick = onConfirm,
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = buttonContainerColor,
+                                    contentColor = buttonContentColor
+                                ),
+                                modifier = Modifier.height(40.dp)
+                            ) {
+                                Text(
+                                    text = confirmLabel,
+                                    style = MaterialTheme.typography.labelLarge.copy(
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                )
+                            }
+                        }
                     }
                 }
             }

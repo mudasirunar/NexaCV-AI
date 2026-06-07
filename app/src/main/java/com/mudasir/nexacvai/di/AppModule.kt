@@ -10,14 +10,16 @@ import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.ProfilesViewModel
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.CreateProfileViewModel
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.ViewProfileViewModel
 import com.mudasir.nexacvai.presentation.ui.profiles.utils.ProfileDeleteManager
+import com.mudasir.nexacvai.presentation.ui.profiles.utils.ProfileExportManager
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 
 val appModule = module {
     
-    // ProfileDeleteManager
+    // ProfileDeleteManager & ProfileExportManager
     single { ProfileDeleteManager(get()) }
+    single { ProfileExportManager() }
     
     // DataStore
     single { AppSettingsManager(androidContext()) }
@@ -44,10 +46,11 @@ val appModule = module {
     single { GetProfileUseCase(get()) }
     single { DeleteProfileUseCase(get()) }
     single { GetAllProfilesUseCase(get()) }
+    single { ImportProfileUseCase(get()) }
 
     // ViewModels
-    viewModel { ProfilesViewModel(get(), get(), get()) }
+    viewModel { ProfilesViewModel(get(), get(), get(), get(), get()) }
     viewModel { CreateProfileViewModel(get(), get(), get()) }
-    viewModel { ViewProfileViewModel(get(), get(), get()) }
+    viewModel { ViewProfileViewModel(get(), get(), get(), get()) }
 }
 

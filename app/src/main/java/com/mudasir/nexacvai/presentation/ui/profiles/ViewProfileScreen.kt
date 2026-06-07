@@ -18,13 +18,20 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.mudasir.nexacvai.domain.model.*
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import com.mudasir.nexacvai.R
+import androidx.compose.ui.res.painterResource
 import com.mudasir.nexacvai.presentation.navigation.Screen
 import com.mudasir.nexacvai.presentation.ui.profiles.components.view_profile.*
 import com.mudasir.nexacvai.presentation.ui.profiles.components.UserProfileImageDialog
+import com.mudasir.nexacvai.presentation.ui.profiles.components.ImportExportBottomSheet
+import com.mudasir.nexacvai.presentation.ui.profiles.components.ImportExportSheetContent
 import com.mudasir.nexacvai.presentation.ui.components.NexaAlertDialog
 import com.mudasir.nexacvai.core.utils.NameUtils
-import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.ViewProfileViewModel
+import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.*
 import com.mudasir.nexacvai.ui.theme.*
 import org.koin.androidx.compose.koinViewModel
 
@@ -38,6 +45,21 @@ fun ViewProfileScreen(
     val profile = state.profile
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showFullScreenImage by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+
+    val exportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/octet-stream"),
+        onResult = { uri ->
+            uri?.let {
+                viewModel.exportProfileToUri(
+                    context = context,
+                    uri = it
+                )
+            } ?: run {
+                viewModel.dismissExportConfirm()
+            }
+        }
+    )
 
     val firstName = remember(profile?.fullName) {
         val name = profile?.fullName?.trim().orEmpty()
@@ -144,6 +166,21 @@ fun ViewProfileScreen(
                                     onClick = {
                                         isMenuExpanded = false
                                         navController.navigate("${Screen.CreateProfile.route}?profileId=${profile.id}")
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Export Profile") },
+                                    leadingIcon = {
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.ic_export),
+                                            contentDescription = "Export Profile",
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    },
+                                    onClick = {
+                                        isMenuExpanded = false
+                                        viewModel.selectProfileForExport(profile)
                                     }
                                 )
                                 DropdownMenuItem(
@@ -465,6 +502,22 @@ fun ViewProfileScreen(
                     isReadOnly = true
                 )
             }
+
+            // Export Confirmation Bottom Sheet
+            if (state.showExportConfirm && state.exportingProfile != null) {
+                val pToExport = state.exportingProfile!!
+                ImportExportBottomSheet(
+                    content = ImportExportSheetContent.ExportConfirm(pToExport),
+                    onExportConfirm = {
+                        viewModel.hideExportDialog()
+                        val fileName = "${pToExport.fullName.trim().replace("\\s+".toRegex(), "_")}_profile.nexacv"
+                        exportLauncher.launch(fileName)
+                    },
+                    onDismiss = { viewModel.dismissExportConfirm() }
+                )
+            }
+
+
         }
     }
 }
