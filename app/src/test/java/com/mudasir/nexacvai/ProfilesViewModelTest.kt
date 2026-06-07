@@ -7,6 +7,10 @@ import com.mudasir.nexacvai.domain.usecase.GetAllProfilesUseCase
 import com.mudasir.nexacvai.domain.usecase.SaveProfileUseCase
 import com.mudasir.nexacvai.presentation.ui.profiles.utils.ProfileDeleteManager
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.ProfilesViewModel
+import com.mudasir.nexacvai.domain.usecase.ImportProfileUseCase
+import com.mudasir.nexacvai.presentation.ui.profiles.utils.ProfileExportManager
+import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.ImportProgressState
+import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.ExportProgressState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -28,6 +32,8 @@ class ProfilesViewModelTest {
     private lateinit var saveProfileUseCase: SaveProfileUseCase
     private lateinit var deleteProfileUseCase: DeleteProfileUseCase
     private lateinit var deleteManager: ProfileDeleteManager
+    private lateinit var importProfileUseCase: ImportProfileUseCase
+    private lateinit var exportManager: ProfileExportManager
 
     @Before
     fun setUp() {
@@ -37,6 +43,8 @@ class ProfilesViewModelTest {
         saveProfileUseCase = SaveProfileUseCase(fakeRepository)
         deleteProfileUseCase = DeleteProfileUseCase(fakeRepository)
         deleteManager = ProfileDeleteManager(deleteProfileUseCase, testScope)
+        importProfileUseCase = ImportProfileUseCase(fakeRepository)
+        exportManager = ProfileExportManager(testScope)
     }
 
     @After
@@ -48,7 +56,9 @@ class ProfilesViewModelTest {
         return ProfilesViewModel(
             getAllProfilesUseCase = getAllProfilesUseCase,
             saveProfileUseCase = saveProfileUseCase,
-            profileDeleteManager = deleteManager
+            importProfileUseCase = importProfileUseCase,
+            profileDeleteManager = deleteManager,
+            profileExportManager = exportManager
         )
     }
 
@@ -175,6 +185,46 @@ class ProfilesViewModelTest {
             createdAt = System.currentTimeMillis(),
             updatedAt = System.currentTimeMillis()
         )
+    }
+
+    @Test
+    fun testExportConfirmationState() = runTest(testDispatcher) {
+        val profile = createDummyProfile(1L, "Alice")
+        val viewModel = createViewModel()
+        
+        // Initial state
+        assertFalse(viewModel.state.value.showExportConfirm)
+        assertNull(viewModel.state.value.exportingProfile)
+
+        // Select for export
+        viewModel.selectProfileForExport(profile)
+        runCurrent()
+        assertTrue(viewModel.state.value.showExportConfirm)
+        assertEquals(profile, viewModel.state.value.exportingProfile)
+
+        // Hide dialog (retains profile pointer but hides dialog visibility)
+        viewModel.hideExportDialog()
+        runCurrent()
+        assertFalse(viewModel.state.value.showExportConfirm)
+        assertEquals(profile, viewModel.state.value.exportingProfile)
+
+        // Dismiss confirmation completely
+        viewModel.dismissExportConfirm()
+        runCurrent()
+        assertFalse(viewModel.state.value.showExportConfirm)
+        assertNull(viewModel.state.value.exportingProfile)
+    }
+
+    @Test
+    fun testCancelImport_clearsImportStates() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        
+        viewModel.cancelImport()
+        runCurrent()
+        
+        assertEquals(ImportProgressState.Idle, viewModel.state.value.importState)
+        assertNull(viewModel.state.value.importedProfileData)
+        assertNull(viewModel.state.value.newlyImportedProfileId)
     }
 
     class FakeUserProfileRepository : UserProfileRepository {
