@@ -3,6 +3,8 @@ package com.mudasir.nexacvai.presentation.ui.components
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
+import androidx.compose.ui.graphics.Color
+import com.mudasir.nexacvai.ui.theme.ErrorRed
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -10,13 +12,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 
-/**
- * A highly-customizable, premium app-native Alert Dialog component.
- * Adheres strictly to the professional minimal identity of NexaCV AI:
- * - Rounded corners (16dp).
- * - Zero hardcoded colors, using pure theme color scheme tokens.
- * - Flat rounded actions (12dp) with support for destructive states.
- */
 @Composable
 fun NexaAlertDialog(
     onDismissRequest: () -> Unit,
@@ -45,7 +40,6 @@ fun NexaAlertDialog(
                     .fillMaxWidth()
                     .padding(24.dp)
             ) {
-                // Title Layer
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleMedium.copy(
@@ -58,7 +52,6 @@ fun NexaAlertDialog(
                     Spacer(modifier = Modifier.height(12.dp))
                 }
 
-                // Message Layer
                 if (message != null) {
                     Text(
                         text = message,
@@ -76,7 +69,6 @@ fun NexaAlertDialog(
                 if (showButtons) {
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Actions Button Bar (Dismiss on left, Confirm on right)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.End,
@@ -104,8 +96,16 @@ fun NexaAlertDialog(
                             if (dismissLabel != null) {
                                 Spacer(modifier = Modifier.width(12.dp))
                             }
-                            val buttonContainerColor = MaterialTheme.colorScheme.primary
-                            val buttonContentColor = MaterialTheme.colorScheme.onPrimary
+                            val buttonContainerColor = if (isDestructive) {
+                                ErrorRed
+                            } else {
+                                MaterialTheme.colorScheme.primary
+                            }
+                            val buttonContentColor = if (isDestructive) {
+                                Color.White
+                            } else {
+                                MaterialTheme.colorScheme.onPrimary
+                            }
 
                             Button(
                                 onClick = onConfirm,
@@ -118,6 +118,7 @@ fun NexaAlertDialog(
                             ) {
                                 Text(
                                     text = confirmLabel,
+                                    color = buttonContentColor,
                                     style = MaterialTheme.typography.labelLarge.copy(
                                         fontWeight = FontWeight.Bold
                                     )
