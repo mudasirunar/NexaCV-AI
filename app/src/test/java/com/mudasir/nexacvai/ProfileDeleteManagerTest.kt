@@ -43,7 +43,7 @@ class ProfileDeleteManagerTest {
         
         assertEquals(profile, manager.pendingDeleteProfile.value)
         runCurrent()
-        assertTrue(fakeRepository.deletedProfiles.isEmpty()) // Should not be deleted yet (undo period active)
+        assertTrue(fakeRepository.deletedProfiles.isEmpty())
     }
 
     @Test
@@ -57,7 +57,7 @@ class ProfileDeleteManagerTest {
         assertNull(manager.pendingDeleteProfile.value)
         assertEquals(1L, manager.lastUndoneProfileId.value)
         runCurrent()
-        assertTrue(fakeRepository.deletedProfiles.isEmpty()) // Restored, not deleted
+        assertTrue(fakeRepository.deletedProfiles.isEmpty())
     }
 
     @Test
@@ -67,9 +67,11 @@ class ProfileDeleteManagerTest {
         manager.requestDelete(profile)
         
         manager.commitPendingDelete()
+        runCurrent()
+        testScheduler.advanceTimeBy(500)
+        runCurrent()
         
         assertNull(manager.pendingDeleteProfile.value)
-        runCurrent()
         assertEquals(1, fakeRepository.deletedProfiles.size)
         assertEquals(profile, fakeRepository.deletedProfiles[0])
     }
@@ -124,13 +126,128 @@ class ProfileDeleteManagerTest {
         
         // Advance time to 5000ms (timeout trigger)
         testScheduler.advanceTimeBy(1)
-        // runCurrent is automatically called by advanceTimeBy, but we can call it to be sure
         runCurrent()
         
-        // Now it should be committed automatically
-        assertNull(manager.pendingDeleteProfile.value)
+        // Verify database deletion occurred but list is not yet cleared (delay is running)
         assertEquals(1, fakeRepository.deletedProfiles.size)
         assertEquals(profile, fakeRepository.deletedProfiles[0])
+        
+        // Advance remaining 500ms to allow delay to finish and clear state flow
+        testScheduler.advanceTimeBy(500)
+        runCurrent()
+        
+        // Now it should be committed automatically and cleared
+        assertNull(manager.pendingDeleteProfile.value)
+        assertTrue(finishedCalled)
+    }
+
+    @Test
+    fun testRequestDeleteBulkProfilesSetsPendingProfiles() = runTest {
+        val manager = ProfileDeleteManager(deleteProfileUseCase, this)
+        val profile1 = createDummyProfile(1L, "Alice")
+        val profile2 = createDummyProfile(2L, "Bob")
+        val profiles = listOf(profile1, profile2)
+        
+        manager.requestDelete(profiles)
+        
+        assertEquals(profiles, manager.pendingDeleteProfiles.value)
+        assertEquals(profile1, manager.pendingDeleteProfile.value)
+        runCurrent()
+        assertTrue(fakeRepository.deletedProfiles.isEmpty())
+    }
+
+    @Test
+    fun testUndoDeleteBulkProfiles() = runTest {
+        val manager = ProfileDeleteManager(deleteProfileUseCase, this)
+        val profile1 = createDummyProfile(1L, "Alice")
+        val profile2 = createDummyProfile(2L, "Bob")
+        val profiles = listOf(profile1, profile2)
+        
+        manager.requestDelete(profiles)
+        manager.undoDelete()
+        
+        assertTrue(manager.pendingDeleteProfiles.value.isEmpty())
+        assertNull(manager.pendingDeleteProfile.value)
+        assertEquals(1L, manager.lastUndoneProfileId.value)
+        runCurrent()
+        assertTrue(fakeRepository.deletedProfiles.isEmpty())
+    }
+
+    @Test
+    fun testCommitPendingDeleteBulkProfiles() = runTest {
+        val manager = ProfileDeleteManager(deleteProfileUseCase, this)
+        val profile1 = createDummyProfile(1L, "Alice")
+        val profile2 = createDummyProfile(2L, "Bob")
+        val profiles = listOf(profile1, profile2)
+        
+        manager.requestDelete(profiles)
+        manager.commitPendingDelete()
+        runCurrent()
+        testScheduler.advanceTimeBy(500)
+        runCurrent()
+        
+        assertTrue(manager.pendingDeleteProfiles.value.isEmpty())
+        assertNull(manager.pendingDeleteProfile.value)
+        assertEquals(2, fakeRepository.deletedProfiles.size)
+        assertTrue(fakeRepository.deletedProfiles.contains(profile1))
+        assertTrue(fakeRepository.deletedProfiles.contains(profile2))
+    }
+
+    @Test
+    fun testSequentialBulkDeletesCommitsPrevious() = runTest {
+        val manager = ProfileDeleteManager(deleteProfileUseCase, this)
+        val profile1 = createDummyProfile(1L, "Alice")
+        val profile2 = createDummyProfile(2L, "Bob")
+        val profile3 = createDummyProfile(3L, "Charlie")
+        
+        manager.requestDelete(listOf(profile1, profile2))
+        manager.requestDelete(listOf(profile3))
+        
+        assertEquals(listOf(profile3), manager.pendingDeleteProfiles.value)
+        runCurrent()
+        assertEquals(2, fakeRepository.deletedProfiles.size)
+        assertTrue(fakeRepository.deletedProfiles.contains(profile1))
+        assertTrue(fakeRepository.deletedProfiles.contains(profile2))
+        assertFalse(fakeRepository.deletedProfiles.contains(profile3))
+    }
+
+    @Test
+    fun testSetSelectionModeActive() = runTest {
+        val manager = ProfileDeleteManager(deleteProfileUseCase, this)
+        assertFalse(manager.isSelectionModeActive.value)
+        
+        manager.setSelectionModeActive(true)
+        assertTrue(manager.isSelectionModeActive.value)
+        
+        manager.setSelectionModeActive(false)
+        assertFalse(manager.isSelectionModeActive.value)
+    }
+
+    @Test
+    fun testAutomaticTimeoutDeletionBulkProfiles() = runTest {
+        val manager = ProfileDeleteManager(deleteProfileUseCase, this)
+        val profile1 = createDummyProfile(1L, "Alice")
+        val profile2 = createDummyProfile(2L, "Bob")
+        val profiles = listOf(profile1, profile2)
+        var finishedCalled = false
+        
+        manager.requestDelete(profiles, onFinished = { finishedCalled = true })
+        
+        runCurrent()
+        assertEquals(profiles, manager.pendingDeleteProfiles.value)
+        assertTrue(fakeRepository.deletedProfiles.isEmpty())
+        assertFalse(finishedCalled)
+        
+        testScheduler.advanceTimeBy(5000)
+        runCurrent()
+        
+        testScheduler.advanceTimeBy(500)
+        runCurrent()
+        
+        assertTrue(manager.pendingDeleteProfiles.value.isEmpty())
+        assertEquals(2, fakeRepository.deletedProfiles.size)
+        assertTrue(fakeRepository.deletedProfiles.contains(profile1))
+        assertTrue(fakeRepository.deletedProfiles.contains(profile2))
         assertTrue(finishedCalled)
     }
 
