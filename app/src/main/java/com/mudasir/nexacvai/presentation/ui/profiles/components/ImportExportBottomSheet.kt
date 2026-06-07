@@ -18,7 +18,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -97,6 +96,7 @@ fun ImportExportBottomSheet(
                     .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
             )
         },
+        contentWindowInsets = { WindowInsets(0, 0, 0, 0) },
         modifier = Modifier.widthIn(max = 480.dp)
     ) {
         // Derive a simple key for AnimatedContent to prevent unnecessary re-compositions
@@ -109,9 +109,6 @@ fun ImportExportBottomSheet(
             }
         }
 
-        val configuration = LocalConfiguration.current
-        val maxSheetHeight = (configuration.screenHeightDp * 0.80f).dp
-
         AnimatedContent(
             targetState = contentKey,
             transitionSpec = {
@@ -120,17 +117,16 @@ fun ImportExportBottomSheet(
                     initialOffsetY = { it / 6 }
                 )).togetherWith(
                     fadeOut(tween(200))
-                ) using SizeTransform(clip = false)
+                ) using SizeTransform(clip = true)
             },
             label = "sheetContentTransition"
         ) { key ->
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(max = maxSheetHeight)
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = 24.dp)
-                    .padding(top = 12.dp, bottom = 32.dp)
+                    .padding(top = 12.dp, bottom = 8.dp)
                     .navigationBarsPadding(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
