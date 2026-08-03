@@ -2,46 +2,49 @@ package com.mudasir.nexacvai
 
 import android.app.Application
 import com.mudasir.nexacvai.data.local.NexaCVDatabase
-import com.mudasir.nexacvai.di.appModule
 import com.mudasir.nexacvai.domain.repository.UserProfileRepository
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import org.koin.android.ext.android.get
-import org.koin.android.ext.koin.androidContext
-import org.koin.android.ext.koin.androidLogger
-import org.koin.core.context.startKoin
 import com.mudasir.nexacvai.domain.usecase.DeleteProfileUseCase
 import com.mudasir.nexacvai.domain.usecase.GetAllProfilesUseCase
 import com.mudasir.nexacvai.domain.usecase.GetProfileUseCase
 import com.mudasir.nexacvai.domain.usecase.SaveProfileUseCase
+import dagger.hilt.android.HiltAndroidApp
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
+@HiltAndroidApp
 class NexaCVApplication : Application() {
+
+    @Inject
+    lateinit var database: NexaCVDatabase
+
+    @Inject
+    lateinit var userProfileRepository: UserProfileRepository
+
+    @Inject
+    lateinit var getAllProfilesUseCase: GetAllProfilesUseCase
+
+    @Inject
+    lateinit var getProfileUseCase: GetProfileUseCase
+
+    @Inject
+    lateinit var saveProfileUseCase: SaveProfileUseCase
+
+    @Inject
+    lateinit var deleteProfileUseCase: DeleteProfileUseCase
+
     override fun onCreate() {
         super.onCreate()
-        
-        startKoin {
-            androidLogger()
-            androidContext(this@NexaCVApplication)
-            modules(appModule)
-        }
 
         // Pre-warm Room database asynchronously to avoid Main thread disk I/O on first screen launch
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val db = get<NexaCVDatabase>()
-                db.query("SELECT 1", null).use { cursor ->
+                database.query("SELECT 1", null).use { cursor ->
                     if (cursor.moveToFirst()) {
                         // DB fully initialized
                     }
                 }
-                
-                // Warm up Koin use cases & repositories to eliminate DI instantiation delay on navigation
-                get<UserProfileRepository>()
-                get<GetAllProfilesUseCase>()
-                get<GetProfileUseCase>()
-                get<SaveProfileUseCase>()
-                get<DeleteProfileUseCase>()
             } catch (e: Exception) {
                 e.printStackTrace()
             }

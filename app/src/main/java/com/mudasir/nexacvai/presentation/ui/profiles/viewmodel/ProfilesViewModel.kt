@@ -20,12 +20,16 @@ import android.net.Uri
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+
 enum class DuplicateResolution {
     Overwrite,
     KeepBoth
 }
 
-class ProfilesViewModel(
+@HiltViewModel
+class ProfilesViewModel @Inject constructor(
     private val getAllProfilesUseCase: GetAllProfilesUseCase,
     private val saveProfileUseCase: SaveProfileUseCase,
     private val importProfileUseCase: ImportProfileUseCase,
@@ -138,7 +142,7 @@ class ProfilesViewModel(
         val profilesToDelete = allProfiles.filter { it.id in selectedIds }
         
         exitSelectionMode()
-        profileDeleteManager.requestDelete(profilesToDelete)
+        profileDeleteManager.requestDeleteMultiple(profilesToDelete)
     }
 
     fun removeProfilePicture(profile: UserProfile) {

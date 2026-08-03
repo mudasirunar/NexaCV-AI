@@ -54,11 +54,12 @@ class ProfileImportExportTest {
         val originalProfile = createDummyProfile(2L, "Bob Designer")
         val outputStream = ByteArrayOutputStream()
         
-        // Construct ZIP archive with GSON profile data and dummy picture entry manually
-        val gson = com.google.gson.Gson()
+        // Construct ZIP archive with Moshi profile data and dummy picture entry manually
+        val moshi = com.squareup.moshi.Moshi.Builder().add(com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory()).build()
+        val adapter = moshi.adapter(UserProfile::class.java)
         java.util.zip.ZipOutputStream(outputStream).use { zos ->
             // Write profile.json
-            val json = gson.toJson(originalProfile)
+            val json = adapter.toJson(originalProfile)
             zos.putNextEntry(java.util.zip.ZipEntry("profile.json"))
             zos.write(json.toByteArray(Charsets.UTF_8))
             zos.closeEntry()

@@ -10,13 +10,21 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
+import javax.inject.Inject
+import javax.inject.Singleton
+
 /**
  * Manages the global export progress state for UserProfiles.
  * Exposes a shared state flow observed by the application root to show the custom toast overlay.
  */
-class ProfileExportManager(
-    private val scope: CoroutineScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
-) {
+@Singleton
+class ProfileExportManager @Inject constructor() {
+    var scope: CoroutineScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+
+    constructor(scope: CoroutineScope) : this() {
+        this.scope = scope
+    }
+
     private val _exportState = MutableStateFlow(ExportProgressState.Idle)
     val exportState: StateFlow<ExportProgressState> = _exportState.asStateFlow()
 

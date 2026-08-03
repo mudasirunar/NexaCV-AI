@@ -32,14 +32,14 @@ import com.mudasir.nexacvai.presentation.ui.profiles.components.ImportExportShee
 import com.mudasir.nexacvai.presentation.ui.components.NexaAlertDialog
 import com.mudasir.nexacvai.core.utils.NameUtils
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.*
-import com.mudasir.nexacvai.ui.theme.*
-import org.koin.androidx.compose.koinViewModel
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.mudasir.nexacvai.ui.theme.AvatarColorPairs
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun ViewProfileScreen(
     navController: NavController,
-    viewModel: ViewProfileViewModel = koinViewModel()
+    viewModel: ViewProfileViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
     val profile = state.profile

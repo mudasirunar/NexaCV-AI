@@ -20,7 +20,11 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class ViewProfileViewModel(
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+
+@HiltViewModel
+class ViewProfileViewModel @Inject constructor(
     private val getAllProfilesUseCase: GetAllProfilesUseCase,
     val profileDeleteManager: ProfileDeleteManager,
     private val profileExportManager: ProfileExportManager,
@@ -61,7 +65,7 @@ class ViewProfileViewModel(
             initialValue = ViewProfileState(isLoading = true)
         )
     } else {
-        kotlinx.coroutines.flow.MutableStateFlow(
+        MutableStateFlow(
             ViewProfileState(error = "No profile ID provided")
         )
     }

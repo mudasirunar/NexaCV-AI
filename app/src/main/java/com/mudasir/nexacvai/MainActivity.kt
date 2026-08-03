@@ -1,50 +1,56 @@
 package com.mudasir.nexacvai
 
 import android.os.Bundle
-import androidx.activity.compose.BackHandler
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
 import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.mudasir.nexacvai.presentation.navigation.AppNavHost
 import com.mudasir.nexacvai.presentation.navigation.BottomNavigationBar
-import com.mudasir.nexacvai.ui.theme.NexaCVAITheme
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.compose.runtime.getValue
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.Box
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.unit.dp
 import com.mudasir.nexacvai.presentation.navigation.BottomNavScreens
 import com.mudasir.nexacvai.presentation.navigation.Screen
-import com.mudasir.nexacvai.presentation.ui.profiles.utils.ProfileDeleteManager
-import com.mudasir.nexacvai.presentation.ui.profiles.utils.ProfileExportManager
 import com.mudasir.nexacvai.presentation.ui.components.NexaSnackbar
 import com.mudasir.nexacvai.presentation.ui.profiles.components.NexaExportToast
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import org.koin.android.ext.android.inject
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.unit.IntOffset
+import com.mudasir.nexacvai.presentation.ui.profiles.utils.ProfileDeleteManager
+import com.mudasir.nexacvai.presentation.ui.profiles.utils.ProfileExportManager
+import com.mudasir.nexacvai.ui.theme.NexaCVAITheme
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    private val profileDeleteManager: ProfileDeleteManager by inject()
-    private val profileExportManager: ProfileExportManager by inject()
+
+    @Inject
+    lateinit var profileDeleteManager: ProfileDeleteManager
+
+    @Inject
+    lateinit var profileExportManager: ProfileExportManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()

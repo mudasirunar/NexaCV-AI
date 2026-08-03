@@ -2,8 +2,9 @@ package com.mudasir.nexacvai.core.utils
 
 import android.content.Context
 import android.net.Uri
-import com.google.gson.Gson
 import com.mudasir.nexacvai.domain.model.UserProfile
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import java.io.*
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
@@ -11,10 +12,14 @@ import java.util.zip.ZipOutputStream
 
 /**
  * A highly robust helper class to package and extract profiles to/from ZIP format.
- * Encapsulates serialization/deserialization logic using Gson and binary picture handling.
+ * Encapsulates serialization/deserialization logic using Moshi and binary picture handling.
  */
 object ProfileImportExportHelper {
-    private val gson = Gson()
+    private val moshi = Moshi.Builder()
+        .add(KotlinJsonAdapterFactory())
+        .build()
+
+    private val userProfileAdapter = moshi.adapter(UserProfile::class.java)
 
     data class ImportedProfileData(
         val profile: UserProfile,
@@ -52,7 +57,7 @@ object ProfileImportExportHelper {
         return try {
             ZipOutputStream(BufferedOutputStream(outputStream)).use { zos ->
                 // 1. Write profile.json
-                val json = gson.toJson(profile)
+                val json = userProfileAdapter.toJson(profile)
                 val jsonBytes = json.toByteArray(Charsets.UTF_8)
                 zos.putNextEntry(ZipEntry("profile.json"))
                 zos.write(jsonBytes)
@@ -98,7 +103,7 @@ object ProfileImportExportHelper {
                             val baos = ByteArrayOutputStream()
                             zis.copyTo(baos)
                             val json = baos.toString("UTF-8")
-                            profile = gson.fromJson(json, UserProfile::class.java)
+                            profile = userProfileAdapter.fromJson(json)
                         }
                         "profile_picture.jpg" -> {
                             hasPicture = true

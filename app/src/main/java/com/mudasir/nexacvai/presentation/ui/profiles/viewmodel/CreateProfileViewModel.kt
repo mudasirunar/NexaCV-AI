@@ -11,7 +11,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class CreateProfileViewModel(
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+
+@HiltViewModel
+class CreateProfileViewModel @Inject constructor(
     private val saveProfileUseCase: SaveProfileUseCase,
     private val getProfileUseCase: GetProfileUseCase,
     savedStateHandle: SavedStateHandle

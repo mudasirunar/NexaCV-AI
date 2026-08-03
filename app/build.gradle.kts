@@ -2,16 +2,13 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.kotlin.kapt)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.hilt.android)
 }
 
 android {
     namespace = "com.mudasir.nexacvai"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.mudasir.nexacvai"
@@ -58,18 +55,25 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.datastore.preferences)
     
-    // Room
+    // Room Database 
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
-    add("kapt", libs.room.compiler)
+    ksp(libs.room.compiler)
     
-    // Koin DI
-    implementation(libs.koin.androidx.compose)
+    // Dagger Hilt Dependency Injection 
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+    implementation(libs.androidx.hilt.navigation.compose)
     
-    // Gson for TypeConverters
-    implementation(libs.gson)
+    // Retrofit 2 & OkHttp 4 Networking
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.moshi)
+    implementation(libs.okhttp.logging)
+
+    // Moshi JSON Serialization
+    implementation(libs.moshi.kotlin)
     
-    // Coil
+    // Coil Image Loading
     implementation(libs.coil.compose)
     
     testImplementation(libs.junit)
@@ -80,8 +84,4 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
-}
-
-kapt {
-    correctErrorTypes = true
 }

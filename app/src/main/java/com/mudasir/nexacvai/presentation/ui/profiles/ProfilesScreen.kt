@@ -76,15 +76,8 @@ import com.mudasir.nexacvai.presentation.ui.profiles.components.profiles_dashboa
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.DuplicateResolution
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.ImportProgressState
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.ProfilesViewModel
-import org.koin.androidx.compose.koinViewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 
-
-/**
- * Derived UI mode for ProfilesScreen.
- * Using this as the Crossfade key instead of the full state object ensures
- * animations only trigger on category-level changes (Loading→Content),
- * not on every data update within the same mode.
- */
 private enum class ProfilesScreenMode {
     Loading, Error, Empty, Content
 }
@@ -93,7 +86,7 @@ private enum class ProfilesScreenMode {
 @Composable
 fun ProfilesScreen(
     navController: NavController,
-    viewModel: ProfilesViewModel = koinViewModel()
+    viewModel: ProfilesViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
     val context = LocalContext.current

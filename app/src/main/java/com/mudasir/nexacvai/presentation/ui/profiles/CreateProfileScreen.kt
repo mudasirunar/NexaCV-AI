@@ -90,7 +90,7 @@ import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.EducationCertsSte
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.ExperienceProjectsStepState
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.SocialsExtrasStepState
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.SummaryStepState
-import org.koin.androidx.compose.koinViewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import java.io.File
 
 fun Context.createImageFileUri(): Uri {
@@ -103,7 +103,7 @@ fun Context.createImageFileUri(): Uri {
 @Composable
 fun CreateProfileScreen(
     navController: NavController,
-    viewModel: CreateProfileViewModel = koinViewModel()
+    viewModel: CreateProfileViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
     val isEditing = state.profileId != null

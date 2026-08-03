@@ -6,16 +6,26 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * Manages the temporary deletion state for UserProfiles.
  * Coordinates UI invisibility (undo period) and permanent database execution.
  */
-class ProfileDeleteManager(
-    private val deleteProfileUseCase: DeleteProfileUseCase,
-    private val scope: CoroutineScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+@Singleton
+class ProfileDeleteManager @Inject constructor(
+    private val deleteProfileUseCase: DeleteProfileUseCase
 ) {
-    
+    var scope: CoroutineScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+
+    constructor(
+        deleteProfileUseCase: DeleteProfileUseCase,
+        scope: CoroutineScope
+    ) : this(deleteProfileUseCase) {
+        this.scope = scope
+    }
+
     private val _pendingDeleteProfiles = MutableStateFlow<List<UserProfile>>(emptyList())
     val pendingDeleteProfiles: StateFlow<List<UserProfile>> = _pendingDeleteProfiles.asStateFlow()
 
@@ -28,87 +38,109 @@ class ProfileDeleteManager(
     private val _isSelectionModeActive = MutableStateFlow(false)
     val isSelectionModeActive: StateFlow<Boolean> = _isSelectionModeActive.asStateFlow()
 
+    private val _selectedProfileIds = MutableStateFlow<Set<Long>>(emptySet())
+    val selectedProfileIds: StateFlow<Set<Long>> = _selectedProfileIds.asStateFlow()
+
     private val _lastUndoneProfileId = MutableStateFlow<Long?>(null)
     val lastUndoneProfileId: StateFlow<Long?> = _lastUndoneProfileId.asStateFlow()
 
-    private var deleteJob: Job? = null
+    private var autoCommitJob: Job? = null
 
     fun setFabVisible(visible: Boolean) {
         _isFabVisible.value = visible
-    }
-
-    fun setSelectionModeActive(active: Boolean) {
-        _isSelectionModeActive.value = active
     }
 
     fun clearLastUndoneProfileId() {
         _lastUndoneProfileId.value = null
     }
 
-    /**
-     * Places a list of profiles in the pending delete state and starts the countdown.
-     * Any existing pending deletion is committed immediately.
-     */
-    fun requestDelete(profiles: List<UserProfile>, onFinished: () -> Unit = {}) {
-        val previousProfiles = _pendingDeleteProfiles.value
-        if (previousProfiles.isNotEmpty()) {
-            deleteJob?.cancel()
-            deleteJob = null
-            scope.launch(NonCancellable) {
-                previousProfiles.forEach { deleteProfileUseCase(it) }
-            }
+    fun setSelectionModeActive(active: Boolean) {
+        _isSelectionModeActive.value = active
+        if (!active) {
+            _selectedProfileIds.value = emptySet()
         }
-        
+    }
+
+    fun toggleProfileSelection(profileId: Long) {
+        val currentSet = _selectedProfileIds.value.toMutableSet()
+        if (currentSet.contains(profileId)) {
+            currentSet.remove(profileId)
+        } else {
+            currentSet.add(profileId)
+        }
+        _selectedProfileIds.value = currentSet
+        if (currentSet.isEmpty() && _isSelectionModeActive.value) {
+            _isSelectionModeActive.value = false
+        }
+    }
+
+    fun selectAllProfiles(allProfileIds: List<Long>) {
+        _selectedProfileIds.value = allProfileIds.toSet()
+        _isSelectionModeActive.value = true
+    }
+
+    fun clearSelection() {
+        _selectedProfileIds.value = emptySet()
+        _isSelectionModeActive.value = false
+    }
+
+    fun requestDelete(profile: UserProfile) {
+        commitPendingDelete()
+        _pendingDeleteProfile.value = profile
+        _pendingDeleteProfiles.value = listOf(profile)
+        _isFabVisible.value = false
+        scheduleAutoCommit()
+    }
+
+    fun requestDeleteMultiple(profiles: List<UserProfile>) {
+        if (profiles.isEmpty()) return
+        commitPendingDelete()
         _pendingDeleteProfiles.value = profiles
-        _pendingDeleteProfile.value = profiles.firstOrNull()
-        
-        deleteJob = scope.launch {
-            delay(5000L) // 5 seconds undo window
-            commitPendingDelete()
-            onFinished()
-        }
+        _pendingDeleteProfile.value = profiles.first()
+        _isFabVisible.value = false
+        clearSelection()
+        scheduleAutoCommit()
     }
 
-    /**
-     * Places a profile in the pending delete state and starts the countdown.
-     * Any existing pending deletion is committed immediately.
-     */
-    fun requestDelete(profile: UserProfile, onFinished: () -> Unit = {}) {
-        requestDelete(listOf(profile), onFinished)
-    }
-
-    /**
-     * Restores the profiles currently pending deletion.
-     */
     fun undoDelete() {
-        val profiles = _pendingDeleteProfiles.value
-        if (profiles.isNotEmpty()) {
-            _lastUndoneProfileId.value = profiles.firstOrNull()?.id
-        }
-        deleteJob?.cancel()
-        deleteJob = null
-        _pendingDeleteProfiles.value = emptyList()
+        autoCommitJob?.cancel()
+        autoCommitJob = null
+        val undoneId = _pendingDeleteProfile.value?.id ?: _pendingDeleteProfiles.value.firstOrNull()?.id
+        _lastUndoneProfileId.value = undoneId
         _pendingDeleteProfile.value = null
+        _pendingDeleteProfiles.value = emptyList()
+        _isFabVisible.value = true
     }
 
-    /**
-     * Commits the pending deletion immediately, removing the profiles from the database.
-     */
     fun commitPendingDelete() {
-        val profilesToCommit = _pendingDeleteProfiles.value
-        if (profilesToCommit.isEmpty()) return
-        deleteJob?.cancel()
-        deleteJob = null
-        
-        scope.launch(NonCancellable) {
-            profilesToCommit.forEach { deleteProfileUseCase(it) }
-            // Allow Room Flow updates to propagate to the UI before clearing the filter
-            delay(500L)
-            val currentPending = _pendingDeleteProfiles.value
-            _pendingDeleteProfiles.value = currentPending.filter { it !in profilesToCommit }
-            if (_pendingDeleteProfile.value in profilesToCommit) {
-                _pendingDeleteProfile.value = null
+        autoCommitJob?.cancel()
+        autoCommitJob = null
+        val profilesToDelete = _pendingDeleteProfiles.value
+        val singleProfile = _pendingDeleteProfile.value
+
+        if (profilesToDelete.isNotEmpty()) {
+            _pendingDeleteProfiles.value = emptyList()
+            _pendingDeleteProfile.value = null
+            _isFabVisible.value = true
+            scope.launch {
+                profilesToDelete.forEach { profile ->
+                    deleteProfileUseCase(profile)
+                }
             }
+        } else if (singleProfile != null) {
+            _pendingDeleteProfile.value = null
+            _isFabVisible.value = true
+            scope.launch {
+                deleteProfileUseCase(singleProfile)
+            }
+        }
+    }
+
+    private fun scheduleAutoCommit() {
+        autoCommitJob?.cancel()
+        autoCommitJob = scope.launch {
+            delay(5000)
+            commitPendingDelete()
         }
     }
 }
