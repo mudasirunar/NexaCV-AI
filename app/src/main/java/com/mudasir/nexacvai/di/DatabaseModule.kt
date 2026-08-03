@@ -26,7 +26,7 @@ object DatabaseModule {
             context,
             NexaCVDatabase::class.java,
             "nexacv_database"
-        ).build()
+        ).fallbackToDestructiveMigration(dropAllTables = true).build()
     }
 
     @Provides

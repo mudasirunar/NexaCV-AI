@@ -1,9 +1,13 @@
 package com.mudasir.nexacvai.data.local.entity
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "user_profiles")
+@Entity(
+    tableName = "user_profiles",
+    indices = [Index(value = ["updatedAt"])]
+)
 data class UserProfileEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
