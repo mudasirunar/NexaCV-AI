@@ -1,22 +1,64 @@
-*.iml
-.gradle
-/local.properties
-/.idea/
-/build
-/captures
-.externalNativeBuild
-.cxx
-local.properties
-.env
-*.log
+# --------------------------------------------------------------------
+# 1. Gradle & Build Artifacts
+# --------------------------------------------------------------------
+.gradle/
+/build/
+/*/build/
+/captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
+*.flat
 
-# App module build
-/app/build/
+# --------------------------------------------------------------------
+# 2. Local Environment & Machine Settings
+# --------------------------------------------------------------------
+local.properties
+/local.properties
+.env
+.env.*
+*.iml
+/.idea/
+.navigation/
+
+# --------------------------------------------------------------------
+# 3. Kotlin Compiler, JVM & Diagnostic Logs
+# --------------------------------------------------------------------
+.kotlin/
+*.salive
+*.log
+hs_err_pid*.log
+replay_pid*.log
+log/
+logs/
+
+# --------------------------------------------------------------------
+# 4. Keystores & Signing Keys (CRITICAL SECURITY)
+# --------------------------------------------------------------------
+*.keystore
+*.jks
+*.pepk
+google-services.json
+GoogleService-Info.plist
+
+# --------------------------------------------------------------------
+# 5. OS & IDE Temporary / Scratch Files
+# --------------------------------------------------------------------
+.DS_Store
+Thumbs.db
 *.bak
 *.tmp
+*.temp
 *.swp
 *~
-.DS_Store
-GEMINI.md
 /temp.txt
-/.kotlin/sessions/kotlin-compiler-15599401201632816792.salive
+
+# --------------------------------------------------------------------
+# 6. Local Machine Documentation & Rules (Gitignored)
+# --------------------------------------------------------------------
+/docs/
+/AGENTS.md
