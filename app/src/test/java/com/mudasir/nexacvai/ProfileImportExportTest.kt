@@ -11,7 +11,8 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 
 /**
- * Unit test suite targeting Profile Import/Export Use Cases and Helpers.
+ * Comprehensive Unit test suite targeting Profile Import/Export Use Cases, Multi-Profile ZIP Helpers,
+ * manifest metadata, and timestamp preservation.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class ProfileImportExportTest {
@@ -109,6 +110,27 @@ class ProfileImportExportTest {
         assertEquals(2, importedList.size)
         assertEquals(p1, importedList[0].profile)
         assertEquals(p2, importedList[1].profile)
+    }
+
+    @Test
+    fun testTimestampPreservation_duringMultiProfileExportAndImport() = runTest {
+        val customCreated = 1600000000000L
+        val customUpdated = 1700000000000L
+        val p1 = createDummyProfile(201L, "Charlie Architect").copy(
+            createdAt = customCreated,
+            updatedAt = customUpdated
+        )
+
+        val outputStream = ByteArrayOutputStream()
+        val mockContext = android.content.ContextWrapper(null)
+
+        ProfileImportExportHelper.exportProfiles(mockContext, listOf(p1), outputStream)
+        val zipBytes = outputStream.toByteArray()
+
+        val importedList = ProfileImportExportHelper.readProfilesFromZip(ByteArrayInputStream(zipBytes))
+        assertEquals(1, importedList.size)
+        assertEquals(customCreated, importedList[0].profile.createdAt)
+        assertEquals(customUpdated, importedList[0].profile.updatedAt)
     }
 
     private fun createDummyProfile(id: Long, name: String): UserProfile {
