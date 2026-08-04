@@ -482,6 +482,14 @@ fun ViewProfileScreen(
                                 }
                             }
                             
+                            // 13. Profile Metadata & Activity Section (Creation, Update, Copy Source & Stats)
+                            ProfileMetadataSection(
+                                profile = profile,
+                                onSourceProfileClick = { sourceId ->
+                                    navController.navigate("${Screen.ViewProfile.route}?profileId=$sourceId")
+                                }
+                            )
+
                             // Extra bottom spacing to ensure comfortable scrolling above any navigation/scaffold bottom bounds
                             Spacer(modifier = Modifier.height(24.dp))
                         }
