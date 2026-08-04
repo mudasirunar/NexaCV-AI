@@ -30,6 +30,9 @@ fun UserProfileWithDetails.toDomain(): UserProfile {
         hobbies = profile.hobbies,
         volunteerWork = profile.volunteerWork,
         awards = profile.awards,
+        sourceProfileId = profile.sourceProfileId,
+        sourceProfileName = profile.sourceProfileName,
+        isCopyTagDismissed = profile.isCopyTagDismissed,
         createdAt = profile.createdAt,
         updatedAt = profile.updatedAt
     )
@@ -51,6 +54,9 @@ fun UserProfile.toEntity(): UserProfileEntity {
         hobbies = hobbies,
         volunteerWork = volunteerWork,
         awards = awards,
+        sourceProfileId = sourceProfileId,
+        sourceProfileName = sourceProfileName,
+        isCopyTagDismissed = isCopyTagDismissed,
         createdAt = createdAt,
         updatedAt = updatedAt
     )

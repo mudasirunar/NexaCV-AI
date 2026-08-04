@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -446,5 +447,19 @@ class ProfilesViewModel @Inject constructor(
             newlyDuplicatedProfileId = null,
             duplicatedProfileName = ""
         )
+    }
+
+    fun removeSourceProfileTag(profileId: Long) {
+        viewModelScope.launch {
+            val target = _state.value.profiles?.find { it.id == profileId }
+                ?: saveProfileUseCase.getProfileById(profileId)
+                ?: return@launch
+
+            // Preserve provenance data and only update the UI chip dismissal state
+            val updated = target.copy(
+                isCopyTagDismissed = true
+            )
+            saveProfileUseCase(updated)
+        }
     }
 }

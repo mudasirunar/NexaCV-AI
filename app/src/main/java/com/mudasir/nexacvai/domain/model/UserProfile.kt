@@ -22,6 +22,9 @@ data class UserProfile(
     val hobbies: String = "",
     val volunteerWork: String = "",
     val awards: String = "",
+    val sourceProfileId: Long? = null,
+    val sourceProfileName: String? = null,
+    val isCopyTagDismissed: Boolean = false,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 )

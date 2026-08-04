@@ -34,6 +34,9 @@ class DuplicateProfileUseCase @Inject constructor(
             references = newReferences,
             socialLinks = newSocialLinks,
             languages = newLanguages,
+            sourceProfileId = originalProfile.id,
+            sourceProfileName = originalProfile.fullName,
+            isCopyTagDismissed = false,
             createdAt = now,
             updatedAt = now
         )

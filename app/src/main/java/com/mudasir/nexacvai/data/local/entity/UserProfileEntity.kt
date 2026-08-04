@@ -33,6 +33,11 @@ data class UserProfileEntity(
     val volunteerWork: String = "",
     val awards: String = "",
     
+    // Copy Lineage Tracking
+    val sourceProfileId: Long? = null,
+    val sourceProfileName: String? = null,
+    val isCopyTagDismissed: Boolean = false,
+    
     // Timestamps
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()

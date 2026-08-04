@@ -1,15 +1,19 @@
 package com.mudasir.nexacvai.presentation.ui.profiles.components.profiles_dashboard
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
@@ -18,7 +22,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
@@ -70,6 +76,14 @@ import com.mudasir.nexacvai.ui.theme.AvatarColorPairs
 import com.mudasir.nexacvai.ui.theme.IconColorEmail
 import com.mudasir.nexacvai.ui.theme.IconColorPhone
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ContentCopy
+
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun UserProfileCard(
@@ -83,7 +97,10 @@ fun UserProfileCard(
     modifier: Modifier = Modifier,
     isSelected: Boolean = false,
     isInSelectionMode: Boolean = false,
-    onCardLongClick: () -> Unit = {}
+    onCardLongClick: () -> Unit = {},
+    isHighlighted: Boolean = false,
+    onSourceProfileClick: (Long) -> Unit = {},
+    onRemoveCopyTagClick: () -> Unit = {}
 ) {
     var isPressed by remember { mutableStateOf(false) }
     var showFullScreenImage by remember { mutableStateOf(false) }
@@ -148,12 +165,33 @@ fun UserProfileCard(
         completionDetails.first.size / 5f
     }
 
+    val infiniteTransition = rememberInfiniteTransition(label = "SpotlightHighlight")
+    val pulseScale by infiniteTransition.animateFloat(
+        initialValue = 1.0f,
+        targetValue = if (isHighlighted) 1.025f else 1.0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(600, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "pulseScale"
+    )
+    val pulseGlowAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.4f,
+        targetValue = if (isHighlighted) 1.0f else 0.4f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(600, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "pulseGlowAlpha"
+    )
+
     Card(
         modifier = modifier
             .fillMaxWidth()
             .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
+                val finalScale = scale * if (isHighlighted) pulseScale else 1.0f
+                scaleX = finalScale
+                scaleY = finalScale
             }
             .pointerInput(profile.id, isInSelectionMode) {
                 detectTapGestures(
@@ -182,8 +220,10 @@ fun UserProfileCard(
             }
         ),
         border = BorderStroke(
-            width = if (isSelected) 2.dp else 1.dp,
-            color = if (isSelected) {
+            width = if (isHighlighted) 2.5.dp else if (isSelected) 2.dp else 1.dp,
+            color = if (isHighlighted) {
+                MaterialTheme.colorScheme.primary.copy(alpha = pulseGlowAlpha)
+            } else if (isSelected) {
                 MaterialTheme.colorScheme.primary
             } else {
                 MaterialTheme.colorScheme.outline
@@ -426,12 +466,11 @@ fun UserProfileCard(
                         color = MaterialTheme.colorScheme.outline
                     )
 
-                    Row(
+                    Box(
                         modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        contentAlignment = Alignment.CenterStart
                     ) {
-                        // Left Aligned: Relative Update Time & Completion
+                        // 1. Left Aligned Info
                         Column(
                             verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
@@ -466,14 +505,80 @@ fun UserProfileCard(
                             }
                         }
 
-                        // Right Aligned: Expandable Action Controls
+                        // 2. Right Aligned Controls & Chip Layer
                         Row(
+                            modifier = Modifier.align(Alignment.CenterEnd),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            horizontalArrangement = Arrangement.spacedBy(2.dp)
                         ) {
+                            val hasCopyTag = (profile.sourceProfileName != null || profile.sourceProfileId != null) && !profile.isCopyTagDismissed
+                            val displayCopyName = profile.sourceProfileName ?: "Profile"
+
+                            // Copied Chip with pure Fade + Scale (Zero width measurement impact)
                             AnimatedVisibility(
+                                visible = hasCopyTag && !areControlsVisible,
+                                enter = fadeIn(animationSpec = tween(150)) + scaleIn(animationSpec = tween(150), initialScale = 0.85f),
+                                exit = fadeOut(animationSpec = tween(120)) + scaleOut(animationSpec = tween(120), targetScale = 0.85f)
+                            ) {
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.12f),
+                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.tertiary.copy(alpha = 0.40f)),
+                                    modifier = Modifier.padding(end = 4.dp)
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp)
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                            modifier = Modifier.clickable {
+                                                profile.sourceProfileId?.let { onSourceProfileClick(it) }
+                                            }
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.ContentCopy,
+                                                contentDescription = "Copied Profile",
+                                                tint = MaterialTheme.colorScheme.tertiary,
+                                                modifier = Modifier.size(13.dp)
+                                            )
+                                            Text(
+                                                text = "Copy: $displayCopyName",
+                                                style = MaterialTheme.typography.labelSmall.copy(
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    color = MaterialTheme.colorScheme.tertiary
+                                                ),
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                        }
+
+                                        Surface(
+                                            shape = RoundedCornerShape(10.dp),
+                                            color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.18f),
+                                            modifier = Modifier
+                                                .clickable { onRemoveCopyTagClick() }
+                                                .padding(1.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Close,
+                                                contentDescription = "Dismiss Copy Badge",
+                                                tint = MaterialTheme.colorScheme.tertiary,
+                                                modifier = Modifier
+                                                    .size(14.dp)
+                                                    .padding(1.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Action Buttons Row (Edit, Delete, Export)
+                            this@Row.AnimatedVisibility(
                                 visible = areControlsVisible,
-                                enter = fadeIn(animationSpec = tween(200)) + 
+                                enter = fadeIn(animationSpec = tween(150)) +
                                         slideInHorizontally(
                                             animationSpec = spring(
                                                 dampingRatio = Spring.DampingRatioLowBouncy,
@@ -488,7 +593,7 @@ fun UserProfileCard(
                                             ),
                                             initialScale = 0.6f
                                         ),
-                                exit = fadeOut(animationSpec = tween(150)) + 
+                                exit = fadeOut(animationSpec = tween(120)) +
                                         slideOutHorizontally(
                                             animationSpec = spring(
                                                 dampingRatio = Spring.DampingRatioNoBouncy,
@@ -497,13 +602,13 @@ fun UserProfileCard(
                                             targetOffsetX = { it }
                                         ) +
                                         scaleOut(
-                                            animationSpec = tween(150),
+                                            animationSpec = tween(120),
                                             targetScale = 0.6f
                                         )
                             ) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                    horizontalArrangement = Arrangement.spacedBy(2.dp)
                                 ) {
                                     IconButton(
                                         onClick = onDeleteClick,
@@ -543,7 +648,6 @@ fun UserProfileCard(
                                 }
                             }
 
-                            // Rotating Menu Toggle Button
                             val rotationAngle by animateFloatAsState(
                                 targetValue = if (areControlsVisible) 90f else 0f,
                                 animationSpec = spring(

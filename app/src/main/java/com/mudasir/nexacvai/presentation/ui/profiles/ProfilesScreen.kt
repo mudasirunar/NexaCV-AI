@@ -85,6 +85,8 @@ import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.DuplicateResoluti
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.ImportProgressState
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.ProfilesViewModel
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 
 private enum class ProfilesScreenMode {
     Loading, Error, Empty, Content
@@ -100,6 +102,8 @@ fun ProfilesScreen(
     val context = LocalContext.current
     val bottomSpacing = 80.dp
     var profileToDelete by remember { mutableStateOf<UserProfile?>(null) }
+    var highlightedProfileId by remember { mutableStateOf<Long?>(null) }
+    val coroutineScope = rememberCoroutineScope()
     val gridState = rememberLazyGridState()
 
     val exportLauncher = rememberLauncherForActivityResult(
@@ -584,6 +588,23 @@ fun ProfilesScreen(
                                     if (!state.isSelectionMode) {
                                         viewModel.enterSelectionMode(profile.id)
                                     }
+                                },
+                                isHighlighted = highlightedProfileId == profile.id,
+                                onSourceProfileClick = { sourceId ->
+                                    val sourceIndex = state.profiles?.indexOfFirst { it.id == sourceId } ?: -1
+                                    if (sourceIndex != -1) {
+                                        coroutineScope.launch {
+                                            gridState.animateScrollToItem(sourceIndex)
+                                            highlightedProfileId = sourceId
+                                            kotlinx.coroutines.delay(2000)
+                                            if (highlightedProfileId == sourceId) {
+                                                highlightedProfileId = null
+                                            }
+                                        }
+                                    }
+                                },
+                                onRemoveCopyTagClick = {
+                                    viewModel.removeSourceProfileTag(profile.id)
                                 },
                                 modifier = Modifier.animateItem(
                                     fadeInSpec = tween(durationMillis = 250),
