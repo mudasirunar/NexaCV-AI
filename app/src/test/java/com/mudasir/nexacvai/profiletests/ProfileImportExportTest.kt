@@ -1,14 +1,19 @@
-package com.mudasir.nexacvai
+package com.mudasir.nexacvai.profiletests
 
+import android.content.ContextWrapper
 import com.mudasir.nexacvai.core.utils.ProfileImportExportHelper
 import com.mudasir.nexacvai.domain.model.UserProfile
 import com.mudasir.nexacvai.domain.usecase.ImportProfileUseCase
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
 import org.junit.Test
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 
 /**
  * Comprehensive Unit test suite targeting Profile Import/Export Use Cases, Multi-Profile ZIP Helpers,
@@ -33,7 +38,7 @@ class ProfileImportExportTest {
     fun testExportAndReadProfileZip_withoutPicture() = runTest {
         val originalProfile = createDummyProfile(1L, "Alice Developer")
         val outputStream = ByteArrayOutputStream()
-        val mockContext = android.content.ContextWrapper(null)
+        val mockContext = ContextWrapper(null)
 
         // Export using helper
         val exportResult = ProfileImportExportHelper.exportProfile(mockContext, originalProfile, outputStream)
@@ -56,18 +61,18 @@ class ProfileImportExportTest {
         val outputStream = ByteArrayOutputStream()
         
         // Construct ZIP archive with Moshi profile data and dummy picture entry manually
-        val moshi = com.squareup.moshi.Moshi.Builder().add(com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory()).build()
+        val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
         val adapter = moshi.adapter(UserProfile::class.java)
-        java.util.zip.ZipOutputStream(outputStream).use { zos ->
+        ZipOutputStream(outputStream).use { zos ->
             // Write profile.json
             val json = adapter.toJson(originalProfile)
-            zos.putNextEntry(java.util.zip.ZipEntry("profile.json"))
+            zos.putNextEntry(ZipEntry("profile.json"))
             zos.write(json.toByteArray(Charsets.UTF_8))
             zos.closeEntry()
 
             // Write dummy profile picture
             val dummyImgBytes = byteArrayOf(1, 2, 3, 4, 5)
-            zos.putNextEntry(java.util.zip.ZipEntry("profile_picture.jpg"))
+            zos.putNextEntry(ZipEntry("profile_picture.jpg"))
             zos.write(dummyImgBytes)
             zos.closeEntry()
         }
@@ -98,7 +103,7 @@ class ProfileImportExportTest {
         val p1 = createDummyProfile(101L, "Alice Lead")
         val p2 = createDummyProfile(102L, "Bob Engineer")
         val outputStream = ByteArrayOutputStream()
-        val mockContext = android.content.ContextWrapper(null)
+        val mockContext = ContextWrapper(null)
 
         val exportResult = ProfileImportExportHelper.exportProfiles(mockContext, listOf(p1, p2), outputStream)
         assertTrue(exportResult)
@@ -122,7 +127,7 @@ class ProfileImportExportTest {
         )
 
         val outputStream = ByteArrayOutputStream()
-        val mockContext = android.content.ContextWrapper(null)
+        val mockContext = ContextWrapper(null)
 
         ProfileImportExportHelper.exportProfiles(mockContext, listOf(p1), outputStream)
         val zipBytes = outputStream.toByteArray()

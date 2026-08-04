@@ -1,11 +1,10 @@
-package com.mudasir.nexacvai
+package com.mudasir.nexacvai.profiletests
 
 import androidx.lifecycle.SavedStateHandle
 import com.mudasir.nexacvai.domain.model.*
 import com.mudasir.nexacvai.domain.repository.UserProfileRepository
 import com.mudasir.nexacvai.domain.usecase.GetProfileUseCase
 import com.mudasir.nexacvai.domain.usecase.SaveProfileUseCase
-import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.CreateProfileState
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.CreateProfileViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi

@@ -1,4 +1,4 @@
-package com.mudasir.nexacvai
+package com.mudasir.nexacvai.profiletests
 
 import com.mudasir.nexacvai.domain.model.UserProfile
 import com.mudasir.nexacvai.domain.repository.UserProfileRepository

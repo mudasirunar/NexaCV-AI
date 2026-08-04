@@ -1,4 +1,4 @@
-package com.mudasir.nexacvai
+package com.mudasir.nexacvai.profiletests
 
 import android.content.ContextWrapper
 import com.mudasir.nexacvai.domain.model.*

@@ -1,4 +1,4 @@
-package com.mudasir.nexacvai
+package com.mudasir.nexacvai.profiletests
 
 import com.mudasir.nexacvai.domain.model.UserProfile
 import com.mudasir.nexacvai.domain.repository.UserProfileRepository
@@ -11,7 +11,6 @@ import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.ProfilesViewModel
 import com.mudasir.nexacvai.domain.usecase.ImportProfileUseCase
 import com.mudasir.nexacvai.presentation.ui.profiles.utils.ProfileExportManager
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.ImportProgressState
-import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.ExportProgressState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
