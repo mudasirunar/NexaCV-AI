@@ -24,12 +24,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.mudasir.nexacvai.domain.model.UserProfile
 import com.mudasir.nexacvai.ui.theme.*
 
 @Composable
 fun UserProfileAvatar(
-    profile: UserProfile,
+    profilePictureUri: String?,
     colorPair: AvatarColorPair,
     initials: String,
     completionProgress: Float,
@@ -92,13 +91,16 @@ fun UserProfileAvatar(
                 ),
             contentAlignment = Alignment.Center
         ) {
-            if (profile.profilePictureUri != null) {
+            if (profilePictureUri != null) {
                 val context = LocalContext.current
-                AsyncImage(
-                    model = ImageRequest.Builder(context)
-                        .data(profile.profilePictureUri)
+                val imageRequest = remember(profilePictureUri) {
+                    ImageRequest.Builder(context)
+                        .data(profilePictureUri)
                         .crossfade(true)
-                        .build(),
+                        .build()
+                }
+                AsyncImage(
+                    model = imageRequest,
                     contentDescription = "Profile Picture",
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
@@ -115,3 +117,4 @@ fun UserProfileAvatar(
         }
     }
 }
+

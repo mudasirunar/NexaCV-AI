@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.mudasir.nexacvai.domain.repository.UserProfileRepository
 import javax.inject.Inject
 
 enum class DuplicateResolution {
@@ -35,6 +36,7 @@ class ProfilesViewModel @Inject constructor(
     private val saveProfileUseCase: SaveProfileUseCase,
     private val importProfileUseCase: ImportProfileUseCase,
     private val duplicateProfileUseCase: com.mudasir.nexacvai.domain.usecase.DuplicateProfileUseCase,
+    private val userProfileRepository: UserProfileRepository,
     val profileDeleteManager: ProfileDeleteManager,
     private val profileExportManager: ProfileExportManager
 ) : ViewModel() {
@@ -451,15 +453,10 @@ class ProfilesViewModel @Inject constructor(
 
     fun removeSourceProfileTag(profileId: Long) {
         viewModelScope.launch {
-            val target = _state.value.profiles?.find { it.id == profileId }
-                ?: saveProfileUseCase.getProfileById(profileId)
-                ?: return@launch
-
-            // Preserve provenance data and only update the UI chip dismissal state
-            val updated = target.copy(
-                isCopyTagDismissed = true
-            )
-            saveProfileUseCase(updated)
+            // Targeted column-only update — does NOT touch updatedAt or child tables,
+            // so Room emits a minimal Flow update and Compose skips recomposing
+            // the entire card tree (avatar, pills, skills, etc.).
+            userProfileRepository.dismissCopyTag(profileId)
         }
     }
 }

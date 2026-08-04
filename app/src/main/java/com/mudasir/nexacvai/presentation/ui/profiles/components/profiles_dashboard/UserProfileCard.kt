@@ -257,7 +257,7 @@ fun UserProfileCard(
             ) {
                 // Left Element: Circular Avatar with progress ring
                 UserProfileAvatar(
-                    profile = profile,
+                    profilePictureUri = profile.profilePictureUri,
                     colorPair = colorPair,
                     initials = initials,
                     completionProgress = completionProgress,
@@ -381,7 +381,9 @@ fun UserProfileCard(
 
                     // Row 4: Subtle Statistics Pills Row (Extracted)
                     UserProfileStatPills(
-                        profile = profile,
+                        expCount = profile.experiences.size,
+                        projCount = profile.projects.size,
+                        certCount = profile.certifications.size,
                         modifier = Modifier.padding(top = 2.dp)
                     )
                 }

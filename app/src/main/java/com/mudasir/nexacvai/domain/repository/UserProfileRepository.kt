@@ -8,5 +8,6 @@ interface UserProfileRepository {
     suspend fun getProfileById(id: Long): UserProfile?
     suspend fun insertProfile(profile: UserProfile): Long
     suspend fun updateProfile(profile: UserProfile)
+    suspend fun dismissCopyTag(profileId: Long)
     suspend fun deleteProfile(profile: UserProfile)
 }

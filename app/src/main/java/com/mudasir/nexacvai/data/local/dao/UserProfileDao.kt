@@ -21,6 +21,9 @@ interface UserProfileDao {
     @Update
     suspend fun updateProfile(profile: UserProfileEntity)
 
+    @Query("UPDATE user_profiles SET isCopyTagDismissed = 1 WHERE id = :profileId")
+    suspend fun dismissCopyTag(profileId: Long)
+
     @Delete
     suspend fun deleteProfile(profile: UserProfileEntity)
 

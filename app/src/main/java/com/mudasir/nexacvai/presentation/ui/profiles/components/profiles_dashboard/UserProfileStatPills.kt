@@ -11,7 +11,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.mudasir.nexacvai.domain.model.UserProfile
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BusinessCenter
@@ -24,13 +23,11 @@ import com.mudasir.nexacvai.ui.theme.IconColorCert
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun UserProfileStatPills(
-    profile: UserProfile,
+    expCount: Int,
+    projCount: Int,
+    certCount: Int,
     modifier: Modifier = Modifier
 ) {
-    val expCount = profile.experiences.size
-    val projCount = profile.projects.size
-    val certCount = profile.certifications.size
-
     if (expCount > 0 || projCount > 0 || certCount > 0) {
         FlowRow(
             modifier = modifier.fillMaxWidth(),

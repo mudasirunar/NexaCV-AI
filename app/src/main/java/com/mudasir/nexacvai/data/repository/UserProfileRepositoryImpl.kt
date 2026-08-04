@@ -39,6 +39,10 @@ class UserProfileRepositoryImpl @Inject constructor(
         saveSubEntities(profile.id, profile)
     }
 
+    override suspend fun dismissCopyTag(profileId: Long) = withContext(Dispatchers.IO) {
+        dao.dismissCopyTag(profileId)
+    }
+
     override suspend fun deleteProfile(profile: UserProfile) = withContext(Dispatchers.IO) {
         dao.deleteProfile(profile.toEntity())
         // Cascading deletes will automatically clear child tables in Room database.
