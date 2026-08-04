@@ -18,6 +18,12 @@ enum class ExportProgressState {
     Error
 }
 
+enum class DuplicateProgressState {
+    Idle,
+    Duplicating,
+    Success
+}
+
 @Immutable
 data class ProfilesState(
     val isLoading: Boolean = false,
@@ -36,6 +42,12 @@ data class ProfilesState(
     val exportState: ExportProgressState = ExportProgressState.Idle,
     val exportError: String? = null,
     
+    // Duplication States
+    val duplicateState: DuplicateProgressState = DuplicateProgressState.Idle,
+    val duplicatedCount: Int = 0,
+    val newlyDuplicatedProfileId: Long? = null,
+    val duplicatedProfileName: String = "",
+
     // Selection States
     val isSelectionMode: Boolean = false,
     val selectedProfileIds: Set<Long> = emptySet()

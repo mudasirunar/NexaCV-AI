@@ -29,6 +29,8 @@ import com.mudasir.nexacvai.presentation.ui.profiles.components.view_profile.*
 import com.mudasir.nexacvai.presentation.ui.profiles.components.UserProfileImageDialog
 import com.mudasir.nexacvai.presentation.ui.profiles.components.ImportExportBottomSheet
 import com.mudasir.nexacvai.presentation.ui.profiles.components.ImportExportSheetContent
+import com.mudasir.nexacvai.presentation.ui.profiles.components.ProfileCopySheet
+import com.mudasir.nexacvai.presentation.ui.profiles.components.ProfileCopySheetContent
 import com.mudasir.nexacvai.presentation.ui.components.NexaAlertDialog
 import com.mudasir.nexacvai.core.utils.NameUtils
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.*
@@ -181,6 +183,20 @@ fun ViewProfileScreen(
                                     onClick = {
                                         isMenuExpanded = false
                                         viewModel.selectProfileForExport(profile)
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Copy Profile") },
+                                    leadingIcon = {
+                                        Icon(
+                                            imageVector = Icons.Default.ContentCopy,
+                                            contentDescription = "Copy Profile",
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    },
+                                    onClick = {
+                                        isMenuExpanded = false
+                                        viewModel.duplicateCurrentProfile(context)
                                     }
                                 )
                                 DropdownMenuItem(
@@ -515,6 +531,31 @@ fun ViewProfileScreen(
                     },
                     onDismiss = { viewModel.dismissExportConfirm() }
                 )
+            }
+
+            // Profile Copy Progress / Success Sheet
+            if (state.duplicateState != DuplicateProgressState.Idle) {
+                val sheetContent = when (state.duplicateState) {
+                    DuplicateProgressState.Duplicating -> ProfileCopySheetContent.Copying
+                    DuplicateProgressState.Success -> ProfileCopySheetContent.Success(
+                        count = 1,
+                        profileName = state.duplicatedProfileName
+                    )
+                    else -> null
+                }
+                if (sheetContent != null) {
+                    ProfileCopySheet(
+                        content = sheetContent,
+                        onViewProfile = {
+                            val newId = state.newlyDuplicatedProfileId
+                            viewModel.dismissDuplicateSheet()
+                            if (newId != null) {
+                                navController.navigate("${Screen.ViewProfile.route}?profileId=$newId")
+                            }
+                        },
+                        onDone = { viewModel.dismissDuplicateSheet() }
+                    )
+                }
             }
 
 

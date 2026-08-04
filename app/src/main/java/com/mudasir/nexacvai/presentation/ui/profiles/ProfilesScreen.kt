@@ -75,9 +75,12 @@ import com.mudasir.nexacvai.presentation.ui.components.NexaButton
 import com.mudasir.nexacvai.presentation.ui.components.NexaFloatingActionButton
 import com.mudasir.nexacvai.presentation.ui.profiles.components.ImportExportBottomSheet
 import com.mudasir.nexacvai.presentation.ui.profiles.components.ImportExportSheetContent
+import com.mudasir.nexacvai.presentation.ui.profiles.components.ProfileCopySheet
+import com.mudasir.nexacvai.presentation.ui.profiles.components.ProfileCopySheetContent
 import com.mudasir.nexacvai.presentation.ui.profiles.components.profiles_dashboard.ProfileCardSkeleton
 import com.mudasir.nexacvai.presentation.ui.profiles.components.profiles_dashboard.ProfileSelectionBottomBar
 import com.mudasir.nexacvai.presentation.ui.profiles.components.profiles_dashboard.UserProfileCard
+import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.DuplicateProgressState
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.DuplicateResolution
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.ImportProgressState
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.ProfilesViewModel
@@ -302,6 +305,25 @@ fun ProfilesScreen(
                                             val all = state.profiles ?: emptyList()
                                             val selected = all.filter { it.id in state.selectedProfileIds }
                                             viewModel.selectProfilesForExport(selected)
+                                        }
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            text = "Copy",
+                                            color = if (isExportEnabled) {
+                                                MaterialTheme.colorScheme.onSurface
+                                            } else {
+                                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                                            }
+                                        )
+                                    },
+                                    enabled = isExportEnabled,
+                                    onClick = {
+                                        if (isExportEnabled) {
+                                            isSelectionMenuExpanded = false
+                                            viewModel.duplicateSelectedProfiles(context)
                                         }
                                     }
                                 )
@@ -661,6 +683,31 @@ fun ProfilesScreen(
                             }
                         },
                         onDismiss = { viewModel.cancelImport() }
+                    )
+                }
+            }
+
+            // Profile Copy Progress / Success Sheet
+            if (state.duplicateState != DuplicateProgressState.Idle) {
+                val sheetContent = when (state.duplicateState) {
+                    DuplicateProgressState.Duplicating -> ProfileCopySheetContent.Copying
+                    DuplicateProgressState.Success -> ProfileCopySheetContent.Success(
+                        count = state.duplicatedCount,
+                        profileName = state.duplicatedProfileName
+                    )
+                    else -> null
+                }
+                if (sheetContent != null) {
+                    ProfileCopySheet(
+                        content = sheetContent,
+                        onViewProfile = {
+                            val newId = state.newlyDuplicatedProfileId
+                            viewModel.dismissDuplicateSheet()
+                            if (newId != null) {
+                                safeNavigate("${Screen.ViewProfile.route}?profileId=$newId")
+                            }
+                        },
+                        onDone = { viewModel.dismissDuplicateSheet() }
                     )
                 }
             }

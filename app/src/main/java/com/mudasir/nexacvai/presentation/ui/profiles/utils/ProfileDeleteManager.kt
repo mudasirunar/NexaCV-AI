@@ -61,6 +61,15 @@ class ProfileDeleteManager @Inject constructor(
         }
     }
 
+    fun enterSelectionMode(initialSelectedIds: Set<Long> = emptySet()) {
+        _selectedProfileIds.value = initialSelectedIds
+        _isSelectionModeActive.value = true
+    }
+
+    fun setSelectedProfiles(ids: Set<Long>) {
+        _selectedProfileIds.value = ids
+    }
+
     fun toggleProfileSelection(profileId: Long) {
         val currentSet = _selectedProfileIds.value.toMutableSet()
         if (currentSet.contains(profileId)) {

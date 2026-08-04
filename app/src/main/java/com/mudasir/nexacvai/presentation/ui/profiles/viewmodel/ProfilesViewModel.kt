@@ -33,6 +33,7 @@ class ProfilesViewModel @Inject constructor(
     private val getAllProfilesUseCase: GetAllProfilesUseCase,
     private val saveProfileUseCase: SaveProfileUseCase,
     private val importProfileUseCase: ImportProfileUseCase,
+    private val duplicateProfileUseCase: com.mudasir.nexacvai.domain.usecase.DuplicateProfileUseCase,
     val profileDeleteManager: ProfileDeleteManager,
     private val profileExportManager: ProfileExportManager
 ) : ViewModel() {
@@ -47,17 +48,15 @@ class ProfilesViewModel @Inject constructor(
 
     private fun observeSelectionMode() {
         viewModelScope.launch {
-            profileDeleteManager.isSelectionModeActive.collect { active ->
+            combine(
+                profileDeleteManager.isSelectionModeActive,
+                profileDeleteManager.selectedProfileIds
+            ) { active, selected ->
+                Pair(active, selected)
+            }.collect { (active, selected) ->
                 _state.value = _state.value.copy(
                     isSelectionMode = active,
-                    selectedProfileIds = if (active) profileDeleteManager.selectedProfileIds.value else emptySet()
-                )
-            }
-        }
-        viewModelScope.launch {
-            profileDeleteManager.selectedProfileIds.collect { selected ->
-                _state.value = _state.value.copy(
-                    selectedProfileIds = selected
+                    selectedProfileIds = if (active) selected else emptySet()
                 )
             }
         }
@@ -93,8 +92,8 @@ class ProfilesViewModel @Inject constructor(
     }
 
     fun enterSelectionMode(initialProfileId: Long? = null) {
-        profileDeleteManager.setSelectionModeActive(true)
         val selection = if (initialProfileId != null) setOf(initialProfileId) else emptySet()
+        profileDeleteManager.enterSelectionMode(selection)
         _state.value = _state.value.copy(
             isSelectionMode = true,
             selectedProfileIds = selection
@@ -102,7 +101,7 @@ class ProfilesViewModel @Inject constructor(
     }
 
     fun exitSelectionMode() {
-        profileDeleteManager.setSelectionModeActive(false)
+        profileDeleteManager.clearSelection()
         _state.value = _state.value.copy(
             isSelectionMode = false,
             selectedProfileIds = emptySet()
@@ -110,29 +109,22 @@ class ProfilesViewModel @Inject constructor(
     }
 
     fun toggleSelection(profileId: Long) {
-        val currentSelected = _state.value.selectedProfileIds.toMutableSet()
-        if (currentSelected.contains(profileId)) {
-            currentSelected.remove(profileId)
-        } else {
-            currentSelected.add(profileId)
-        }
-        
-        if (currentSelected.isEmpty()) {
-            exitSelectionMode()
-        } else {
-            _state.value = _state.value.copy(selectedProfileIds = currentSelected)
-        }
+        profileDeleteManager.toggleProfileSelection(profileId)
+        val currentSelected = profileDeleteManager.selectedProfileIds.value
+        _state.value = _state.value.copy(selectedProfileIds = currentSelected)
     }
 
     fun toggleSelectAll() {
         val allProfiles = _state.value.profiles ?: emptyList()
-        val allIds = allProfiles.map { it.id }.toSet()
+        val allIds = allProfiles.map { it.id }
         val currentSelected = _state.value.selectedProfileIds
         
         if (currentSelected.size == allIds.size) {
+            profileDeleteManager.setSelectedProfiles(emptySet())
             _state.value = _state.value.copy(selectedProfileIds = emptySet())
         } else {
-            _state.value = _state.value.copy(selectedProfileIds = allIds)
+            profileDeleteManager.selectAllProfiles(allIds)
+            _state.value = _state.value.copy(selectedProfileIds = allIds.toSet())
         }
     }
 
@@ -416,5 +408,43 @@ class ProfilesViewModel @Inject constructor(
         profileExportManager.exportProfilesToUri(context, profilesToExport, uri)
         dismissExportConfirm()
         profileDeleteManager.clearSelection()
+    }
+
+    fun duplicateSelectedProfiles(context: Context) {
+        val selectedIds = _state.value.selectedProfileIds
+        val allProfiles = _state.value.profiles ?: emptyList()
+        val targets = allProfiles.filter { it.id in selectedIds }
+        if (targets.isEmpty()) return
+
+        viewModelScope.launch {
+            _state.value = _state.value.copy(duplicateState = DuplicateProgressState.Duplicating)
+            val startTime = System.currentTimeMillis()
+            var lastId: Long? = null
+
+            targets.forEach { profile ->
+                lastId = duplicateProfileUseCase(context, profile)
+            }
+
+            val elapsed = System.currentTimeMillis() - startTime
+            val remaining = (800L - elapsed).coerceAtLeast(0L)
+            if (remaining > 0) kotlinx.coroutines.delay(remaining)
+
+            _state.value = _state.value.copy(
+                duplicateState = DuplicateProgressState.Success,
+                duplicatedCount = targets.size,
+                newlyDuplicatedProfileId = lastId,
+                duplicatedProfileName = targets.lastOrNull()?.fullName ?: ""
+            )
+            profileDeleteManager.clearSelection()
+        }
+    }
+
+    fun dismissDuplicateSheet() {
+        _state.value = _state.value.copy(
+            duplicateState = DuplicateProgressState.Idle,
+            duplicatedCount = 0,
+            newlyDuplicatedProfileId = null,
+            duplicatedProfileName = ""
+        )
     }
 }

@@ -4,6 +4,7 @@ import com.mudasir.nexacvai.core.utils.ProfileImportExportHelper
 import com.mudasir.nexacvai.domain.model.UserProfile
 import com.mudasir.nexacvai.domain.repository.UserProfileRepository
 import com.mudasir.nexacvai.domain.usecase.DeleteProfileUseCase
+import com.mudasir.nexacvai.domain.usecase.DuplicateProfileUseCase
 import com.mudasir.nexacvai.domain.usecase.GetAllProfilesUseCase
 import com.mudasir.nexacvai.domain.usecase.SaveProfileUseCase
 import com.mudasir.nexacvai.presentation.ui.profiles.utils.ProfileDeleteManager
@@ -12,7 +13,6 @@ import com.mudasir.nexacvai.domain.usecase.ImportProfileUseCase
 import com.mudasir.nexacvai.presentation.ui.profiles.utils.ProfileExportManager
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.ImportProgressState
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.ExportProgressState
-import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.DuplicateResolution
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -35,6 +35,7 @@ class ProfilesViewModelTest {
     private lateinit var deleteProfileUseCase: DeleteProfileUseCase
     private lateinit var deleteManager: ProfileDeleteManager
     private lateinit var importProfileUseCase: ImportProfileUseCase
+    private lateinit var duplicateProfileUseCase: DuplicateProfileUseCase
     private lateinit var exportManager: ProfileExportManager
 
     @Before
@@ -46,6 +47,7 @@ class ProfilesViewModelTest {
         deleteProfileUseCase = DeleteProfileUseCase(fakeRepository)
         deleteManager = ProfileDeleteManager(deleteProfileUseCase, testScope)
         importProfileUseCase = ImportProfileUseCase(fakeRepository)
+        duplicateProfileUseCase = DuplicateProfileUseCase(fakeRepository)
         exportManager = ProfileExportManager(testScope)
     }
 
@@ -59,6 +61,7 @@ class ProfilesViewModelTest {
             getAllProfilesUseCase = getAllProfilesUseCase,
             saveProfileUseCase = saveProfileUseCase,
             importProfileUseCase = importProfileUseCase,
+            duplicateProfileUseCase = duplicateProfileUseCase,
             profileDeleteManager = deleteManager,
             profileExportManager = exportManager
         )
@@ -323,6 +326,7 @@ class ProfilesViewModelTest {
         val profilesFlow = MutableStateFlow<List<UserProfile>>(emptyList())
         val deletedProfiles = mutableListOf<UserProfile>()
         val savedProfiles = mutableMapOf<Long, UserProfile>()
+        private var nextId = 100L
 
         fun emit(list: List<UserProfile>) {
             profilesFlow.value = list
@@ -338,8 +342,11 @@ class ProfilesViewModelTest {
         }
 
         override suspend fun insertProfile(profile: UserProfile): Long {
-            savedProfiles[profile.id] = profile
-            return profile.id
+            val id = if (profile.id == 0L) nextId++ else profile.id
+            val saved = profile.copy(id = id)
+            savedProfiles[id] = saved
+            profilesFlow.value = profilesFlow.value + saved
+            return id
         }
 
         override suspend fun updateProfile(profile: UserProfile) {
