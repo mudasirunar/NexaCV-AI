@@ -106,7 +106,7 @@ fun UserProfileCard(
     var showFullScreenImage by remember { mutableStateOf(false) }
     var showCompletionDialog by remember { mutableStateOf(false) }
     var areControlsVisible by remember { mutableStateOf(false) }
-    
+
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.98f else 1.0f,
         animationSpec = spring(
@@ -142,13 +142,26 @@ fun UserProfileCard(
     val primaryEmail = remember(profile.emails) { profile.emails.firstOrNull() ?: "" }
     val primaryPhone = remember(profile.phones) { profile.phones.firstOrNull() ?: "" }
 
-    val completionDetails = remember(profile) {
+    // FIX: narrowed remember key — was remember(profile), which re-triggered on EVERY
+    // field change including isCopyTagDismissed/updatedAt, causing the completion ring
+    // and "% Complete" text to flicker/recompute whenever the copy chip was dismissed.
+    val completionDetails = remember(
+        profile.fullName,
+        profile.professionalTitle,
+        profile.emails,
+        profile.phones,
+        profile.address,
+        profile.skills,
+        profile.experiences,
+        profile.projects,
+        profile.educations
+    ) {
         val hasBasicInfo = profile.fullName.isNotBlank() &&
                 profile.professionalTitle.isNotBlank() &&
                 profile.emails.isNotEmpty() &&
                 profile.phones.isNotEmpty() &&
                 profile.address.isNotBlank()
-        
+
         val pillars = listOf(
             "Basic Info" to hasBasicInfo,
             "Skills" to profile.skills.isNotEmpty(),
@@ -275,7 +288,7 @@ fun UserProfileCard(
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.weight(1f)
                         )
-                        
+
                         if (isInSelectionMode) {
                             Spacer(modifier = Modifier.width(8.dp))
                             Icon(
@@ -299,7 +312,7 @@ fun UserProfileCard(
                             )
                         }
                     }
-                
+
                     // Row 2: Professional Title
                     if (displayTitle.isNotBlank()) {
                         Text(
@@ -365,7 +378,7 @@ fun UserProfileCard(
                             }
                         }
                     }
-                
+
                     // Row 4: Subtle Statistics Pills Row (Extracted)
                     UserProfileStatPills(
                         profile = profile,
@@ -391,7 +404,7 @@ fun UserProfileCard(
                             modifier = Modifier.padding(vertical = 2.dp)
                         )
                     }
-                    
+
                     if (displaySkills.isNotEmpty()) {
                         FlowRow(
                             modifier = Modifier.fillMaxWidth(),
@@ -466,12 +479,17 @@ fun UserProfileCard(
                         color = MaterialTheme.colorScheme.outline
                     )
 
-                    Box(
+                    // FIX: Box replaced with a plain Row. Left info Column now has weight(1f)
+                    // so it can never be pushed/overlapped by the right side. Chip + buttons
+                    // share one self-sized Box on the right (mutually exclusive overlay slot),
+                    // fully decoupled from the left text — no more shared-width jank or flicker.
+                    Row(
                         modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.CenterStart
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         // 1. Left Aligned Info
                         Column(
+                            modifier = Modifier.weight(1f),
                             verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
                             Text(
@@ -505,20 +523,27 @@ fun UserProfileCard(
                             }
                         }
 
-                        // 2. Right Aligned Controls & Chip Layer
-                        Row(
-                            modifier = Modifier.align(Alignment.CenterEnd),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(2.dp)
-                        ) {
-                            val hasCopyTag = (profile.sourceProfileName != null || profile.sourceProfileId != null) && !profile.isCopyTagDismissed
-                            val displayCopyName = profile.sourceProfileName ?: "Profile"
+                        Spacer(modifier = Modifier.width(8.dp))
 
-                            // Copied Chip with pure Fade + Scale (Zero width measurement impact)
-                            AnimatedVisibility(
+                        val hasCopyTag = (profile.sourceProfileName != null || profile.sourceProfileId != null) && !profile.isCopyTagDismissed
+                        val displayCopyName = profile.sourceProfileName ?: "Profile"
+
+                        // 2. Chip + Buttons share one self-sized Box (mutually exclusive slot)
+                        Box(contentAlignment = Alignment.CenterEnd) {
+                            androidx.compose.animation.AnimatedVisibility(
                                 visible = hasCopyTag && !areControlsVisible,
-                                enter = fadeIn(animationSpec = tween(150)) + scaleIn(animationSpec = tween(150), initialScale = 0.85f),
-                                exit = fadeOut(animationSpec = tween(120)) + scaleOut(animationSpec = tween(120), targetScale = 0.85f)
+                                enter = fadeIn(
+                                    animationSpec = tween(durationMillis = 200)
+                                ) + slideInHorizontally(
+                                    animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing),
+                                    initialOffsetX = { -it }
+                                ),
+                                exit = fadeOut(
+                                    animationSpec = tween(durationMillis = 150)
+                                ) + slideOutHorizontally(
+                                    animationSpec = tween(durationMillis = 150, easing = FastOutSlowInEasing),
+                                    targetOffsetX = { -it }
+                                )
                             ) {
                                 Surface(
                                     shape = RoundedCornerShape(8.dp),
@@ -575,8 +600,7 @@ fun UserProfileCard(
                                 }
                             }
 
-                            // Action Buttons Row (Edit, Delete, Export)
-                            this@Row.AnimatedVisibility(
+                            androidx.compose.animation.AnimatedVisibility(
                                 visible = areControlsVisible,
                                 enter = fadeIn(animationSpec = tween(150)) +
                                         slideInHorizontally(
@@ -647,29 +671,31 @@ fun UserProfileCard(
                                     }
                                 }
                             }
+                        }
 
-                            val rotationAngle by animateFloatAsState(
-                                targetValue = if (areControlsVisible) 90f else 0f,
-                                animationSpec = spring(
-                                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                                    stiffness = Spring.StiffnessMedium
-                                ),
-                                label = "toggleButtonRotation"
+                        Spacer(modifier = Modifier.width(2.dp))
+
+                        val rotationAngle by animateFloatAsState(
+                            targetValue = if (areControlsVisible) 90f else 0f,
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioMediumBouncy,
+                                stiffness = Spring.StiffnessMedium
+                            ),
+                            label = "toggleButtonRotation"
+                        )
+
+                        IconButton(
+                            onClick = { areControlsVisible = !areControlsVisible },
+                            modifier = Modifier
+                                .size(36.dp)
+                                .graphicsLayer { rotationZ = rotationAngle }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.MoreVert,
+                                contentDescription = "Toggle Actions",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(20.dp)
                             )
-
-                            IconButton(
-                                onClick = { areControlsVisible = !areControlsVisible },
-                                modifier = Modifier
-                                    .size(36.dp)
-                                    .graphicsLayer { rotationZ = rotationAngle }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.MoreVert,
-                                    contentDescription = "Toggle Actions",
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
                         }
                     }
                 }
@@ -706,7 +732,7 @@ fun UserProfileCard(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     )
-                    
+
                     if (completionDetails.first.isNotEmpty()) {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Text(
@@ -781,7 +807,7 @@ fun UserProfileCard(
 private fun formatExperienceText(experience: String): String {
     val trimmed = experience.trim()
     if (trimmed.isBlank()) return ""
-    
+
     // Decode prefix strings and map them cleanly
     val (selectedType, rawVal) = when {
         trimmed.startsWith("FRESH", ignoreCase = true) -> "Fresh" to ""
@@ -794,9 +820,9 @@ private fun formatExperienceText(experience: String): String {
         trimmed.contains("year", ignoreCase = true) || trimmed.replace("+", "").trim().toIntOrNull() != null -> "Years" to trimmed
         else -> "Custom" to trimmed
     }
-    
+
     val valueTrimmed = rawVal.trim()
-    
+
     // Format based on type
     return when (selectedType) {
         "Fresh" -> "📊 Fresh Candidate"
