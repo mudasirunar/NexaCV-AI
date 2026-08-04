@@ -165,6 +165,14 @@ fun ProfilesScreen(
         }
     }
 
+    LaunchedEffect(state.duplicateState) {
+        if (state.duplicateState == DuplicateProgressState.Success) {
+            if (gridState.firstVisibleItemIndex <= 2) {
+                gridState.animateScrollToItem(0)
+            }
+        }
+    }
+
     LaunchedEffect(state.profiles) {
         if (state.profiles?.isEmpty() == true) {
             gridState.scrollToItem(0)
