@@ -22,11 +22,31 @@ object DatabaseModule {
     fun provideDatabase(
         @ApplicationContext context: Context
     ): NexaCVDatabase {
-        return Room.databaseBuilder(
-            context,
-            NexaCVDatabase::class.java,
-            "nexacv_database"
-        ).fallbackToDestructiveMigration(dropAllTables = true).build()
+        return try {
+            val db = Room.databaseBuilder(
+                context,
+                NexaCVDatabase::class.java,
+                "nexacv_database"
+            )
+                .fallbackToDestructiveMigration(dropAllTables = true)
+                .fallbackToDestructiveMigrationOnDowngrade(dropAllTables = true)
+                .build()
+
+            // Eagerly trigger database open to catch schema mismatches during development
+            db.openHelper.writableDatabase
+            db
+        } catch (e: Exception) {
+            // Automatically wipe mismatched database file on disk during development
+            context.deleteDatabase("nexacv_database")
+            Room.databaseBuilder(
+                context,
+                NexaCVDatabase::class.java,
+                "nexacv_database"
+            )
+                .fallbackToDestructiveMigration(dropAllTables = true)
+                .fallbackToDestructiveMigrationOnDowngrade(dropAllTables = true)
+                .build()
+        }
     }
 
     @Provides
