@@ -244,6 +244,8 @@ fun ProfilesScreen(
         modifier = Modifier.nestedScroll(nestedScrollConnection),
         topBar = {
             if (state.isSelectionMode) {
+                var isSelectionMenuExpanded by remember { mutableStateOf(false) }
+                val isExportEnabled = state.selectedProfileIds.isNotEmpty()
                 TopAppBar(
                     title = {
                         Text(
@@ -258,6 +260,52 @@ fun ProfilesScreen(
                                 contentDescription = "Exit Selection Mode",
                                 tint = MaterialTheme.colorScheme.onSurface
                             )
+                        }
+                    },
+                    actions = {
+                        Box {
+                            IconButton(onClick = { isSelectionMenuExpanded = true }) {
+                                Icon(
+                                    imageVector = Icons.Default.MoreVert,
+                                    contentDescription = "Selection Options",
+                                    tint = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                            DropdownMenu(
+                                expanded = isSelectionMenuExpanded,
+                                onDismissRequest = { isSelectionMenuExpanded = false },
+                                shape = RoundedCornerShape(12.dp),
+                                containerColor = MaterialTheme.colorScheme.surface,
+                                modifier = Modifier
+                                    .width(180.dp)
+                                    .border(
+                                        width = 1.dp,
+                                        color = MaterialTheme.colorScheme.outlineVariant,
+                                        shape = RoundedCornerShape(12.dp)
+                                    )
+                            ) {
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            text = "Export",
+                                            color = if (isExportEnabled) {
+                                                MaterialTheme.colorScheme.onSurface
+                                            } else {
+                                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                                            }
+                                        )
+                                    },
+                                    enabled = isExportEnabled,
+                                    onClick = {
+                                        if (isExportEnabled) {
+                                            isSelectionMenuExpanded = false
+                                            val all = state.profiles ?: emptyList()
+                                            val selected = all.filter { it.id in state.selectedProfileIds }
+                                            viewModel.selectProfilesForExport(selected)
+                                        }
+                                    }
+                                )
+                            }
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
@@ -291,7 +339,7 @@ fun ProfilesScreen(
                                     )
                             ) {
                                 DropdownMenuItem(
-                                    text = { Text("Import Profile") },
+                                    text = { Text("Import Profile(s)") },
                                     onClick = {
                                         isMenuExpanded = false
                                         importLauncher.launch(arrayOf("*/*"))
@@ -301,7 +349,26 @@ fun ProfilesScreen(
                                 DropdownMenuItem(
                                     text = {
                                         Text(
-                                            text = "Select Profiles",
+                                            text = "Export All Profiles",
+                                            color = if (isProfilesEmpty) {
+                                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                                            } else {
+                                                MaterialTheme.colorScheme.onSurface
+                                            }
+                                        )
+                                    },
+                                    enabled = !isProfilesEmpty,
+                                    onClick = {
+                                        if (!isProfilesEmpty) {
+                                            isMenuExpanded = false
+                                            viewModel.selectAllProfilesForExport()
+                                        }
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            text = "Select Profile(s)",
                                             color = if (isProfilesEmpty) {
                                                 MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                                             } else {
@@ -518,13 +585,20 @@ fun ProfilesScreen(
                 )
             }
 
-            if (state.showExportConfirm && state.exportingProfile != null) {
-                val pToExport = state.exportingProfile!!
+            if (state.showExportConfirm && state.exportingProfilesList.isNotEmpty()) {
+                val profilesToExport = state.exportingProfilesList
                 ImportExportBottomSheet(
-                    content = ImportExportSheetContent.ExportConfirm(pToExport),
+                    content = ImportExportSheetContent.ExportConfirm(profilesToExport),
                     onExportConfirm = {
                         viewModel.hideExportDialog()
-                        val fileName = "${pToExport.fullName.trim().replace("\\s+".toRegex(), "_")}_profile.nexacv"
+                        val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd_HHmm", java.util.Locale.getDefault())
+                        val formattedDate = dateFormat.format(java.util.Date())
+                        val fileName = if (profilesToExport.size > 1) {
+                            "NexaCV_Profiles_Backup_$formattedDate.nexacv"
+                        } else {
+                            val cleanName = profilesToExport.first().fullName.trim().replace("\\s+".toRegex(), "_").ifBlank { "Profile" }
+                            "${cleanName}_profile.nexacv"
+                        }
                         exportLauncher.launch(fileName)
                     },
                     onDismiss = { viewModel.dismissExportConfirm() }
@@ -534,19 +608,42 @@ fun ProfilesScreen(
             if (state.importState != ImportProgressState.Idle) {
                 val sheetContent = when (state.importState) {
                     ImportProgressState.DuplicateSelection -> {
-                        val duplicateProfile = state.importedProfileData?.profile
-                        val existingProfile = state.profiles?.find { it.id == duplicateProfile?.id }
-                        if (duplicateProfile != null) {
-                            ImportExportSheetContent.DuplicateFound(
-                                importedProfile = duplicateProfile,
-                                existingName = existingProfile?.fullName ?: "Existing Profile"
+                        val list = state.importedProfileDataList.ifEmpty {
+                            state.importedProfileData?.let { listOf(it) } ?: emptyList()
+                        }
+                        if (list.size > 1) {
+                            val existingProfiles = state.profiles ?: emptyList()
+                            val existingMap = existingProfiles.associate { it.id to it.fullName }
+                            ImportExportSheetContent.MultiDuplicateFound(
+                                importedProfilesData = list,
+                                existingProfilesMap = existingMap
                             )
-                        } else null
+                        } else {
+                            val duplicateProfile = state.importedProfileData?.profile
+                            val existingProfile = state.profiles?.find { it.id == duplicateProfile?.id }
+                            if (duplicateProfile != null) {
+                                ImportExportSheetContent.DuplicateFound(
+                                    importedProfile = duplicateProfile,
+                                    existingName = existingProfile?.fullName ?: "Existing Profile"
+                                )
+                            } else null
+                        }
                     }
                     ImportProgressState.Importing -> ImportExportSheetContent.Importing
-                    ImportProgressState.Success -> ImportExportSheetContent.ImportSuccess(
-                        profileName = state.importedProfileData?.profile?.fullName ?: ""
-                    )
+                    ImportProgressState.Success -> {
+                        val list = state.importedProfileDataList
+                        val importedSingleProfile = if (state.newlyImportedProfileId != null) {
+                            list.find { it.profile.id == state.newlyImportedProfileId }?.profile
+                        } else null
+                        val mainName = state.importedProfileData?.profile?.fullName
+                            ?: importedSingleProfile?.fullName
+                            ?: list.firstOrNull()?.profile?.fullName
+                            ?: ""
+                        ImportExportSheetContent.ImportSuccess(
+                            count = state.importedCount,
+                            mainProfileName = mainName
+                        )
+                    }
                     ImportProgressState.Idle -> null
                 }
 
@@ -555,6 +652,7 @@ fun ProfilesScreen(
                         content = sheetContent,
                         onKeepBoth = { viewModel.executeImport(context, DuplicateResolution.KeepBoth) },
                         onOverwrite = { viewModel.executeImport(context, DuplicateResolution.Overwrite) },
+                        onExecuteMultiImport = { map -> viewModel.executeMultiImport(context, map) },
                         onViewProfile = {
                             val importedId = state.newlyImportedProfileId
                             viewModel.cancelImport()

@@ -1,6 +1,7 @@
 package com.mudasir.nexacvai.presentation.ui.profiles.viewmodel
 
 import androidx.compose.runtime.Immutable
+import com.mudasir.nexacvai.core.utils.ProfileImportExportHelper
 import com.mudasir.nexacvai.domain.model.UserProfile
 
 enum class ImportProgressState {
@@ -25,9 +26,12 @@ data class ProfilesState(
     
     // Import/Export States
     val importState: ImportProgressState = ImportProgressState.Idle,
-    val importedProfileData: com.mudasir.nexacvai.core.utils.ProfileImportExportHelper.ImportedProfileData? = null,
+    val importedProfileData: ProfileImportExportHelper.ImportedProfileData? = null,
+    val importedProfileDataList: List<ProfileImportExportHelper.ImportedProfileData> = emptyList(),
     val newlyImportedProfileId: Long? = null,
+    val importedCount: Int = 0,
     val exportingProfile: UserProfile? = null,
+    val exportingProfilesList: List<UserProfile> = emptyList(),
     val showExportConfirm: Boolean = false,
     val exportState: ExportProgressState = ExportProgressState.Idle,
     val exportError: String? = null,

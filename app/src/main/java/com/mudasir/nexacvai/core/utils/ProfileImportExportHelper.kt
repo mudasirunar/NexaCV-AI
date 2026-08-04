@@ -11,7 +11,7 @@ import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 
 /**
- * A highly robust helper class to package and extract profiles to/from ZIP format.
+ * A highly robust helper class to package and extract single and multi-profile bundles to/from ZIP format (.nexacv).
  * Encapsulates serialization/deserialization logic using Moshi and binary picture handling.
  */
 object ProfileImportExportHelper {
@@ -20,6 +20,14 @@ object ProfileImportExportHelper {
         .build()
 
     private val userProfileAdapter = moshi.adapter(UserProfile::class.java)
+
+    data class BundleManifest(
+        val bundleVersion: Int = 1,
+        val exportTimestamp: Long = System.currentTimeMillis(),
+        val profileCount: Int = 0
+    )
+
+    private val bundleManifestAdapter = moshi.adapter(BundleManifest::class.java)
 
     data class ImportedProfileData(
         val profile: UserProfile,
@@ -74,7 +82,6 @@ object ProfileImportExportHelper {
                         }
                     } catch (e: Exception) {
                         e.printStackTrace()
-                        // Fail gracefully on picture copy; text content is still saved
                     }
                 }
             }
@@ -86,30 +93,102 @@ object ProfileImportExportHelper {
     }
 
     /**
-     * Reads a profile package from the ZIP [inputStream].
-     * Avoids using reader wrapper classes directly on the ZipInputStream to prevent buffer overshoot.
+     * Exports multiple [profiles] into a single multi-profile .nexacv bundle ZIP.
+     */
+    fun exportProfiles(context: Context, profiles: List<UserProfile>, outputStream: OutputStream): Boolean {
+        if (profiles.isEmpty()) return false
+        if (profiles.size == 1) {
+            return exportProfile(context, profiles.first(), outputStream)
+        }
+        return try {
+            ZipOutputStream(BufferedOutputStream(outputStream)).use { zos ->
+                // 1. Write manifest.json
+                val manifest = BundleManifest(
+                    bundleVersion = 1,
+                    exportTimestamp = System.currentTimeMillis(),
+                    profileCount = profiles.size
+                )
+                val manifestJsonBytes = bundleManifestAdapter.toJson(manifest).toByteArray(Charsets.UTF_8)
+                zos.putNextEntry(ZipEntry("manifest.json"))
+                zos.write(manifestJsonBytes)
+                zos.closeEntry()
+
+                // 2. Write each profile entry under profiles/profile_{id}/
+                profiles.forEach { profile ->
+                    val folder = "profiles/profile_${profile.id}"
+                    val json = userProfileAdapter.toJson(profile)
+                    val jsonBytes = json.toByteArray(Charsets.UTF_8)
+                    zos.putNextEntry(ZipEntry("$folder/profile.json"))
+                    zos.write(jsonBytes)
+                    zos.closeEntry()
+
+                    val pictureUri = profile.profilePictureUri
+                    if (!pictureUri.isNullOrBlank()) {
+                        try {
+                            context.contentResolver.openInputStream(Uri.parse(pictureUri))?.use { inputStream ->
+                                zos.putNextEntry(ZipEntry("$folder/avatar.jpg"))
+                                inputStream.copyTo(zos)
+                                zos.closeEntry()
+                            }
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }
+                }
+            }
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    /**
+     * Reads a single profile package from the ZIP [inputStream].
      */
     fun readProfileFromZip(inputStream: InputStream): ImportedProfileData? {
-        return try {
-            var profile: UserProfile? = null
-            var hasPicture = false
-            var pictureBytes: ByteArray? = null
+        return readProfilesFromZip(inputStream).firstOrNull()
+    }
+
+    /**
+     * Reads single or multi-profile packages from [inputStream].
+     * Supports both single-profile ZIP files and multi-profile bundle ZIP files.
+     */
+    fun readProfilesFromZip(inputStream: InputStream): List<ImportedProfileData> {
+        val resultList = mutableListOf<ImportedProfileData>()
+        try {
+            val profileMap = mutableMapOf<String, ProfileRawData>()
+            var legacyProfileJsonBytes: ByteArray? = null
+            var legacyAvatarBytes: ByteArray? = null
 
             ZipInputStream(BufferedInputStream(inputStream)).use { zis ->
                 var entry: ZipEntry? = zis.nextEntry
                 while (entry != null) {
-                    when (entry.name) {
-                        "profile.json" -> {
+                    val name = entry.name
+                    when {
+                        name == "profile.json" -> {
                             val baos = ByteArrayOutputStream()
                             zis.copyTo(baos)
-                            val json = baos.toString("UTF-8")
-                            profile = userProfileAdapter.fromJson(json)
+                            legacyProfileJsonBytes = baos.toByteArray()
                         }
-                        "profile_picture.jpg" -> {
-                            hasPicture = true
+                        name == "profile_picture.jpg" -> {
                             val baos = ByteArrayOutputStream()
                             zis.copyTo(baos)
-                            pictureBytes = baos.toByteArray()
+                            legacyAvatarBytes = baos.toByteArray()
+                        }
+                        name.startsWith("profiles/") -> {
+                            val parts = name.split("/")
+                            if (parts.size >= 3) {
+                                val folderKey = parts[1]
+                                val fileName = parts[2]
+                                val raw = profileMap.getOrPut(folderKey) { ProfileRawData() }
+                                val baos = ByteArrayOutputStream()
+                                zis.copyTo(baos)
+                                when (fileName) {
+                                    "profile.json" -> raw.jsonBytes = baos.toByteArray()
+                                    "avatar.jpg" -> raw.avatarBytes = baos.toByteArray()
+                                }
+                            }
                         }
                     }
                     zis.closeEntry()
@@ -117,15 +196,45 @@ object ProfileImportExportHelper {
                 }
             }
 
-            if (profile != null) {
-                ImportedProfileData(profile, hasPicture, pictureBytes)
-            } else {
-                null
+            if (legacyProfileJsonBytes != null) {
+                val jsonStr = legacyProfileJsonBytes!!.toString(Charsets.UTF_8)
+                val profile = userProfileAdapter.fromJson(jsonStr)
+                if (profile != null) {
+                    resultList.add(
+                        ImportedProfileData(
+                            profile = profile,
+                            hasPicture = legacyAvatarBytes != null,
+                            pictureBytes = legacyAvatarBytes
+                        )
+                    )
+                }
+            }
+
+            profileMap.values.forEach { raw ->
+                val jsonBytes = raw.jsonBytes
+                if (jsonBytes != null) {
+                    val jsonStr = jsonBytes.toString(Charsets.UTF_8)
+                    val profile = userProfileAdapter.fromJson(jsonStr)
+                    if (profile != null) {
+                        resultList.add(
+                            ImportedProfileData(
+                                profile = profile,
+                                hasPicture = raw.avatarBytes != null,
+                                pictureBytes = raw.avatarBytes
+                            )
+                        )
+                    }
+                }
             }
         } catch (e: Exception) {
             e.printStackTrace()
-            null
         }
+        return resultList
+    }
+
+    private class ProfileRawData {
+        var jsonBytes: ByteArray? = null
+        var avatarBytes: ByteArray? = null
     }
 
     /**

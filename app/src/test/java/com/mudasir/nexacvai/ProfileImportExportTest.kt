@@ -92,6 +92,25 @@ class ProfileImportExportTest {
         assertNull(importedData)
     }
 
+    @Test
+    fun testExportAndReadProfilesZip_multiProfile() = runTest {
+        val p1 = createDummyProfile(101L, "Alice Lead")
+        val p2 = createDummyProfile(102L, "Bob Engineer")
+        val outputStream = ByteArrayOutputStream()
+        val mockContext = android.content.ContextWrapper(null)
+
+        val exportResult = ProfileImportExportHelper.exportProfiles(mockContext, listOf(p1, p2), outputStream)
+        assertTrue(exportResult)
+
+        val zipBytes = outputStream.toByteArray()
+        val inputStream = ByteArrayInputStream(zipBytes)
+        val importedList = ProfileImportExportHelper.readProfilesFromZip(inputStream)
+
+        assertEquals(2, importedList.size)
+        assertEquals(p1, importedList[0].profile)
+        assertEquals(p2, importedList[1].profile)
+    }
+
     private fun createDummyProfile(id: Long, name: String): UserProfile {
         return UserProfile(
             id = id,

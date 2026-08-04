@@ -507,7 +507,7 @@ fun ViewProfileScreen(
             if (state.showExportConfirm && state.exportingProfile != null) {
                 val pToExport = state.exportingProfile!!
                 ImportExportBottomSheet(
-                    content = ImportExportSheetContent.ExportConfirm(pToExport),
+                    content = ImportExportSheetContent.ExportConfirm(listOf(pToExport)),
                     onExportConfirm = {
                         viewModel.hideExportDialog()
                         val fileName = "${pToExport.fullName.trim().replace("\\s+".toRegex(), "_")}_profile.nexacv"

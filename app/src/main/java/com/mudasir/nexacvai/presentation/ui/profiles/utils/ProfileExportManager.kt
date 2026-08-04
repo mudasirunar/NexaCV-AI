@@ -9,7 +9,6 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -37,16 +36,19 @@ class ProfileExportManager @Inject constructor() {
     }
 
     fun exportProfileToUri(context: Context, profile: UserProfile, uri: Uri) {
+        exportProfilesToUri(context, listOf(profile), uri)
+    }
+
+    fun exportProfilesToUri(context: Context, profiles: List<UserProfile>, uri: Uri) {
         scope.launch(Dispatchers.IO) {
             withContext(Dispatchers.Main) {
                 _exportState.value = ExportProgressState.Exporting
                 _exportError.value = null
             }
             try {
-                // 1. Perform actual export immediately so the file is saved instantly without waiting
                 var result = false
                 context.contentResolver.openOutputStream(uri)?.use { outputStream ->
-                    result = ProfileImportExportHelper.exportProfile(context, profile, outputStream)
+                    result = ProfileImportExportHelper.exportProfiles(context, profiles, outputStream)
                 } ?: run {
                     withContext(Dispatchers.Main) {
                         _exportState.value = ExportProgressState.Error
@@ -55,7 +57,6 @@ class ProfileExportManager @Inject constructor() {
                     return@launch
                 }
 
-                // 2. Add visual delay so the user can see the progress spinner and dot animation
                 delay(1000L)
 
                 withContext(Dispatchers.Main) {

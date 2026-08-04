@@ -175,7 +175,7 @@ fun SummaryStep(state: SummaryStepState, viewModel: CreateProfileViewModel) {
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
+                    verticalAlignment = Alignment.Bottom,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     NexaTextField(
@@ -207,7 +207,6 @@ fun SummaryStep(state: SummaryStepState, viewModel: CreateProfileViewModel) {
                         },
                         text = "Add",
                         enabled = state.currentSkillInput.isNotBlank(),
-                        modifier = Modifier.padding(top = 22.dp),
                         hasBorder = false,
                         fillColor = MaterialTheme.colorScheme.primary,
                         fillOpacity = 1.0f,

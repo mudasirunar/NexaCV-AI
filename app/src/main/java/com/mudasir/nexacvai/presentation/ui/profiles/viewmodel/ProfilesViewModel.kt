@@ -1,31 +1,31 @@
 package com.mudasir.nexacvai.presentation.ui.profiles.viewmodel
 
+import android.content.Context
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mudasir.nexacvai.core.utils.ProfileImportExportHelper
 import com.mudasir.nexacvai.domain.model.UserProfile
 import com.mudasir.nexacvai.domain.usecase.GetAllProfilesUseCase
+import com.mudasir.nexacvai.domain.usecase.ImportProfileUseCase
 import com.mudasir.nexacvai.domain.usecase.SaveProfileUseCase
 import com.mudasir.nexacvai.presentation.ui.profiles.utils.ProfileDeleteManager
 import com.mudasir.nexacvai.presentation.ui.profiles.utils.ProfileExportManager
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
-import com.mudasir.nexacvai.domain.usecase.ImportProfileUseCase
-import com.mudasir.nexacvai.core.utils.ProfileImportExportHelper
-import android.content.Context
-import android.net.Uri
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-
-import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
 enum class DuplicateResolution {
     Overwrite,
-    KeepBoth
+    KeepBoth,
+    Skip
 }
 
 @HiltViewModel
@@ -48,39 +48,41 @@ class ProfilesViewModel @Inject constructor(
     private fun observeSelectionMode() {
         viewModelScope.launch {
             profileDeleteManager.isSelectionModeActive.collect { active ->
-                if (!active && _state.value.isSelectionMode) {
-                    _state.value = _state.value.copy(
-                        isSelectionMode = false,
-                        selectedProfileIds = emptySet()
-                    )
-                }
+                _state.value = _state.value.copy(
+                    isSelectionMode = active,
+                    selectedProfileIds = if (active) profileDeleteManager.selectedProfileIds.value else emptySet()
+                )
+            }
+        }
+        viewModelScope.launch {
+            profileDeleteManager.selectedProfileIds.collect { selected ->
+                _state.value = _state.value.copy(
+                    selectedProfileIds = selected
+                )
             }
         }
     }
 
     private fun loadProfiles() {
         viewModelScope.launch {
+            _state.value = _state.value.copy(isLoading = true, error = null)
             combine(
                 getAllProfilesUseCase(),
                 profileDeleteManager.pendingDeleteProfiles
-            ) { profiles, pendingList ->
-                val pendingIds = pendingList.map { it.id }.toSet()
-                if (pendingIds.isNotEmpty()) {
-                    profiles.filter { it.id !in pendingIds }
-                } else {
-                    profiles
-                }
+            ) { allProfiles, pendingDeletes ->
+                val pendingIds = pendingDeletes.map { it.id }.toSet()
+                allProfiles.filter { it.id !in pendingIds }
             }
             .catch { e ->
                 _state.value = _state.value.copy(
                     isLoading = false,
-                    error = e.message ?: "An unexpected error occurred"
+                    error = e.message ?: "An unexpected error occurred while loading profiles."
                 )
             }
-            .collect { filteredProfiles ->
+            .collect { visibleProfiles ->
                 _state.value = _state.value.copy(
                     isLoading = false,
-                    profiles = filteredProfiles
+                    profiles = visibleProfiles
                 )
             }
         }
@@ -173,30 +175,31 @@ class ProfilesViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 context.contentResolver.openInputStream(uri)?.use { inputStream ->
-                    val importedData = ProfileImportExportHelper.readProfileFromZip(inputStream)
-                    if (importedData == null) {
+                    val importedList = ProfileImportExportHelper.readProfilesFromZip(inputStream)
+                    if (importedList.isEmpty()) {
                         withContext(Dispatchers.Main) {
                             onError("Invalid or corrupted profile file.")
                         }
                         return@launch
                     }
 
-                    // Check for duplicate profile ID
                     val existingProfiles = _state.value.profiles ?: emptyList()
-                    val isDuplicate = existingProfiles.any { it.id == importedData.profile.id }
+                    val existingIds = existingProfiles.map { it.id }.toSet()
+
+                    val duplicates = importedList.filter { it.profile.id in existingIds }
 
                     withContext(Dispatchers.Main) {
-                        if (isDuplicate) {
+                        if (duplicates.isNotEmpty()) {
                             _state.value = _state.value.copy(
                                 importState = ImportProgressState.DuplicateSelection,
-                                importedProfileData = importedData
+                                importedProfileData = importedList.firstOrNull(),
+                                importedProfileDataList = importedList
                             )
                         } else {
-                            // Direct import if no duplicate
                             _state.value = _state.value.copy(
-                                importedProfileData = importedData
+                                importedProfileDataList = importedList
                             )
-                            executeImport(context, DuplicateResolution.Overwrite)
+                            executeMultiImport(context, emptyMap())
                         }
                     }
                 } ?: run {
@@ -214,79 +217,46 @@ class ProfilesViewModel @Inject constructor(
     }
 
     fun executeImport(context: Context, duplicateResolution: DuplicateResolution) {
-        val data = _state.value.importedProfileData ?: return
+        val singleData = _state.value.importedProfileData
+        val list = _state.value.importedProfileDataList.ifEmpty {
+            singleData?.let { listOf(it) } ?: emptyList()
+        }
+        val map = list.associate { it.profile.id to duplicateResolution }
+        executeMultiImport(context, map)
+    }
+
+    fun executeMultiImport(context: Context, perProfileResolutions: Map<Long, DuplicateResolution>) {
+        val list = _state.value.importedProfileDataList.ifEmpty {
+            _state.value.importedProfileData?.let { listOf(it) } ?: emptyList()
+        }
+        if (list.isEmpty()) return
+
+        val itemsToImport = list.filter { data ->
+            val res = perProfileResolutions[data.profile.id] ?: DuplicateResolution.Overwrite
+            res != DuplicateResolution.Skip
+        }
+
+        if (itemsToImport.isEmpty()) {
+            _state.value = _state.value.copy(
+                importState = ImportProgressState.Success,
+                newlyImportedProfileId = null,
+                importedCount = 0
+            )
+            return
+        }
+
         viewModelScope.launch {
             _state.value = _state.value.copy(importState = ImportProgressState.Importing)
             try {
-                // Track start time so we can ensure minimum 1-second progress visibility
                 val startTime = System.currentTimeMillis()
+                var lastSavedId: Long? = null
+                var successCount = 0
 
-                var profileToSave = data.profile
-
-                if (duplicateResolution == DuplicateResolution.KeepBoth) {
-                    // Reset profile ID to 0 to generate a new key and update sub-entities to new unique UUIDs
-                    val newExperiences = profileToSave.experiences.map { it.copy(id = java.util.UUID.randomUUID().toString()) }
-                    val newProjects = profileToSave.projects.map { it.copy(id = java.util.UUID.randomUUID().toString()) }
-                    val newEducations = profileToSave.educations.map { it.copy(id = java.util.UUID.randomUUID().toString()) }
-                    val newCertifications = profileToSave.certifications.map { it.copy(id = java.util.UUID.randomUUID().toString()) }
-                    val newReferences = profileToSave.references.map { it.copy(id = java.util.UUID.randomUUID().toString()) }
-                    val newSocialLinks = profileToSave.socialLinks.map { it.copy(id = java.util.UUID.randomUUID().toString()) }
-                    val newLanguages = profileToSave.languages.map { it.copy(id = java.util.UUID.randomUUID().toString()) }
-
-                    profileToSave = profileToSave.copy(
-                        id = 0L,
-                        experiences = newExperiences,
-                        projects = newProjects,
-                        educations = newEducations,
-                        certifications = newCertifications,
-                        references = newReferences,
-                        socialLinks = newSocialLinks,
-                        languages = newLanguages,
-                        createdAt = System.currentTimeMillis(),
-                        updatedAt = System.currentTimeMillis()
-                    )
-                } else {
-                    // Overwrite or regular import: regenerate sub-entity UUIDs to prevent any key collisions with other profiles
-                    val newExperiences = profileToSave.experiences.map { it.copy(id = java.util.UUID.randomUUID().toString()) }
-                    val newProjects = profileToSave.projects.map { it.copy(id = java.util.UUID.randomUUID().toString()) }
-                    val newEducations = profileToSave.educations.map { it.copy(id = java.util.UUID.randomUUID().toString()) }
-                    val newCertifications = profileToSave.certifications.map { it.copy(id = java.util.UUID.randomUUID().toString()) }
-                    val newReferences = profileToSave.references.map { it.copy(id = java.util.UUID.randomUUID().toString()) }
-                    val newSocialLinks = profileToSave.socialLinks.map { it.copy(id = java.util.UUID.randomUUID().toString()) }
-                    val newLanguages = profileToSave.languages.map { it.copy(id = java.util.UUID.randomUUID().toString()) }
-
-                    profileToSave = profileToSave.copy(
-                        experiences = newExperiences,
-                        projects = newProjects,
-                        educations = newEducations,
-                        certifications = newCertifications,
-                        references = newReferences,
-                        socialLinks = newSocialLinks,
-                        languages = newLanguages,
-                        updatedAt = System.currentTimeMillis()
-                    )
-                }
-
-                val savedId = withContext(Dispatchers.IO) {
-                    importProfileUseCase(profileToSave)
-                }
-
-                if (data.hasPicture && data.pictureBytes != null) {
-                    val localUri = withContext(Dispatchers.IO) {
-                        ProfileImportExportHelper.saveImportedProfilePicture(
-                            context,
-                            data.pictureBytes,
-                            savedId
-                        )
-                    }
-                    if (localUri != null) {
-                        val updatedProfile = profileToSave.copy(
-                            id = savedId,
-                            profilePictureUri = localUri
-                        )
-                        withContext(Dispatchers.IO) {
-                            importProfileUseCase(updatedProfile)
-                        }
+                list.forEach { data ->
+                    val resolution = perProfileResolutions[data.profile.id] ?: DuplicateResolution.Overwrite
+                    if (resolution != DuplicateResolution.Skip) {
+                        lastSavedId = importSingleProfileData(context, data, resolution)
+                        successCount++
                     }
                 }
 
@@ -296,24 +266,99 @@ class ProfilesViewModel @Inject constructor(
 
                 _state.value = _state.value.copy(
                     importState = ImportProgressState.Success,
-                    newlyImportedProfileId = savedId
+                    newlyImportedProfileId = lastSavedId,
+                    importedCount = successCount
                 )
             } catch (e: Exception) {
                 e.printStackTrace()
                 _state.value = _state.value.copy(
                     importState = ImportProgressState.Idle,
                     importedProfileData = null,
-                    error = "Failed to import profile: ${e.message}"
+                    importedProfileDataList = emptyList(),
+                    importedCount = 0,
+                    error = "Failed to import profiles: ${e.message}"
                 )
             }
         }
+    }
+
+    private suspend fun importSingleProfileData(
+        context: Context,
+        data: ProfileImportExportHelper.ImportedProfileData,
+        duplicateResolution: DuplicateResolution
+    ): Long {
+        var profileToSave = data.profile
+
+        val newExperiences = profileToSave.experiences.map { it.copy(id = java.util.UUID.randomUUID().toString()) }
+        val newProjects = profileToSave.projects.map { it.copy(id = java.util.UUID.randomUUID().toString()) }
+        val newEducations = profileToSave.educations.map { it.copy(id = java.util.UUID.randomUUID().toString()) }
+        val newCertifications = profileToSave.certifications.map { it.copy(id = java.util.UUID.randomUUID().toString()) }
+        val newReferences = profileToSave.references.map { it.copy(id = java.util.UUID.randomUUID().toString()) }
+        val newSocialLinks = profileToSave.socialLinks.map { it.copy(id = java.util.UUID.randomUUID().toString()) }
+        val newLanguages = profileToSave.languages.map { it.copy(id = java.util.UUID.randomUUID().toString()) }
+
+        val originalCreatedAt = if (data.profile.createdAt > 0) data.profile.createdAt else System.currentTimeMillis()
+        val originalUpdatedAt = if (data.profile.updatedAt > 0) data.profile.updatedAt else System.currentTimeMillis()
+
+        if (duplicateResolution == DuplicateResolution.KeepBoth) {
+            profileToSave = profileToSave.copy(
+                id = 0L,
+                experiences = newExperiences,
+                projects = newProjects,
+                educations = newEducations,
+                certifications = newCertifications,
+                references = newReferences,
+                socialLinks = newSocialLinks,
+                languages = newLanguages,
+                createdAt = originalCreatedAt,
+                updatedAt = originalUpdatedAt
+            )
+        } else {
+            profileToSave = profileToSave.copy(
+                experiences = newExperiences,
+                projects = newProjects,
+                educations = newEducations,
+                certifications = newCertifications,
+                references = newReferences,
+                socialLinks = newSocialLinks,
+                languages = newLanguages,
+                createdAt = originalCreatedAt,
+                updatedAt = originalUpdatedAt
+            )
+        }
+
+        val savedId = withContext(Dispatchers.IO) {
+            importProfileUseCase(profileToSave)
+        }
+
+        if (data.hasPicture && data.pictureBytes != null) {
+            val localUri = withContext(Dispatchers.IO) {
+                ProfileImportExportHelper.saveImportedProfilePicture(
+                    context,
+                    data.pictureBytes,
+                    savedId
+                )
+            }
+            if (localUri != null) {
+                val updatedProfile = profileToSave.copy(
+                    id = savedId,
+                    profilePictureUri = localUri
+                )
+                withContext(Dispatchers.IO) {
+                    importProfileUseCase(updatedProfile)
+                }
+            }
+        }
+        return savedId
     }
 
     fun cancelImport() {
         _state.value = _state.value.copy(
             importState = ImportProgressState.Idle,
             importedProfileData = null,
-            newlyImportedProfileId = null
+            importedProfileDataList = emptyList(),
+            newlyImportedProfileId = null,
+            importedCount = 0
         )
     }
 
@@ -324,13 +369,29 @@ class ProfilesViewModel @Inject constructor(
     fun selectProfileForExport(profile: UserProfile) {
         _state.value = _state.value.copy(
             exportingProfile = profile,
+            exportingProfilesList = listOf(profile),
             showExportConfirm = true
         )
+    }
+
+    fun selectProfilesForExport(profiles: List<UserProfile>) {
+        if (profiles.isEmpty()) return
+        _state.value = _state.value.copy(
+            exportingProfilesList = profiles,
+            exportingProfile = profiles.firstOrNull(),
+            showExportConfirm = true
+        )
+    }
+
+    fun selectAllProfilesForExport() {
+        val allProfiles = _state.value.profiles ?: emptyList()
+        selectProfilesForExport(allProfiles)
     }
 
     fun dismissExportConfirm() {
         _state.value = _state.value.copy(
             exportingProfile = null,
+            exportingProfilesList = emptyList(),
             showExportConfirm = false
         )
     }
@@ -342,8 +403,18 @@ class ProfilesViewModel @Inject constructor(
     }
 
     fun exportProfileToUri(context: Context, uri: Uri) {
-        val profile = _state.value.exportingProfile ?: return
-        profileExportManager.exportProfileToUri(context, profile, uri)
+        val profilesToExport = if (_state.value.exportingProfilesList.isNotEmpty()) {
+            _state.value.exportingProfilesList
+        } else if (_state.value.exportingProfile != null) {
+            listOf(_state.value.exportingProfile!!)
+        } else {
+            emptyList()
+        }
+
+        if (profilesToExport.isEmpty()) return
+
+        profileExportManager.exportProfilesToUri(context, profilesToExport, uri)
         dismissExportConfirm()
+        profileDeleteManager.clearSelection()
     }
 }
