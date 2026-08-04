@@ -23,7 +23,8 @@ import org.junit.Test
  * Comprehensive test suite for the Profile Copy (Duplication) feature.
  * Tests cover:
  * - DuplicateProfileUseCase: deep copy logic, fresh IDs, timestamps, nested entity UUID regeneration
- * - ProfilesViewModel: single & batch duplication state transitions, selection mode auto-exit, dismiss
+ * - ProfilesViewModel: single & batch duplication state transitions, selection mode auto-exit, dismiss,
+ *   and non-destructive copy tag dismissal (isCopyTagDismissed).
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class ProfileCopyTest {
@@ -315,6 +316,17 @@ class ProfileCopyTest {
         assertEquals("MS", copy.educations[1].degree)
     }
 
+    @Test
+    fun testDuplicate_defaultsCopyTagDismissedToFalse() = runTest(testDispatcher) {
+        val original = createRichProfile(id = 14L, name = "Nathan")
+        val mockContext = ContextWrapper(null)
+
+        val newId = duplicateProfileUseCase(mockContext, original)
+        val copy = fakeRepository.savedProfiles[newId]!!
+
+        assertFalse(copy.isCopyTagDismissed)
+    }
+
     // ──────────────────────────────────────────────
     // ProfilesViewModel — Duplication State Tests
     // ──────────────────────────────────────────────
@@ -445,6 +457,52 @@ class ProfileCopyTest {
         assertEquals("Alice", copy.fullName)
     }
 
+    @Test
+    fun testDuplicate_assignsSourceProfileLineage() = runTest(testDispatcher) {
+        val original = createRichProfile(id = 5L, name = "Charlie Brown")
+        fakeRepository.savedProfiles[original.id] = original
+
+        val mockContext = ContextWrapper(null)
+        val newId = duplicateProfileUseCase(mockContext, original)
+        val copy = fakeRepository.savedProfiles[newId]!!
+
+        assertEquals(5L, copy.sourceProfileId)
+        assertEquals("Charlie Brown", copy.sourceProfileName)
+    }
+
+    @Test
+    fun testRemoveSourceProfileTag_setsCopyTagDismissed_andPreservesLineage() = runTest(testDispatcher) {
+        val original = createRichProfile(id = 10L, name = "Diana Prince")
+        fakeRepository.insertProfile(original)
+
+        val viewModel = createViewModel()
+        testScheduler.advanceUntilIdle()
+
+        viewModel.enterSelectionMode(original.id)
+        testScheduler.advanceUntilIdle()
+        viewModel.duplicateSelectedProfiles(ContextWrapper(null))
+        waitForDuplicationSuccess(viewModel)
+
+        val newId = viewModel.state.value.newlyDuplicatedProfileId!!
+        var copy = fakeRepository.getProfileById(newId)!!
+        assertEquals(10L, copy.sourceProfileId)
+        assertEquals("Diana Prince", copy.sourceProfileName)
+        assertFalse(copy.isCopyTagDismissed)
+
+        // Trigger remove tag (close button on UI chip)
+        viewModel.removeSourceProfileTag(newId)
+        testScheduler.advanceUntilIdle()
+
+        copy = fakeRepository.getProfileById(newId)!!
+
+        // Assert that visual dismissal tag is set to true
+        assertTrue(copy.isCopyTagDismissed)
+
+        // Assert that underlying lineage pedigree is safely preserved
+        assertEquals(10L, copy.sourceProfileId)
+        assertEquals("Diana Prince", copy.sourceProfileName)
+    }
+
     private fun TestScope.waitForDuplicationSuccess(viewModel: ProfilesViewModel) {
         var attempts = 0
         while (viewModel.state.value.duplicateState != DuplicateProgressState.Success && attempts < 40) {
@@ -477,6 +535,9 @@ class ProfileCopyTest {
             references = emptyList(),
             socialLinks = emptyList(),
             languages = emptyList(),
+            sourceProfileId = null,
+            sourceProfileName = null,
+            isCopyTagDismissed = false,
             createdAt = System.currentTimeMillis(),
             updatedAt = System.currentTimeMillis()
         )

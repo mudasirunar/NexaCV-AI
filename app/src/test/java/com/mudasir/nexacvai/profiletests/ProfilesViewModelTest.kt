@@ -259,6 +259,12 @@ class ProfilesViewModelTest {
 
         override suspend fun updateProfile(profile: UserProfile) {
             savedProfiles[profile.id] = profile
+            val current = profilesFlow.value.toMutableList()
+            val index = current.indexOfFirst { it.id == profile.id }
+            if (index != -1) {
+                current[index] = profile
+                profilesFlow.value = current
+            }
         }
 
         override suspend fun deleteProfile(profile: UserProfile) {
