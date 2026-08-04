@@ -113,23 +113,21 @@ class ProfileDeleteManager @Inject constructor(
     fun commitPendingDelete() {
         autoCommitJob?.cancel()
         autoCommitJob = null
-        val profilesToDelete = _pendingDeleteProfiles.value
-        val singleProfile = _pendingDeleteProfile.value
+        val profilesToDelete = _pendingDeleteProfiles.value.ifEmpty {
+            _pendingDeleteProfile.value?.let { listOf(it) } ?: emptyList()
+        }
 
         if (profilesToDelete.isNotEmpty()) {
-            _pendingDeleteProfiles.value = emptyList()
-            _pendingDeleteProfile.value = null
             _isFabVisible.value = true
             scope.launch {
-                profilesToDelete.forEach { profile ->
-                    deleteProfileUseCase(profile)
+                try {
+                    profilesToDelete.forEach { profile ->
+                        deleteProfileUseCase(profile)
+                    }
+                } finally {
+                    _pendingDeleteProfiles.value = emptyList()
+                    _pendingDeleteProfile.value = null
                 }
-            }
-        } else if (singleProfile != null) {
-            _pendingDeleteProfile.value = null
-            _isFabVisible.value = true
-            scope.launch {
-                deleteProfileUseCase(singleProfile)
             }
         }
     }
