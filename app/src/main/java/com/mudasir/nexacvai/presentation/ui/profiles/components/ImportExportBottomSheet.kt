@@ -26,9 +26,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import androidx.compose.ui.graphics.Color
 import com.mudasir.nexacvai.R
 import com.mudasir.nexacvai.core.utils.NameUtils
 import com.mudasir.nexacvai.domain.model.UserProfile
+import com.mudasir.nexacvai.presentation.ui.components.NexaButton
 import com.mudasir.nexacvai.ui.theme.AvatarColorPairs
 import com.mudasir.nexacvai.ui.theme.SheetIconSuccessGreen
 import com.mudasir.nexacvai.ui.theme.SheetIconWarningAmber
@@ -298,43 +300,33 @@ private fun ExportConfirmContent(
     Spacer(modifier = Modifier.height(24.dp))
 
     // Primary action
-    Button(
+    NexaButton(
         onClick = onExport,
+        text = "Export",
+        icon = null,
         modifier = Modifier
             .fillMaxWidth()
             .height(50.dp),
-        shape = RoundedCornerShape(14.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary
-        )
-    ) {
-        Icon(
-            painter = painterResource(id = R.drawable.ic_export),
-            contentDescription = null,
-            modifier = Modifier.size(18.dp)
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(
-            text = "Export",
-            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
-        )
-    }
+        hasBorder = false,
+        fillColor = MaterialTheme.colorScheme.primary,
+        fillOpacity = 1.0f,
+        contentColor = MaterialTheme.colorScheme.onPrimary
+    )
 
     Spacer(modifier = Modifier.height(10.dp))
 
     // Cancel action
-    TextButton(
+    NexaButton(
         onClick = onCancel,
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp)
-    ) {
-        Text(
-            text = "Cancel",
-            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
+        text = "Cancel",
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(44.dp),
+        hasBorder = false,
+        fillColor = Color.Transparent,
+        fillOpacity = 0f,
+        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+    )
 }
 
 /**
@@ -388,61 +380,48 @@ private fun DuplicateResolutionContent(
     Spacer(modifier = Modifier.height(24.dp))
 
     // Keep Both — Primary action
-    Button(
+    NexaButton(
         onClick = onKeepBoth,
+        text = "Keep Both (Import as Copy)",
         modifier = Modifier
             .fillMaxWidth()
             .height(50.dp),
-        shape = RoundedCornerShape(14.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary
-        )
-    ) {
-        Text(
-            text = "Keep Both (Import as Copy)",
-            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
-        )
-    }
+        hasBorder = false,
+        fillColor = MaterialTheme.colorScheme.primary,
+        fillOpacity = 1.0f,
+        contentColor = MaterialTheme.colorScheme.onPrimary
+    )
 
     Spacer(modifier = Modifier.height(10.dp))
 
-    // Overwrite — Destructive outlined
-    OutlinedButton(
+    // Overwrite — Destructive translucent fill with border
+    NexaButton(
         onClick = onOverwrite,
+        text = "Overwrite / Replace Existing",
         modifier = Modifier
             .fillMaxWidth()
             .height(50.dp),
-        shape = RoundedCornerShape(14.dp),
-        colors = ButtonDefaults.outlinedButtonColors(
-            contentColor = MaterialTheme.colorScheme.error
-        ),
-        border = ButtonDefaults.outlinedButtonBorder(enabled = true).copy(
-            brush = androidx.compose.ui.graphics.SolidColor(
-                MaterialTheme.colorScheme.error.copy(alpha = 0.5f)
-            )
-        )
-    ) {
-        Text(
-            text = "Overwrite / Replace Existing",
-            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
-        )
-    }
+        hasBorder = true,
+        borderColor = MaterialTheme.colorScheme.error,
+        fillColor = MaterialTheme.colorScheme.error,
+        fillOpacity = 0.16f,
+        contentColor = MaterialTheme.colorScheme.error
+    )
 
     Spacer(modifier = Modifier.height(10.dp))
 
     // Cancel
-    TextButton(
+    NexaButton(
         onClick = onCancel,
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp)
-    ) {
-        Text(
-            text = "Cancel",
-            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
+        text = "Cancel",
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(44.dp),
+        hasBorder = false,
+        fillColor = Color.Transparent,
+        fillOpacity = 0f,
+        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+    )
 }
 
 /**
@@ -550,35 +529,30 @@ private fun ImportSuccessContent(
     Spacer(modifier = Modifier.height(24.dp))
 
     // View Profile — Primary action
-    Button(
+    NexaButton(
         onClick = onViewProfile,
+        text = "View Profile",
         modifier = Modifier
             .fillMaxWidth()
             .height(50.dp),
-        shape = RoundedCornerShape(14.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary
-        )
-    ) {
-        Text(
-            text = "View Profile",
-            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
-        )
-    }
+        hasBorder = false,
+        fillColor = MaterialTheme.colorScheme.primary,
+        fillOpacity = 1.0f,
+        contentColor = MaterialTheme.colorScheme.onPrimary
+    )
 
     Spacer(modifier = Modifier.height(10.dp))
 
     // Done
-    TextButton(
+    NexaButton(
         onClick = onDone,
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp)
-    ) {
-        Text(
-            text = "Done",
-            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
+        text = "Done",
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(44.dp),
+        hasBorder = false,
+        fillColor = Color.Transparent,
+        fillOpacity = 0f,
+        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+    )
 }

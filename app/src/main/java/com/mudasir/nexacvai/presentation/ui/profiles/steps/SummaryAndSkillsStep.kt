@@ -24,6 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
+import com.mudasir.nexacvai.presentation.ui.components.NexaButton
 import com.mudasir.nexacvai.presentation.ui.components.NexaTextField
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.CreateProfileViewModel
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.SummaryStepState
@@ -198,29 +199,20 @@ fun SummaryStep(state: SummaryStepState, viewModel: CreateProfileViewModel) {
                         singleLine = true
                     )
                     
-                    val skillInteractionSource = remember { MutableInteractionSource() }
-                    val isPressed by skillInteractionSource.collectIsPressedAsState()
-                    val buttonScale by animateFloatAsState(if (isPressed && state.currentSkillInput.isNotBlank()) 0.98f else 1f, label = "buttonScale")
-                    
-                    Button(
+                    NexaButton(
                         onClick = { 
                             if (state.currentSkillInput.isNotBlank()) {
                                 viewModel.addSkill(state.currentSkillInput)
                             }
                         },
+                        text = "Add",
                         enabled = state.currentSkillInput.isNotBlank(),
-                        interactionSource = skillInteractionSource,
-                        modifier = Modifier
-                            .padding(top = 22.dp)
-                            .graphicsLayer(scaleX = buttonScale, scaleY = buttonScale),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary
-                        ),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Text("Add")
-                    }
+                        modifier = Modifier.padding(top = 22.dp),
+                        hasBorder = false,
+                        fillColor = MaterialTheme.colorScheme.primary,
+                        fillOpacity = 1.0f,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    )
                 }
 
                 if (state.skills.isNotEmpty()) {

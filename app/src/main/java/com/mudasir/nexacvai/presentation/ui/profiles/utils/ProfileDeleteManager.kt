@@ -88,7 +88,6 @@ class ProfileDeleteManager @Inject constructor(
         commitPendingDelete()
         _pendingDeleteProfile.value = profile
         _pendingDeleteProfiles.value = listOf(profile)
-        _isFabVisible.value = false
         scheduleAutoCommit()
     }
 
@@ -97,7 +96,6 @@ class ProfileDeleteManager @Inject constructor(
         commitPendingDelete()
         _pendingDeleteProfiles.value = profiles
         _pendingDeleteProfile.value = profiles.first()
-        _isFabVisible.value = false
         clearSelection()
         scheduleAutoCommit()
     }

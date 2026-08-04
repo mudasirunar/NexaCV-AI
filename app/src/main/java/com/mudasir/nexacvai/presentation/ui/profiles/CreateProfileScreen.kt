@@ -47,7 +47,7 @@ import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -59,6 +59,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import com.mudasir.nexacvai.presentation.ui.components.NexaButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -271,7 +272,7 @@ fun CreateProfileScreen(
                 shadowElevation = 0.dp
             ) {
                 Column {
-                    Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f), thickness = 1.dp)
+                    HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f), thickness = 1.dp)
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -283,20 +284,17 @@ fun CreateProfileScreen(
                         contentAlignment = Alignment.CenterStart
                     ) {
                         if (state.currentStep > 0) {
-                            val backInteractionSource = remember { MutableInteractionSource() }
-                            val backPressed by backInteractionSource.collectIsPressedAsState()
-                            val backScale by animateFloatAsState(if (backPressed) 0.98f else 1f, label = "backScale")
-                            OutlinedButton(
+                            NexaButton(
                                 onClick = { viewModel.previousStep() },
-                                interactionSource = backInteractionSource,
-                                modifier = Modifier
-                                    .height(38.dp)
-                                    .graphicsLayer(scaleX = backScale, scaleY = backScale),
-                                shape = RoundedCornerShape(12.dp),
+                                text = "Back",
+                                modifier = Modifier.height(38.dp),
+                                hasBorder = true,
+                                borderColor = MaterialTheme.colorScheme.outline,
+                                fillColor = MaterialTheme.colorScheme.surface,
+                                fillOpacity = 0.0f,
+                                contentColor = MaterialTheme.colorScheme.onSurface,
                                 contentPadding = PaddingValues(horizontal = 12.dp)
-                            ) {
-                                Text("Back", style = MaterialTheme.typography.labelLarge)
-                            }
+                            )
                         }
                     }
                         Box(
@@ -308,29 +306,19 @@ fun CreateProfileScreen(
                                 enter = fadeIn() + scaleIn(initialScale = 0.9f),
                                 exit = fadeOut() + scaleOut(targetScale = 0.9f)
                             ) {
-                                val saveMidwayInteractionSource = remember { MutableInteractionSource() }
-                                val saveMidwayPressed by saveMidwayInteractionSource.collectIsPressedAsState()
-                                val saveMidwayScale by animateFloatAsState(if (saveMidwayPressed) 0.98f else 1f, label = "saveMidwayScale")
-                                
-                                OutlinedButton(
+                                NexaButton(
                                     onClick = {
                                         if (!state.isSaving) {
                                             viewModel.saveProfile()
                                         }
                                     },
-                                    enabled = true,
-                                    interactionSource = saveMidwayInteractionSource,
-                                    modifier = Modifier
-                                        .height(38.dp)
-                                        .graphicsLayer(scaleX = saveMidwayScale, scaleY = saveMidwayScale),
-                                    colors = ButtonDefaults.outlinedButtonColors(
-                                        contentColor = MaterialTheme.colorScheme.primary
-                                    ),
-                                    border = androidx.compose.foundation.BorderStroke(
-                                        width = 1.dp,
-                                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)
-                                    ),
-                                    shape = RoundedCornerShape(12.dp),
+                                    modifier = Modifier.height(38.dp),
+                                    enabled = !state.isSaving,
+                                    hasBorder = true,
+                                    borderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
+                                    fillColor = MaterialTheme.colorScheme.primary,
+                                    fillOpacity = 0.08f,
+                                    contentColor = MaterialTheme.colorScheme.primary,
                                     contentPadding = PaddingValues(horizontal = 12.dp)
                                 ) {
                                     if (state.isSaving) {
@@ -374,21 +362,17 @@ fun CreateProfileScreen(
                                         }
                                     }
                                 }
-                                val nextInteractionSource = remember { MutableInteractionSource() }
-                                val nextPressed by nextInteractionSource.collectIsPressedAsState()
-                                val nextScale by animateFloatAsState(if (nextPressed) 0.98f else 1f, label = "nextScale")
-                                Button(
+                                NexaButton(
                                     onClick = { viewModel.nextStep() },
+                                    text = "Next",
                                     enabled = isNextEnabled,
-                                    interactionSource = nextInteractionSource,
-                                    modifier = Modifier
-                                        .height(38.dp)
-                                        .graphicsLayer(scaleX = nextScale, scaleY = nextScale),
-                                    shape = RoundedCornerShape(12.dp),
+                                    modifier = Modifier.height(38.dp),
+                                    hasBorder = false,
+                                    fillColor = MaterialTheme.colorScheme.primary,
+                                    fillOpacity = 1.0f,
+                                    contentColor = MaterialTheme.colorScheme.onPrimary,
                                     contentPadding = PaddingValues(horizontal = 16.dp)
-                                ) {
-                                    Text("Next", style = MaterialTheme.typography.labelLarge)
-                                }
+                                )
                             } else {
                                 val isSaveEnabled by remember(state.fullName, state.socialLinks, state.references, state.languages) {
                                     derivedStateOf {
@@ -398,21 +382,18 @@ fun CreateProfileScreen(
                                         state.languages.all { it.languageName.isNotBlank() && it.proficiency.isNotBlank() }
                                     }
                                 }
-                                val saveInteractionSource = remember { MutableInteractionSource() }
-                                val savePressed by saveInteractionSource.collectIsPressedAsState()
-                                val saveScale by animateFloatAsState(if (savePressed) 0.98f else 1f, label = "saveScale")
-                                Button(
+                                NexaButton(
                                     onClick = {
                                         if (isSaveEnabled && !state.isSaving) {
                                             viewModel.saveProfile()
                                         }
                                     },
                                     enabled = isSaveEnabled,
-                                    interactionSource = saveInteractionSource,
-                                    modifier = Modifier
-                                        .height(38.dp)
-                                        .graphicsLayer(scaleX = saveScale, scaleY = saveScale),
-                                    shape = RoundedCornerShape(12.dp),
+                                    modifier = Modifier.height(38.dp),
+                                    hasBorder = false,
+                                    fillColor = MaterialTheme.colorScheme.primary,
+                                    fillOpacity = 1.0f,
+                                    contentColor = MaterialTheme.colorScheme.onPrimary,
                                     contentPadding = PaddingValues(horizontal = 16.dp)
                                 ) {
                                     if (state.isSaving) {

@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.mudasir.nexacvai.domain.model.Experience
 import com.mudasir.nexacvai.domain.model.Project
+import com.mudasir.nexacvai.presentation.ui.components.NexaButton
 import com.mudasir.nexacvai.presentation.ui.profiles.components.create_profile.ExperienceCard
 import com.mudasir.nexacvai.presentation.ui.profiles.components.create_profile.ProjectCard
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.ExperienceProjectsStepState
@@ -106,18 +107,15 @@ fun ExperienceProjectsStep(
                         )
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        val addFirstInteractionSource = remember { MutableInteractionSource() }
-                        val addFirstPressed by addFirstInteractionSource.collectIsPressedAsState()
-                        val addFirstScale by animateFloatAsState(if (addFirstPressed) 0.98f else 1f, label = "addExpScale")
-
-                        Button(
+                        NexaButton(
                             onClick = { viewModel.addExperience(Experience()) },
-                            interactionSource = addFirstInteractionSource,
-                            modifier = Modifier.graphicsLayer(scaleX = addFirstScale, scaleY = addFirstScale),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Text("+ Add Experience")
-                        }
+                            text = "+ Add Experience",
+                            hasBorder = true,
+                            borderColor = MaterialTheme.colorScheme.primary,
+                            fillColor = MaterialTheme.colorScheme.primary,
+                            fillOpacity = 0.12f,
+                            contentColor = MaterialTheme.colorScheme.primary
+                        )
                     }
                 }
             }
@@ -139,20 +137,16 @@ fun ExperienceProjectsStep(
             }
 
             item {
-                val addMoreInteractionSource = remember { MutableInteractionSource() }
-                val addMorePressed by addMoreInteractionSource.collectIsPressedAsState()
-                val addMoreScale by animateFloatAsState(if (addMorePressed) 0.98f else 1f, label = "addMoreExpScale")
-
-                OutlinedButton(
+                NexaButton(
                     onClick = { viewModel.addExperience(Experience()) },
-                    interactionSource = addMoreInteractionSource,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .graphicsLayer(scaleX = addMoreScale, scaleY = addMoreScale),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text("+ Add Another Experience")
-                }
+                    text = "+ Add Another Experience",
+                    modifier = Modifier.fillMaxWidth(),
+                    hasBorder = true,
+                    borderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
+                    fillColor = MaterialTheme.colorScheme.primary,
+                    fillOpacity = 0.08f,
+                    contentColor = MaterialTheme.colorScheme.primary
+                )
             }
         }
 
@@ -215,18 +209,15 @@ fun ExperienceProjectsStep(
                         )
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        val addFirstProjInteractionSource = remember { MutableInteractionSource() }
-                        val addFirstProjPressed by addFirstProjInteractionSource.collectIsPressedAsState()
-                        val addFirstProjScale by animateFloatAsState(if (addFirstProjPressed) 0.98f else 1f, label = "addProjScale")
-
-                        Button(
+                        NexaButton(
                             onClick = { viewModel.addProject(Project()) },
-                            interactionSource = addFirstProjInteractionSource,
-                            modifier = Modifier.graphicsLayer(scaleX = addFirstProjScale, scaleY = addFirstProjScale),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Text("+ Add Project")
-                        }
+                            text = "+ Add Project",
+                            hasBorder = true,
+                            borderColor = MaterialTheme.colorScheme.primary,
+                            fillColor = MaterialTheme.colorScheme.primary,
+                            fillOpacity = 0.12f,
+                            contentColor = MaterialTheme.colorScheme.primary
+                        )
                     }
                 }
             }
@@ -248,20 +239,16 @@ fun ExperienceProjectsStep(
             }
 
             item {
-                val addAnotherProjInteractionSource = remember { MutableInteractionSource() }
-                val addAnotherProjPressed by addAnotherProjInteractionSource.collectIsPressedAsState()
-                val addAnotherProjScale by animateFloatAsState(if (addAnotherProjPressed) 0.98f else 1f, label = "addMoreProjScale")
-
-                OutlinedButton(
+                NexaButton(
                     onClick = { viewModel.addProject(Project()) },
-                    interactionSource = addAnotherProjInteractionSource,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .graphicsLayer(scaleX = addAnotherProjScale, scaleY = addAnotherProjScale),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text("+ Add Another Project")
-                }
+                    text = "+ Add Another Project",
+                    modifier = Modifier.fillMaxWidth(),
+                    hasBorder = true,
+                    borderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
+                    fillColor = MaterialTheme.colorScheme.primary,
+                    fillOpacity = 0.08f,
+                    contentColor = MaterialTheme.colorScheme.primary
+                )
             }
         }
     }

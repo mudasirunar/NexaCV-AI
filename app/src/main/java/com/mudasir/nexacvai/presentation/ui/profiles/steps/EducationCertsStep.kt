@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.mudasir.nexacvai.domain.model.Education
 import com.mudasir.nexacvai.domain.model.Certification
+import com.mudasir.nexacvai.presentation.ui.components.NexaButton
 import com.mudasir.nexacvai.presentation.ui.profiles.components.create_profile.EducationCard
 import com.mudasir.nexacvai.presentation.ui.profiles.components.create_profile.CertificationCard
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.EducationCertsStepState
@@ -106,18 +107,15 @@ fun EducationCertsStep(
                         )
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        val addFirstEduInteractionSource = remember { MutableInteractionSource() }
-                        val addFirstEduPressed by addFirstEduInteractionSource.collectIsPressedAsState()
-                        val addFirstEduScale by animateFloatAsState(if (addFirstEduPressed) 0.98f else 1f, label = "addEduScale")
-
-                        Button(
+                        NexaButton(
                             onClick = { viewModel.addEducation(Education()) },
-                            interactionSource = addFirstEduInteractionSource,
-                            modifier = Modifier.graphicsLayer(scaleX = addFirstEduScale, scaleY = addFirstEduScale),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Text("+ Add Education")
-                        }
+                            text = "+ Add Education",
+                            hasBorder = true,
+                            borderColor = MaterialTheme.colorScheme.primary,
+                            fillColor = MaterialTheme.colorScheme.primary,
+                            fillOpacity = 0.12f,
+                            contentColor = MaterialTheme.colorScheme.primary
+                        )
                     }
                 }
             }
@@ -139,20 +137,16 @@ fun EducationCertsStep(
             }
 
             item {
-                val addMoreEduInteractionSource = remember { MutableInteractionSource() }
-                val addMoreEduPressed by addMoreEduInteractionSource.collectIsPressedAsState()
-                val addMoreEduScale by animateFloatAsState(if (addMoreEduPressed) 0.98f else 1f, label = "addMoreEduScale")
-
-                OutlinedButton(
+                NexaButton(
                     onClick = { viewModel.addEducation(Education()) },
-                    interactionSource = addMoreEduInteractionSource,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .graphicsLayer(scaleX = addMoreEduScale, scaleY = addMoreEduScale),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text("+ Add Another Education")
-                }
+                    text = "+ Add Another Education",
+                    modifier = Modifier.fillMaxWidth(),
+                    hasBorder = true,
+                    borderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
+                    fillColor = MaterialTheme.colorScheme.primary,
+                    fillOpacity = 0.08f,
+                    contentColor = MaterialTheme.colorScheme.primary
+                )
             }
         }
 
@@ -215,18 +209,15 @@ fun EducationCertsStep(
                         )
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        val addFirstCertInteractionSource = remember { MutableInteractionSource() }
-                        val addFirstCertPressed by addFirstCertInteractionSource.collectIsPressedAsState()
-                        val addFirstCertScale by animateFloatAsState(if (addFirstCertPressed) 0.98f else 1f, label = "addCertScale")
-
-                        Button(
+                        NexaButton(
                             onClick = { viewModel.addCertification(Certification()) },
-                            interactionSource = addFirstCertInteractionSource,
-                            modifier = Modifier.graphicsLayer(scaleX = addFirstCertScale, scaleY = addFirstCertScale),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Text("+ Add Certification")
-                        }
+                            text = "+ Add Certification",
+                            hasBorder = true,
+                            borderColor = MaterialTheme.colorScheme.primary,
+                            fillColor = MaterialTheme.colorScheme.primary,
+                            fillOpacity = 0.12f,
+                            contentColor = MaterialTheme.colorScheme.primary
+                        )
                     }
                 }
             }
@@ -248,20 +239,16 @@ fun EducationCertsStep(
             }
 
             item {
-                val addAnotherCertInteractionSource = remember { MutableInteractionSource() }
-                val addAnotherCertPressed by addAnotherCertInteractionSource.collectIsPressedAsState()
-                val addAnotherCertScale by animateFloatAsState(if (addAnotherCertPressed) 0.98f else 1f, label = "addMoreCertScale")
-
-                OutlinedButton(
+                NexaButton(
                     onClick = { viewModel.addCertification(Certification()) },
-                    interactionSource = addAnotherCertInteractionSource,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .graphicsLayer(scaleX = addAnotherCertScale, scaleY = addAnotherCertScale),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text("+ Add Another Certification")
-                }
+                    text = "+ Add Another Certification",
+                    modifier = Modifier.fillMaxWidth(),
+                    hasBorder = true,
+                    borderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
+                    fillColor = MaterialTheme.colorScheme.primary,
+                    fillOpacity = 0.08f,
+                    contentColor = MaterialTheme.colorScheme.primary
+                )
             }
         }
     }

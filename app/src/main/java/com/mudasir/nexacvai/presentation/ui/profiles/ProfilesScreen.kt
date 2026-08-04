@@ -12,6 +12,7 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -34,6 +35,8 @@ import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -68,6 +71,8 @@ import androidx.navigation.NavController
 import com.mudasir.nexacvai.domain.model.UserProfile
 import com.mudasir.nexacvai.presentation.navigation.Screen
 import com.mudasir.nexacvai.presentation.ui.components.NexaAlertDialog
+import com.mudasir.nexacvai.presentation.ui.components.NexaButton
+import com.mudasir.nexacvai.presentation.ui.components.NexaFloatingActionButton
 import com.mudasir.nexacvai.presentation.ui.profiles.components.ImportExportBottomSheet
 import com.mudasir.nexacvai.presentation.ui.profiles.components.ImportExportSheetContent
 import com.mudasir.nexacvai.presentation.ui.profiles.components.profiles_dashboard.ProfileCardSkeleton
@@ -174,16 +179,36 @@ fun ProfilesScreen(
 
     var isFabVisible by remember { mutableStateOf(true) }
 
+    val isGridScrollable by remember {
+        derivedStateOf {
+            gridState.canScrollBackward || gridState.canScrollForward
+        }
+    }
+
     val nestedScrollConnection = remember {
         object : NestedScrollConnection {
             override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-                if (available.y < -10) {
-                    isFabVisible = false
-                } else if (available.y > 10) {
-                    isFabVisible = true
+                if (isGridScrollable && source == NestedScrollSource.UserInput) {
+                    if (available.y < -12) {
+                        isFabVisible = false
+                    } else if (available.y > 12) {
+                        isFabVisible = true
+                    }
                 }
                 return Offset.Zero
             }
+        }
+    }
+
+    LaunchedEffect(isGridScrollable) {
+        if (!isGridScrollable) {
+            isFabVisible = true
+        }
+    }
+
+    LaunchedEffect(gridState.canScrollBackward) {
+        if (!gridState.canScrollBackward) {
+            isFabVisible = true
         }
     }
 
@@ -201,7 +226,7 @@ fun ProfilesScreen(
 
     val isFabVisuallyShown by remember {
         derivedStateOf {
-            isFabVisible && (screenMode == ProfilesScreenMode.Content || screenMode == ProfilesScreenMode.Empty) && !state.isSelectionMode
+            isFabVisible && screenMode == ProfilesScreenMode.Content && !state.isSelectionMode
         }
     }
     
@@ -272,11 +297,24 @@ fun ProfilesScreen(
                                         importLauncher.launch(arrayOf("*/*"))
                                     }
                                 )
+                                val isProfilesEmpty = screenMode == ProfilesScreenMode.Empty
                                 DropdownMenuItem(
-                                    text = { Text("Select Profiles") },
+                                    text = {
+                                        Text(
+                                            text = "Select Profiles",
+                                            color = if (isProfilesEmpty) {
+                                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                                            } else {
+                                                MaterialTheme.colorScheme.onSurface
+                                            }
+                                        )
+                                    },
+                                    enabled = !isProfilesEmpty,
                                     onClick = {
-                                        isMenuExpanded = false
-                                        viewModel.enterSelectionMode()
+                                        if (!isProfilesEmpty) {
+                                            isMenuExpanded = false
+                                            viewModel.enterSelectionMode()
+                                        }
                                     }
                                 )
                             }
@@ -294,14 +332,17 @@ fun ProfilesScreen(
                 enter = slideInVertically(initialOffsetY = { it * 2 }) + fadeIn() + scaleIn(initialScale = 0.8f),
                 exit = slideOutVertically(targetOffsetY = { it * 2 }) + fadeOut() + scaleOut(targetScale = 0.8f)
             ) {
-                FloatingActionButton(
+                NexaFloatingActionButton(
                     onClick = { safeNavigate(Screen.CreateProfile.route) },
                     modifier = Modifier.padding(bottom = bottomSpacing),
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = "Add Profile")
-                }
+                    icon = Icons.Default.Add,
+                    contentDescription = "Add Profile",
+                    hasBorder = true,
+                    borderColor = MaterialTheme.colorScheme.primary,
+                    fillColor = MaterialTheme.colorScheme.primary,
+                    fillOpacity = 0.16f,
+                    contentColor = MaterialTheme.colorScheme.primary
+                )
             }
         },
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -385,6 +426,17 @@ fun ProfilesScreen(
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(24.dp))
+                        NexaButton(
+                            onClick = { safeNavigate(Screen.CreateProfile.route) },
+                            text = "Create Profile",
+                            icon = Icons.Default.Add,
+                            hasBorder = true,
+                            borderColor = MaterialTheme.colorScheme.primary,
+                            fillColor = MaterialTheme.colorScheme.primary,
+                            fillOpacity = 0.12f,
+                            contentColor = MaterialTheme.colorScheme.primary
                         )
                     }
                 }

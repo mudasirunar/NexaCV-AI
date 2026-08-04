@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import com.mudasir.nexacvai.domain.model.Language
 import com.mudasir.nexacvai.domain.model.Reference
 import com.mudasir.nexacvai.domain.model.SocialLink
+import com.mudasir.nexacvai.presentation.ui.components.NexaButton
 import com.mudasir.nexacvai.presentation.ui.components.NexaTextField
 import com.mudasir.nexacvai.presentation.ui.profiles.components.create_profile.ReferenceCard
 import com.mudasir.nexacvai.presentation.ui.profiles.components.create_profile.LanguageCard
@@ -115,18 +116,15 @@ fun SocialsExtrasStep(
                         )
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        val addRefInteractionSource = remember { MutableInteractionSource() }
-                        val addRefPressed by addRefInteractionSource.collectIsPressedAsState()
-                        val addRefScale by animateFloatAsState(if (addRefPressed) 0.98f else 1f, label = "addRefScale")
-
-                        Button(
+                        NexaButton(
                             onClick = { viewModel.addReference(Reference()) },
-                            interactionSource = addRefInteractionSource,
-                            modifier = Modifier.graphicsLayer(scaleX = addRefScale, scaleY = addRefScale),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Text("+ Add Reference")
-                        }
+                            text = "+ Add Reference",
+                            hasBorder = true,
+                            borderColor = MaterialTheme.colorScheme.primary,
+                            fillColor = MaterialTheme.colorScheme.primary,
+                            fillOpacity = 0.12f,
+                            contentColor = MaterialTheme.colorScheme.primary
+                        )
                     }
                 }
             }
@@ -148,20 +146,16 @@ fun SocialsExtrasStep(
             }
 
             item {
-                val addMoreRefInteractionSource = remember { MutableInteractionSource() }
-                val addMoreRefPressed by addMoreRefInteractionSource.collectIsPressedAsState()
-                val addMoreRefScale by animateFloatAsState(if (addMoreRefPressed) 0.98f else 1f, label = "addMoreRefScale")
-
-                OutlinedButton(
+                NexaButton(
                     onClick = { viewModel.addReference(Reference()) },
-                    interactionSource = addMoreRefInteractionSource,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .graphicsLayer(scaleX = addMoreRefScale, scaleY = addMoreRefScale),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text("+ Add Another Reference")
-                }
+                    text = "+ Add Another Reference",
+                    modifier = Modifier.fillMaxWidth(),
+                    hasBorder = true,
+                    borderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
+                    fillColor = MaterialTheme.colorScheme.primary,
+                    fillOpacity = 0.08f,
+                    contentColor = MaterialTheme.colorScheme.primary
+                )
             }
         }
 
@@ -224,18 +218,15 @@ fun SocialsExtrasStep(
                         )
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        val addLangInteractionSource = remember { MutableInteractionSource() }
-                        val addLangPressed by addLangInteractionSource.collectIsPressedAsState()
-                        val addLangScale by animateFloatAsState(if (addLangPressed) 0.98f else 1f, label = "addLangScale")
-
-                        Button(
+                        NexaButton(
                             onClick = { viewModel.addLanguage(Language()) },
-                            interactionSource = addLangInteractionSource,
-                            modifier = Modifier.graphicsLayer(scaleX = addLangScale, scaleY = addLangScale),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Text("+ Add Language")
-                        }
+                            text = "+ Add Language",
+                            hasBorder = true,
+                            borderColor = MaterialTheme.colorScheme.primary,
+                            fillColor = MaterialTheme.colorScheme.primary,
+                            fillOpacity = 0.12f,
+                            contentColor = MaterialTheme.colorScheme.primary
+                        )
                     }
                 }
             }
@@ -257,20 +248,16 @@ fun SocialsExtrasStep(
             }
 
             item {
-                val addMoreLangInteractionSource = remember { MutableInteractionSource() }
-                val addMoreLangPressed by addMoreLangInteractionSource.collectIsPressedAsState()
-                val addMoreLangScale by animateFloatAsState(if (addMoreLangPressed) 0.98f else 1f, label = "addMoreLangScale")
-
-                OutlinedButton(
+                NexaButton(
                     onClick = { viewModel.addLanguage(Language()) },
-                    interactionSource = addMoreLangInteractionSource,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .graphicsLayer(scaleX = addMoreLangScale, scaleY = addMoreLangScale),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text("+ Add Another Language")
-                }
+                    text = "+ Add Another Language",
+                    modifier = Modifier.fillMaxWidth(),
+                    hasBorder = true,
+                    borderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
+                    fillColor = MaterialTheme.colorScheme.primary,
+                    fillOpacity = 0.08f,
+                    contentColor = MaterialTheme.colorScheme.primary
+                )
             }
         }
 
@@ -333,18 +320,15 @@ fun SocialsExtrasStep(
                         )
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        val addLinkInteractionSource = remember { MutableInteractionSource() }
-                        val addLinkPressed by addLinkInteractionSource.collectIsPressedAsState()
-                        val addLinkScale by animateFloatAsState(if (addLinkPressed) 0.98f else 1f, label = "addLinkScale")
-
-                        Button(
+                        NexaButton(
                             onClick = { viewModel.addSocialLink(SocialLink()) },
-                            interactionSource = addLinkInteractionSource,
-                            modifier = Modifier.graphicsLayer(scaleX = addLinkScale, scaleY = addLinkScale),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Text("+ Add Social Link")
-                        }
+                            text = "+ Add Social Link",
+                            hasBorder = true,
+                            borderColor = MaterialTheme.colorScheme.primary,
+                            fillColor = MaterialTheme.colorScheme.primary,
+                            fillOpacity = 0.12f,
+                            contentColor = MaterialTheme.colorScheme.primary
+                        )
                     }
                 }
             }
@@ -366,20 +350,16 @@ fun SocialsExtrasStep(
             }
 
             item {
-                val addMoreLinkInteractionSource = remember { MutableInteractionSource() }
-                val addMoreLinkPressed by addMoreLinkInteractionSource.collectIsPressedAsState()
-                val addMoreLinkScale by animateFloatAsState(if (addMoreLinkPressed) 0.98f else 1f, label = "addMoreLinkScale")
-
-                OutlinedButton(
+                NexaButton(
                     onClick = { viewModel.addSocialLink(SocialLink()) },
-                    interactionSource = addMoreLinkInteractionSource,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .graphicsLayer(scaleX = addMoreLinkScale, scaleY = addMoreLinkScale),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text("+ Add Another Social Link")
-                }
+                    text = "+ Add Another Social Link",
+                    modifier = Modifier.fillMaxWidth(),
+                    hasBorder = true,
+                    borderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
+                    fillColor = MaterialTheme.colorScheme.primary,
+                    fillOpacity = 0.08f,
+                    contentColor = MaterialTheme.colorScheme.primary
+                )
             }
         }
 
