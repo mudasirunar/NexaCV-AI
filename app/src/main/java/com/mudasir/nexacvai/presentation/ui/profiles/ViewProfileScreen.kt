@@ -3,7 +3,9 @@ package com.mudasir.nexacvai.presentation.ui.profiles
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -271,29 +273,27 @@ fun ViewProfileScreen(
                     }
                 }
                 profile != null -> {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        // 1. Header Card (Avatar + Name + Title)
-                        item {
+                    SelectionContainer {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .verticalScroll(rememberScrollState())
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            // 1. Header Card (Avatar + Name + Title)
                             ProfileHeaderSection(
                                 profile = profile,
                                 colorPair = colorPair,
                                 initials = initials,
                                 onAvatarClick = { showFullScreenImage = true }
                             )
-                        }
 
-                        // 2. Contact & Quick Info (Mandatory Check)
-                        item {
+                            // 2. Contact & Quick Info (Mandatory Check)
                             ContactAndQuickInfoSection(profile = profile)
-                        }
 
-                        // 3. Summary Section
-                        if (profile.professionalSummary.isNotBlank()) {
-                            item {
+                            // 3. Summary Section
+                            if (profile.professionalSummary.isNotBlank()) {
                                 DetailSectionCard(
                                     title = "Professional Summary",
                                     icon = Icons.Outlined.Description
@@ -306,11 +306,9 @@ fun ViewProfileScreen(
                                     )
                                 }
                             }
-                        }
 
-                        // 4. Skills Section
-                        if (profile.skills.isNotEmpty()) {
-                            item {
+                            // 4. Skills Section
+                            if (profile.skills.isNotEmpty()) {
                                 DetailSectionCard(
                                     title = "Skills",
                                     icon = Icons.Outlined.Extension
@@ -334,11 +332,9 @@ fun ViewProfileScreen(
                                     }
                                 }
                             }
-                        }
 
-                        // 5. Experience Section
-                        if (profile.experiences.isNotEmpty()) {
-                            item {
+                            // 5. Experience Section
+                            if (profile.experiences.isNotEmpty()) {
                                 DetailSectionCard(
                                     title = "Experience",
                                     icon = Icons.Outlined.BusinessCenter
@@ -353,11 +349,9 @@ fun ViewProfileScreen(
                                     }
                                 }
                             }
-                        }
 
-                        // 6. Projects Section
-                        if (profile.projects.isNotEmpty()) {
-                            item {
+                            // 6. Projects Section
+                            if (profile.projects.isNotEmpty()) {
                                 DetailSectionCard(
                                     title = "Projects",
                                     icon = Icons.Outlined.Folder
@@ -372,11 +366,9 @@ fun ViewProfileScreen(
                                     }
                                 }
                             }
-                        }
 
-                        // 7. Education Section
-                        if (profile.educations.isNotEmpty()) {
-                            item {
+                            // 7. Education Section
+                            if (profile.educations.isNotEmpty()) {
                                 DetailSectionCard(
                                     title = "Education",
                                     icon = Icons.Outlined.School
@@ -391,11 +383,9 @@ fun ViewProfileScreen(
                                     }
                                 }
                             }
-                        }
 
-                        // 8. Certifications Section
-                        if (profile.certifications.isNotEmpty()) {
-                            item {
+                            // 8. Certifications Section
+                            if (profile.certifications.isNotEmpty()) {
                                 DetailSectionCard(
                                     title = "Certifications",
                                     icon = Icons.Outlined.Verified
@@ -410,11 +400,9 @@ fun ViewProfileScreen(
                                     }
                                 }
                             }
-                        }
 
-                        // 9. Languages Section
-                        if (profile.languages.isNotEmpty()) {
-                            item {
+                            // 9. Languages Section
+                            if (profile.languages.isNotEmpty()) {
                                 DetailSectionCard(
                                     title = "Languages",
                                     icon = Icons.Outlined.Language
@@ -439,11 +427,9 @@ fun ViewProfileScreen(
                                     }
                                 }
                             }
-                        }
 
-                        // 10. Social Links Section
-                        if (profile.socialLinks.isNotEmpty()) {
-                            item {
+                            // 10. Social Links Section
+                            if (profile.socialLinks.isNotEmpty()) {
                                 DetailSectionCard(
                                     title = "Social Links",
                                     icon = Icons.Outlined.Link
@@ -455,11 +441,9 @@ fun ViewProfileScreen(
                                     }
                                 }
                             }
-                        }
 
-                        // 11. References Section
-                        if (profile.references.isNotEmpty()) {
-                            item {
+                            // 11. References Section
+                            if (profile.references.isNotEmpty()) {
                                 DetailSectionCard(
                                     title = "References",
                                     icon = Icons.Outlined.People
@@ -474,14 +458,12 @@ fun ViewProfileScreen(
                                     }
                                 }
                             }
-                        }
 
-                        // 12. Additional Information Section (Hobbies, Volunteer, Awards)
-                        val hasAdditionalInfo = profile.hobbies.isNotBlank() || 
-                                                 profile.volunteerWork.isNotBlank() || 
-                                                 profile.awards.isNotBlank()
-                        if (hasAdditionalInfo) {
-                            item {
+                            // 12. Additional Information Section (Hobbies, Volunteer, Awards)
+                            val hasAdditionalInfo = profile.hobbies.isNotBlank() || 
+                                                     profile.volunteerWork.isNotBlank() || 
+                                                     profile.awards.isNotBlank()
+                            if (hasAdditionalInfo) {
                                 DetailSectionCard(
                                     title = "Additional Information",
                                     icon = Icons.Outlined.Favorite
@@ -499,10 +481,8 @@ fun ViewProfileScreen(
                                     }
                                 }
                             }
-                        }
-                        
-                        // Extra bottom spacing to ensure comfortable scrolling above any navigation/scaffold bottom bounds
-                        item {
+                            
+                            // Extra bottom spacing to ensure comfortable scrolling above any navigation/scaffold bottom bounds
                             Spacer(modifier = Modifier.height(24.dp))
                         }
                     }
