@@ -27,19 +27,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 /**
  * Reusable, highly customizable iOS-style translucent/bordered button component for NexaCV AI.
- * 
- * Customization options:
- * - Solid border vs borderless variants (`hasBorder`)
- * - Border color & width (`borderColor`, `borderWidth`)
- * - Fill color & opacity tint (`fillColor`, `fillOpacity`)
- * - Custom content color (`contentColor`) for theme or fixed colors
- * - Tactile press scale animation (`scaleOnPress`)
- * - Custom shapes, sizes, padding, and enabled/disabled states
  */
 @Composable
 fun NexaButton(
@@ -127,13 +121,16 @@ fun NexaButton(
                     )
                 }
                 if (icon != null && !text.isNullOrEmpty()) {
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
                 }
                 if (!text.isNullOrEmpty()) {
                     Text(
                         text = text,
                         style = MaterialTheme.typography.labelLarge,
-                        color = effectiveContentColor
+                        color = effectiveContentColor,
+                        textAlign = TextAlign.Center,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
