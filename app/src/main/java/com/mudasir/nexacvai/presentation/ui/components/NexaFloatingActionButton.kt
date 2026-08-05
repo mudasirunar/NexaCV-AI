@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
@@ -26,14 +27,7 @@ import androidx.compose.ui.unit.dp
 
 /**
  * Reusable, highly customizable translucent/bordered Floating Action Button (FAB) for NexaCV AI.
- * 
- * Features:
- * - Semi-transparent primary background fill (`fillColor` with `fillOpacity`, default 0.16f)
- * - Solid accent border (`hasBorder`, `borderColor`, `borderWidth`)
- * - Matching icon color (`contentColor`)
- * - Plus (+) icon or custom icon
- * - Tactile press scale animation (`scaleOnPress`)
- * - Customizable shape & elevation
+ * Fixed clipping and border stroke alignment for clean Light & Dark Mode rendering.
  */
 @Composable
 fun NexaFloatingActionButton(
@@ -59,22 +53,22 @@ fun NexaFloatingActionButton(
         label = "NexaFabScale"
     )
 
-    val effectiveModifier = if (hasBorder) {
-        modifier
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            }
-            .border(
-                border = BorderStroke(borderWidth, borderColor),
-                shape = shape
-            )
-    } else {
-        modifier.graphicsLayer {
+    val effectiveModifier = modifier
+        .graphicsLayer {
             scaleX = scale
             scaleY = scale
         }
-    }
+        .clip(shape) // 1. Clip first to force exact rounded corners
+        .then(
+            if (hasBorder) {
+                Modifier.border(
+                    border = BorderStroke(borderWidth, borderColor),
+                    shape = shape
+                )
+            } else {
+                Modifier
+            }
+        )
 
     FloatingActionButton(
         onClick = onClick,
@@ -83,10 +77,10 @@ fun NexaFloatingActionButton(
         containerColor = fillColor.copy(alpha = fillOpacity),
         contentColor = contentColor,
         elevation = FloatingActionButtonDefaults.elevation(
-            defaultElevation = 2.dp,
+            defaultElevation = 0.dp,
             pressedElevation = 0.dp,
-            focusedElevation = 2.dp,
-            hoveredElevation = 4.dp
+            focusedElevation = 0.dp,
+            hoveredElevation = 0.dp
         ),
         interactionSource = interactionSource
     ) {
