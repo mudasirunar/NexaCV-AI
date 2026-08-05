@@ -527,11 +527,20 @@ fun ProfileMetadataSection(
         "$dateStr ($relative)"
     }
 
-    val updatedFormatted = remember(profile.updatedAt) {
-        val sdf = SimpleDateFormat("MMM dd, yyyy • hh:mm a", Locale.getDefault())
-        val dateStr = sdf.format(Date(profile.updatedAt))
-        val relative = DateTimeUtils.getRelativeTimeSpanString(profile.updatedAt)
-        "$dateStr ($relative)"
+    // Detect if updatedAt is meaningfully different from createdAt
+    val isUpdated = remember(profile.createdAt, profile.updatedAt) {
+        kotlin.math.abs(profile.updatedAt - profile.createdAt) > 1000L
+    }
+
+    val updatedFormatted = remember(profile.createdAt, profile.updatedAt, isUpdated) {
+        if (!isUpdated) {
+            "--"
+        } else {
+            val sdf = SimpleDateFormat("MMM dd, yyyy • hh:mm a", Locale.getDefault())
+            val dateStr = sdf.format(Date(profile.updatedAt))
+            val relative = DateTimeUtils.getRelativeTimeSpanString(profile.updatedAt)
+            "$dateStr ($relative)"
+        }
     }
 
     val completionProgress = remember(profile) {
@@ -554,14 +563,40 @@ fun ProfileMetadataSection(
 
     val recordStats = remember(profile) {
         val list = mutableListOf<String>()
-        if (profile.experiences.isNotEmpty()) list.add("${profile.experiences.size} Exp")
-        if (profile.projects.isNotEmpty()) list.add("${profile.projects.size} Projects")
-        if (profile.educations.isNotEmpty()) list.add("${profile.educations.size} Edu")
-        if (profile.certifications.isNotEmpty()) list.add("${profile.certifications.size} Certs")
-        if (profile.skills.isNotEmpty()) list.add("${profile.skills.size} Skills")
-        if (profile.languages.isNotEmpty()) list.add("${profile.languages.size} Languages")
-        if (profile.socialLinks.isNotEmpty()) list.add("${profile.socialLinks.size} Socials")
-        if (profile.references.isNotEmpty()) list.add("${profile.references.size} Refs")
+
+        if (profile.experiences.isNotEmpty()) {
+            val size = profile.experiences.size
+            list.add("$size ${if (size == 1) "Exp" else "Exps"}")
+        }
+        if (profile.projects.isNotEmpty()) {
+            val size = profile.projects.size
+            list.add("$size ${if (size == 1) "Project" else "Projects"}")
+        }
+        if (profile.educations.isNotEmpty()) {
+            val size = profile.educations.size
+            list.add("$size ${if (size == 1) "Edu" else "Edus"}")
+        }
+        if (profile.certifications.isNotEmpty()) {
+            val size = profile.certifications.size
+            list.add("$size ${if (size == 1) "Cert" else "Certs"}")
+        }
+        if (profile.skills.isNotEmpty()) {
+            val size = profile.skills.size
+            list.add("$size ${if (size == 1) "Skill" else "Skills"}")
+        }
+        if (profile.languages.isNotEmpty()) {
+            val size = profile.languages.size
+            list.add("$size ${if (size == 1) "Language" else "Languages"}")
+        }
+        if (profile.socialLinks.isNotEmpty()) {
+            val size = profile.socialLinks.size
+            list.add("$size ${if (size == 1) "Social" else "Socials"}")
+        }
+        if (profile.references.isNotEmpty()) {
+            val size = profile.references.size
+            list.add("$size ${if (size == 1) "Ref" else "Refs"}")
+        }
+
         if (list.isEmpty()) "Initial Draft" else list.joinToString(" • ")
     }
 
@@ -618,7 +653,7 @@ fun ProfileMetadataSection(
                         Icon(
                             imageVector = Icons.Outlined.Update,
                             contentDescription = "Updated",
-                            tint = MaterialTheme.colorScheme.primary,
+                            tint = if (isUpdated) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
                             modifier = Modifier.size(16.dp)
                         )
                         Column {
@@ -629,8 +664,10 @@ fun ProfileMetadataSection(
                             )
                             Text(
                                 text = updatedFormatted,
-                                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
-                                color = MaterialTheme.colorScheme.onSurface
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    fontWeight = if (isUpdated) FontWeight.Medium else FontWeight.Normal
+                                ),
+                                color = if (isUpdated) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                             )
                         }
                     }
