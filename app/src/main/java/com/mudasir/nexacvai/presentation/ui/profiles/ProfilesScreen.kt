@@ -198,7 +198,9 @@ fun ProfilesScreen(
 
     LaunchedEffect(state.sortOrder) {
         if (state.profiles?.isNotEmpty() == true) {
-            gridState.scrollToItem(0)
+            if (gridState.firstVisibleItemIndex > 0 || gridState.firstVisibleItemScrollOffset > 0) {
+                gridState.animateScrollToItem(0)
+            }
         }
     }
 
@@ -523,11 +525,14 @@ fun ProfilesScreen(
                                     viewModel.removeSourceProfileTag(profile.id)
                                 },
                                 modifier = Modifier.animateItem(
-                                    fadeInSpec = tween(durationMillis = 250),
+                                    fadeInSpec = spring(
+                                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                                        stiffness = Spring.StiffnessMediumLow
+                                    ),
                                     fadeOutSpec = tween(durationMillis = 200),
                                     placementSpec = spring(
                                         dampingRatio = Spring.DampingRatioMediumBouncy,
-                                        stiffness = Spring.StiffnessMediumLow
+                                        stiffness = 320f
                                     )
                                 )
                             )
