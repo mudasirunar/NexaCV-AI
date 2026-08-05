@@ -282,6 +282,7 @@ class ProfilesViewModel @Inject constructor(
         data: ProfileImportExportHelper.ImportedProfileData,
         duplicateResolution: DuplicateResolution
     ): Long {
+        val now = System.currentTimeMillis()
         var profileToSave = data.profile
 
         val newExperiences = profileToSave.experiences.map { it.copy(id = java.util.UUID.randomUUID().toString()) }
@@ -292,34 +293,38 @@ class ProfilesViewModel @Inject constructor(
         val newSocialLinks = profileToSave.socialLinks.map { it.copy(id = java.util.UUID.randomUUID().toString()) }
         val newLanguages = profileToSave.languages.map { it.copy(id = java.util.UUID.randomUUID().toString()) }
 
-        val originalCreatedAt = if (data.profile.createdAt > 0) data.profile.createdAt else System.currentTimeMillis()
-        val originalUpdatedAt = if (data.profile.updatedAt > 0) data.profile.updatedAt else System.currentTimeMillis()
+        when (duplicateResolution) {
+            DuplicateResolution.KeepBoth -> {
+                profileToSave = profileToSave.copy(
+                    id = 0L,
+                    experiences = newExperiences,
+                    projects = newProjects,
+                    educations = newEducations,
+                    certifications = newCertifications,
+                    references = newReferences,
+                    socialLinks = newSocialLinks,
+                    languages = newLanguages,
+                    createdAt = now,
+                    updatedAt = now
+                )
+            }
+            DuplicateResolution.Overwrite -> {
+                val existingProfile = userProfileRepository.getProfileById(profileToSave.id)
+                val preservedCreatedAt = existingProfile?.createdAt ?: now
 
-        if (duplicateResolution == DuplicateResolution.KeepBoth) {
-            profileToSave = profileToSave.copy(
-                id = 0L,
-                experiences = newExperiences,
-                projects = newProjects,
-                educations = newEducations,
-                certifications = newCertifications,
-                references = newReferences,
-                socialLinks = newSocialLinks,
-                languages = newLanguages,
-                createdAt = originalCreatedAt,
-                updatedAt = originalUpdatedAt
-            )
-        } else {
-            profileToSave = profileToSave.copy(
-                experiences = newExperiences,
-                projects = newProjects,
-                educations = newEducations,
-                certifications = newCertifications,
-                references = newReferences,
-                socialLinks = newSocialLinks,
-                languages = newLanguages,
-                createdAt = originalCreatedAt,
-                updatedAt = originalUpdatedAt
-            )
+                profileToSave = profileToSave.copy(
+                    experiences = newExperiences,
+                    projects = newProjects,
+                    educations = newEducations,
+                    certifications = newCertifications,
+                    references = newReferences,
+                    socialLinks = newSocialLinks,
+                    languages = newLanguages,
+                    createdAt = preservedCreatedAt,
+                    updatedAt = now
+                )
+            }
+            DuplicateResolution.Skip -> return data.profile.id
         }
 
         val savedId = withContext(Dispatchers.IO) {
@@ -453,9 +458,6 @@ class ProfilesViewModel @Inject constructor(
 
     fun removeSourceProfileTag(profileId: Long) {
         viewModelScope.launch {
-            // Targeted column-only update — does NOT touch updatedAt or child tables,
-            // so Room emits a minimal Flow update and Compose skips recomposing
-            // the entire card tree (avatar, pills, skills, etc.).
             userProfileRepository.dismissCopyTag(profileId)
         }
     }
