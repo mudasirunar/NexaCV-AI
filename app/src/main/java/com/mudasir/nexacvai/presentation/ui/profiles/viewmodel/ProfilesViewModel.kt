@@ -102,7 +102,7 @@ class ProfilesViewModel @Inject constructor(
                     ProfileSortOrder.LAST_UPDATED -> filtered.sortedByDescending { it.updatedAt }
                     ProfileSortOrder.MOST_USED -> filtered.sortedByDescending { it.updatedAt }
                 }
-                Pair(sorted, sortOrder)
+                Triple(sorted, unDeleted.isEmpty(), sortOrder)
             }
             .catch { e ->
                 _state.value = _state.value.copy(
@@ -110,10 +110,11 @@ class ProfilesViewModel @Inject constructor(
                     error = e.message ?: "An unexpected error occurred while loading profiles."
                 )
             }
-            .collect { (visibleProfiles, sortOrder) ->
+            .collect { (visibleProfiles, isTotalEmpty, sortOrder) ->
                 _state.value = _state.value.copy(
                     isLoading = false,
                     profiles = visibleProfiles,
+                    isTotalProfilesEmpty = isTotalEmpty,
                     sortOrder = sortOrder
                 )
             }

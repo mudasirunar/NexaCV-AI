@@ -29,6 +29,7 @@ enum class DuplicateProgressState {
 data class ProfilesState(
     val isLoading: Boolean = false,
     val profiles: List<UserProfile>? = null,
+    val isTotalProfilesEmpty: Boolean = false,
     val error: String? = null,
     
     // Import/Export States

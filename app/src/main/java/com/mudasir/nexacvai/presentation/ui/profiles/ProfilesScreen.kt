@@ -265,7 +265,7 @@ fun ProfilesScreen(
             when {
                 state.error != null -> ProfilesScreenMode.Error
                 state.isLoading || profiles == null -> ProfilesScreenMode.Loading
-                profiles.isEmpty() -> ProfilesScreenMode.Empty
+                state.isTotalProfilesEmpty -> ProfilesScreenMode.Empty
                 else -> ProfilesScreenMode.Content
             }
         }
