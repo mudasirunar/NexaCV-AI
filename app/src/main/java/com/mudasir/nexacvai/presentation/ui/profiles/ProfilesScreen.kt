@@ -2,7 +2,10 @@ package com.mudasir.nexacvai.presentation.ui.profiles
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -10,14 +13,19 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -36,6 +44,9 @@ import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Search
+import com.mudasir.nexacvai.presentation.ui.profiles.components.profiles_dashboard.EmptySearchResultScreen
+import com.mudasir.nexacvai.presentation.ui.profiles.components.profiles_dashboard.ProfileSearchBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
@@ -315,7 +326,55 @@ fun ProfilesScreen(
                 )
             } else {
                 TopAppBar(
-                    title = { Text("Profiles", style = MaterialTheme.typography.titleMedium) },
+                    title = {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clipToBounds()
+                        ) {
+                            AnimatedContent(
+                                targetState = state.isSearchActive,
+                                transitionSpec = {
+                                    if (targetState) {
+                                        // Opening Search: Title slides out to left (-width), Search bar slides in from right (+width)
+                                        (slideInHorizontally(animationSpec = tween(280, easing = LinearOutSlowInEasing)) { width -> width } + fadeIn(animationSpec = tween(200))) togetherWith
+                                        (slideOutHorizontally(animationSpec = tween(240, easing = FastOutLinearInEasing)) { width -> -width } + fadeOut(animationSpec = tween(180)))
+                                    } else {
+                                        // Closing Search: Search bar slides out to right (+width), Title slides in from left (-width)
+                                        (slideInHorizontally(animationSpec = tween(280, easing = LinearOutSlowInEasing)) { width -> -width } + fadeIn(animationSpec = tween(200))) togetherWith
+                                        (slideOutHorizontally(animationSpec = tween(240, easing = FastOutLinearInEasing)) { width -> width } + fadeOut(animationSpec = tween(180)))
+                                    }
+                                },
+                                label = "titleSearchSlide"
+                            ) { isSearch ->
+                                if (isSearch) {
+                                    ProfileSearchBar(
+                                        query = state.searchQuery,
+                                        hasResults = state.profiles?.isNotEmpty() == true,
+                                        onQueryChange = { viewModel.onSearchQueryChanged(it) },
+                                        onCloseSearch = { viewModel.onSearchActiveChanged(false) }
+                                    )
+                                } else {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text("Profiles", style = MaterialTheme.typography.titleMedium)
+                                        Spacer(modifier = Modifier.weight(1f))
+                                        if (screenMode != ProfilesScreenMode.Empty) {
+                                            IconButton(onClick = { viewModel.onSearchActiveChanged(true) }) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Search,
+                                                    contentDescription = "Search Profiles",
+                                                    tint = MaterialTheme.colorScheme.onSurface
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
                     actions = {
                         ProfilesOverflowMenu(
                             isProfilesEmpty = screenMode == ProfilesScreenMode.Empty,
@@ -460,14 +519,20 @@ fun ProfilesScreen(
                     }
                 }
                 ProfilesScreenMode.Content -> {
-                    val configuration = LocalConfiguration.current
-                    val isWideScreen = configuration.screenWidthDp >= 600
-                    val columns = if (isWideScreen) GridCells.Fixed(2) else GridCells.Fixed(1)
+                    if (state.isSearchActive && state.searchQuery.isNotBlank() && state.profiles.isNullOrEmpty()) {
+                        EmptySearchResultScreen(
+                            query = state.searchQuery,
+                            onClearSearchClick = { viewModel.clearSearchQuery() }
+                        )
+                    } else {
+                        val configuration = LocalConfiguration.current
+                        val isWideScreen = configuration.screenWidthDp >= 600
+                        val columns = if (isWideScreen) GridCells.Fixed(2) else GridCells.Fixed(1)
 
-                    LazyVerticalGrid(
-                        columns = columns,
-                        state = gridState,
-                        modifier = Modifier.fillMaxSize(),
+                        LazyVerticalGrid(
+                            columns = columns,
+                            state = gridState,
+                            modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(
                             start = 16.dp,
                             top = 16.dp,
@@ -540,6 +605,7 @@ fun ProfilesScreen(
                     }
                 }
             }
+        }
 
             if (profileToDelete != null) {
                 val pToDelete = profileToDelete!!

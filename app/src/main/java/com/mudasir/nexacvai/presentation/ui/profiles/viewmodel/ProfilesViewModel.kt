@@ -24,6 +24,7 @@ import kotlinx.coroutines.withContext
 import com.mudasir.nexacvai.data.local.datastore.AppSettingsManager
 import com.mudasir.nexacvai.domain.model.ProfileSortOrder
 import com.mudasir.nexacvai.domain.repository.UserProfileRepository
+import com.mudasir.nexacvai.domain.model.matchesSearchQuery
 import javax.inject.Inject
 
 enum class DuplicateResolution {
@@ -47,6 +48,8 @@ class ProfilesViewModel @Inject constructor(
     private val _state = MutableStateFlow(ProfilesState())
     val state: StateFlow<ProfilesState> = _state.asStateFlow()
 
+    private val searchQueryFlow = MutableStateFlow("")
+
     init {
         loadProfiles()
         observeSelectionMode()
@@ -60,9 +63,14 @@ class ProfilesViewModel @Inject constructor(
             ) { active, selected ->
                 Pair(active, selected)
             }.collect { (active, selected) ->
+                if (active) {
+                    searchQueryFlow.value = ""
+                }
                 _state.value = _state.value.copy(
                     isSelectionMode = active,
-                    selectedProfileIds = if (active) selected else emptySet()
+                    selectedProfileIds = if (active) selected else emptySet(),
+                    isSearchActive = if (active) false else _state.value.isSearchActive,
+                    searchQuery = if (active) "" else _state.value.searchQuery
                 )
             }
         }
@@ -76,17 +84,23 @@ class ProfilesViewModel @Inject constructor(
             combine(
                 getAllProfilesUseCase(),
                 profileDeleteManager.pendingDeleteProfiles,
-                appSettingsManager.profileSortOrderFlow
-            ) { allProfiles: List<UserProfile>, pendingDeletes: List<UserProfile>, sortOrder: ProfileSortOrder ->
+                appSettingsManager.profileSortOrderFlow,
+                searchQueryFlow
+            ) { allProfiles: List<UserProfile>, pendingDeletes: List<UserProfile>, sortOrder: ProfileSortOrder, query: String ->
                 val pendingIds = pendingDeletes.map { it.id }.toSet()
-                val visible = allProfiles.filter { it.id !in pendingIds }
+                val unDeleted = allProfiles.filter { it.id !in pendingIds }
+                val filtered = if (query.isBlank()) {
+                    unDeleted
+                } else {
+                    unDeleted.filter { it.matchesSearchQuery(query) }
+                }
                 val sorted = when (sortOrder) {
-                    ProfileSortOrder.NEWEST_FIRST -> visible.sortedByDescending { it.createdAt }
-                    ProfileSortOrder.OLDEST_FIRST -> visible.sortedBy { it.createdAt }
-                    ProfileSortOrder.NAME_ASC -> visible.sortedBy { it.fullName.lowercase().ifBlank { "zzz" } }
-                    ProfileSortOrder.NAME_DESC -> visible.sortedByDescending { it.fullName.lowercase().ifBlank { "aaa" } }
-                    ProfileSortOrder.LAST_UPDATED -> visible.sortedByDescending { it.updatedAt }
-                    ProfileSortOrder.MOST_USED -> visible.sortedByDescending { it.updatedAt }
+                    ProfileSortOrder.NEWEST_FIRST -> filtered.sortedByDescending { it.createdAt }
+                    ProfileSortOrder.OLDEST_FIRST -> filtered.sortedBy { it.createdAt }
+                    ProfileSortOrder.NAME_ASC -> filtered.sortedBy { it.fullName.lowercase().ifBlank { "zzz" } }
+                    ProfileSortOrder.NAME_DESC -> filtered.sortedByDescending { it.fullName.lowercase().ifBlank { "aaa" } }
+                    ProfileSortOrder.LAST_UPDATED -> filtered.sortedByDescending { it.updatedAt }
+                    ProfileSortOrder.MOST_USED -> filtered.sortedByDescending { it.updatedAt }
                 }
                 Pair(sorted, sortOrder)
             }
@@ -104,6 +118,25 @@ class ProfilesViewModel @Inject constructor(
                 )
             }
         }
+    }
+
+    fun onSearchQueryChanged(query: String) {
+        searchQueryFlow.value = query
+        _state.value = _state.value.copy(searchQuery = query)
+    }
+
+    fun onSearchActiveChanged(active: Boolean) {
+        if (!active) {
+            searchQueryFlow.value = ""
+            _state.value = _state.value.copy(isSearchActive = false, searchQuery = "")
+        } else {
+            _state.value = _state.value.copy(isSearchActive = true)
+        }
+    }
+
+    fun clearSearchQuery() {
+        searchQueryFlow.value = ""
+        _state.value = _state.value.copy(searchQuery = "")
     }
 
     fun updateSortOrder(sortOrder: ProfileSortOrder) {

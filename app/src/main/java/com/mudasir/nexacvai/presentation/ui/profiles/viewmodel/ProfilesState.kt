@@ -54,5 +54,9 @@ data class ProfilesState(
     val selectedProfileIds: Set<Long> = emptySet(),
 
     // Sorting State
-    val sortOrder: ProfileSortOrder = ProfileSortOrder.NEWEST_FIRST
+    val sortOrder: ProfileSortOrder = ProfileSortOrder.NEWEST_FIRST,
+
+    // Search State
+    val searchQuery: String = "",
+    val isSearchActive: Boolean = false
 )

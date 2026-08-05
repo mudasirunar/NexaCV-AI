@@ -137,3 +137,9 @@ val SnackbarTextLight = Color(0xFF1E293B)  // Dark slate for light mode text rea
 // 📦 Import/Export Bottom Sheet Icon Tints
 val SheetIconSuccessGreen = Color(0xFF22C55E)  // Green check for import success state
 val SheetIconWarningAmber = Color(0xFFF59E0B)  // Amber warning for duplicate conflicts
+
+// 🔍 Search Bar Result Colors
+val SearchMatchContainer = Color(0xFF22C55E)     // green container tint
+val SearchMatchBorder = Color(0xFF16A34A)        // green border tint
+val SearchNoMatchContainer = Color(0xFFEF4444)   // red container tint
+val SearchNoMatchBorder = Color(0xFFDC2626)      // red border tint
