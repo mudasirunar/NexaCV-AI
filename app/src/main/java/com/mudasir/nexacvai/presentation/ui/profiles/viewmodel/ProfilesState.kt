@@ -3,6 +3,7 @@ package com.mudasir.nexacvai.presentation.ui.profiles.viewmodel
 import androidx.compose.runtime.Immutable
 import com.mudasir.nexacvai.core.utils.ProfileImportExportHelper
 import com.mudasir.nexacvai.domain.model.UserProfile
+import com.mudasir.nexacvai.domain.model.ProfileSortOrder
 
 enum class ImportProgressState {
     Idle,
@@ -50,5 +51,8 @@ data class ProfilesState(
 
     // Selection States
     val isSelectionMode: Boolean = false,
-    val selectedProfileIds: Set<Long> = emptySet()
+    val selectedProfileIds: Set<Long> = emptySet(),
+
+    // Sorting State
+    val sortOrder: ProfileSortOrder = ProfileSortOrder.NEWEST_FIRST
 )

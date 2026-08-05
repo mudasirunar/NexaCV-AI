@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -42,6 +43,18 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import android.widget.Toast
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.material.icons.automirrored.filled.Sort
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.HorizontalDivider
+import com.mudasir.nexacvai.domain.model.ProfileSortOrder
+import com.mudasir.nexacvai.presentation.ui.profiles.components.profiles_dashboard.ProfilesOverflowMenu
+import com.mudasir.nexacvai.presentation.ui.profiles.components.profiles_dashboard.SelectionModeOverflowMenu
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -183,6 +196,12 @@ fun ProfilesScreen(
         }
     }
 
+    LaunchedEffect(state.sortOrder) {
+        if (state.profiles?.isNotEmpty() == true) {
+            gridState.scrollToItem(0)
+        }
+    }
+
     var lastClickTime by remember { mutableStateOf(0L) }
     val safeNavigate: (String) -> Unit = { route ->
         val currentTime = System.currentTimeMillis()
@@ -259,8 +278,6 @@ fun ProfilesScreen(
         modifier = Modifier.nestedScroll(nestedScrollConnection),
         topBar = {
             if (state.isSelectionMode) {
-                var isSelectionMenuExpanded by remember { mutableStateOf(false) }
-                val isExportEnabled = state.selectedProfileIds.isNotEmpty()
                 TopAppBar(
                     title = {
                         Text(
@@ -278,148 +295,47 @@ fun ProfilesScreen(
                         }
                     },
                     actions = {
-                        Box {
-                            IconButton(onClick = { isSelectionMenuExpanded = true }) {
-                                Icon(
-                                    imageVector = Icons.Default.MoreVert,
-                                    contentDescription = "Selection Options",
-                                    tint = MaterialTheme.colorScheme.onSurface
-                                )
+                        SelectionModeOverflowMenu(
+                            isExportEnabled = state.selectedProfileIds.isNotEmpty(),
+                            onExportSelectedClick = {
+                                val all = state.profiles ?: emptyList()
+                                val selected = all.filter { it.id in state.selectedProfileIds }
+                                viewModel.selectProfilesForExport(selected)
+                            },
+                            onCopySelectedClick = {
+                                viewModel.duplicateSelectedProfiles(context)
                             }
-                            DropdownMenu(
-                                expanded = isSelectionMenuExpanded,
-                                onDismissRequest = { isSelectionMenuExpanded = false },
-                                shape = RoundedCornerShape(12.dp),
-                                containerColor = MaterialTheme.colorScheme.surface,
-                                modifier = Modifier
-                                    .width(180.dp)
-                                    .border(
-                                        width = 1.dp,
-                                        color = MaterialTheme.colorScheme.outlineVariant,
-                                        shape = RoundedCornerShape(12.dp)
-                                    )
-                            ) {
-                                DropdownMenuItem(
-                                    text = {
-                                        Text(
-                                            text = "Export",
-                                            color = if (isExportEnabled) {
-                                                MaterialTheme.colorScheme.onSurface
-                                            } else {
-                                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-                                            }
-                                        )
-                                    },
-                                    enabled = isExportEnabled,
-                                    onClick = {
-                                        if (isExportEnabled) {
-                                            isSelectionMenuExpanded = false
-                                            val all = state.profiles ?: emptyList()
-                                            val selected = all.filter { it.id in state.selectedProfileIds }
-                                            viewModel.selectProfilesForExport(selected)
-                                        }
-                                    }
-                                )
-                                DropdownMenuItem(
-                                    text = {
-                                        Text(
-                                            text = "Copy",
-                                            color = if (isExportEnabled) {
-                                                MaterialTheme.colorScheme.onSurface
-                                            } else {
-                                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-                                            }
-                                        )
-                                    },
-                                    enabled = isExportEnabled,
-                                    onClick = {
-                                        if (isExportEnabled) {
-                                            isSelectionMenuExpanded = false
-                                            viewModel.duplicateSelectedProfiles(context)
-                                        }
-                                    }
-                                )
-                            }
-                        }
+                        )
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = MaterialTheme.colorScheme.background
                     )
                 )
             } else {
-                var isMenuExpanded by remember { mutableStateOf(false) }
                 TopAppBar(
                     title = { Text("Profiles", style = MaterialTheme.typography.titleMedium) },
                     actions = {
-                        Box {
-                            IconButton(onClick = { isMenuExpanded = true }) {
-                                Icon(
-                                    imageVector = Icons.Default.MoreVert,
-                                    contentDescription = "More Options",
-                                    tint = MaterialTheme.colorScheme.onSurface
-                                )
+                        ProfilesOverflowMenu(
+                            isProfilesEmpty = screenMode == ProfilesScreenMode.Empty,
+                            currentSortOrder = state.sortOrder,
+                            onImportClick = {
+                                importLauncher.launch(arrayOf("*/*"))
+                            },
+                            onExportAllClick = {
+                                viewModel.selectAllProfilesForExport()
+                            },
+                            onSelectProfilesClick = {
+                                viewModel.enterSelectionMode()
+                            },
+                            onSortOrderSelected = { sortOption ->
+                                viewModel.updateSortOrder(sortOption)
+                                Toast.makeText(
+                                    context,
+                                    "Sorted by: ${sortOption.displayName}",
+                                    Toast.LENGTH_SHORT
+                                ).show()
                             }
-                            DropdownMenu(
-                                expanded = isMenuExpanded,
-                                onDismissRequest = { isMenuExpanded = false },
-                                shape = RoundedCornerShape(12.dp),
-                                containerColor = MaterialTheme.colorScheme.surface,
-                                modifier = Modifier
-                                    .width(180.dp)
-                                    .border(
-                                        width = 1.dp,
-                                        color = MaterialTheme.colorScheme.outlineVariant,
-                                        shape = RoundedCornerShape(12.dp)
-                                    )
-                            ) {
-                                DropdownMenuItem(
-                                    text = { Text("Import Profile(s)") },
-                                    onClick = {
-                                        isMenuExpanded = false
-                                        importLauncher.launch(arrayOf("*/*"))
-                                    }
-                                )
-                                val isProfilesEmpty = screenMode == ProfilesScreenMode.Empty
-                                DropdownMenuItem(
-                                    text = {
-                                        Text(
-                                            text = "Export All Profiles",
-                                            color = if (isProfilesEmpty) {
-                                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-                                            } else {
-                                                MaterialTheme.colorScheme.onSurface
-                                            }
-                                        )
-                                    },
-                                    enabled = !isProfilesEmpty,
-                                    onClick = {
-                                        if (!isProfilesEmpty) {
-                                            isMenuExpanded = false
-                                            viewModel.selectAllProfilesForExport()
-                                        }
-                                    }
-                                )
-                                DropdownMenuItem(
-                                    text = {
-                                        Text(
-                                            text = "Select Profile(s)",
-                                            color = if (isProfilesEmpty) {
-                                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-                                            } else {
-                                                MaterialTheme.colorScheme.onSurface
-                                            }
-                                        )
-                                    },
-                                    enabled = !isProfilesEmpty,
-                                    onClick = {
-                                        if (!isProfilesEmpty) {
-                                            isMenuExpanded = false
-                                            viewModel.enterSelectionMode()
-                                        }
-                                    }
-                                )
-                            }
-                        }
+                        )
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = MaterialTheme.colorScheme.background

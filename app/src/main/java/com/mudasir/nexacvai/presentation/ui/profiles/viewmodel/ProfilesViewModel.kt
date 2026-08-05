@@ -21,6 +21,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.mudasir.nexacvai.data.local.datastore.AppSettingsManager
+import com.mudasir.nexacvai.domain.model.ProfileSortOrder
 import com.mudasir.nexacvai.domain.repository.UserProfileRepository
 import javax.inject.Inject
 
@@ -38,7 +40,8 @@ class ProfilesViewModel @Inject constructor(
     private val duplicateProfileUseCase: com.mudasir.nexacvai.domain.usecase.DuplicateProfileUseCase,
     private val userProfileRepository: UserProfileRepository,
     val profileDeleteManager: ProfileDeleteManager,
-    private val profileExportManager: ProfileExportManager
+    private val profileExportManager: ProfileExportManager,
+    private val appSettingsManager: AppSettingsManager
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ProfilesState())
@@ -67,13 +70,25 @@ class ProfilesViewModel @Inject constructor(
 
     private fun loadProfiles() {
         viewModelScope.launch {
-            _state.value = _state.value.copy(isLoading = true, error = null)
+            if (_state.value.profiles == null) {
+                _state.value = _state.value.copy(isLoading = true, error = null)
+            }
             combine(
                 getAllProfilesUseCase(),
-                profileDeleteManager.pendingDeleteProfiles
-            ) { allProfiles, pendingDeletes ->
+                profileDeleteManager.pendingDeleteProfiles,
+                appSettingsManager.profileSortOrderFlow
+            ) { allProfiles: List<UserProfile>, pendingDeletes: List<UserProfile>, sortOrder: ProfileSortOrder ->
                 val pendingIds = pendingDeletes.map { it.id }.toSet()
-                allProfiles.filter { it.id !in pendingIds }
+                val visible = allProfiles.filter { it.id !in pendingIds }
+                val sorted = when (sortOrder) {
+                    ProfileSortOrder.NEWEST_FIRST -> visible.sortedByDescending { it.createdAt }
+                    ProfileSortOrder.OLDEST_FIRST -> visible.sortedBy { it.createdAt }
+                    ProfileSortOrder.NAME_ASC -> visible.sortedBy { it.fullName.lowercase().ifBlank { "zzz" } }
+                    ProfileSortOrder.NAME_DESC -> visible.sortedByDescending { it.fullName.lowercase().ifBlank { "aaa" } }
+                    ProfileSortOrder.LAST_UPDATED -> visible.sortedByDescending { it.updatedAt }
+                    ProfileSortOrder.MOST_USED -> visible.sortedByDescending { it.updatedAt }
+                }
+                Pair(sorted, sortOrder)
             }
             .catch { e ->
                 _state.value = _state.value.copy(
@@ -81,12 +96,19 @@ class ProfilesViewModel @Inject constructor(
                     error = e.message ?: "An unexpected error occurred while loading profiles."
                 )
             }
-            .collect { visibleProfiles ->
+            .collect { (visibleProfiles, sortOrder) ->
                 _state.value = _state.value.copy(
                     isLoading = false,
-                    profiles = visibleProfiles
+                    profiles = visibleProfiles,
+                    sortOrder = sortOrder
                 )
             }
+        }
+    }
+
+    fun updateSortOrder(sortOrder: ProfileSortOrder) {
+        viewModelScope.launch {
+            appSettingsManager.setProfileSortOrder(sortOrder)
         }
     }
 

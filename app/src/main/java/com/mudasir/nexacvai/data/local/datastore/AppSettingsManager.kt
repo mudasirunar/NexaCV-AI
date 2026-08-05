@@ -12,37 +12,52 @@ import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
 
+import androidx.datastore.preferences.core.stringPreferencesKey
+import com.mudasir.nexacvai.domain.model.ProfileSortOrder
+
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "nexacvai_settings")
 
 @Singleton
-class AppSettingsManager @Inject constructor(
+open class AppSettingsManager @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
 
     companion object {
         val IS_DARK_MODE = booleanPreferencesKey("is_dark_mode")
         val HAS_SEEN_ONBOARDING = booleanPreferencesKey("has_seen_onboarding")
+        val PROFILE_SORT_ORDER = stringPreferencesKey("profile_sort_order")
     }
 
-    val isDarkModeFlow: Flow<Boolean?> = context.dataStore.data
-        .map { preferences ->
+    open val isDarkModeFlow: Flow<Boolean?>
+        get() = context.dataStore.data.map { preferences ->
             preferences[IS_DARK_MODE]
         }
 
-    val hasSeenOnboardingFlow: Flow<Boolean> = context.dataStore.data
-        .map { preferences ->
+    open val hasSeenOnboardingFlow: Flow<Boolean>
+        get() = context.dataStore.data.map { preferences ->
             preferences[HAS_SEEN_ONBOARDING] ?: false
         }
 
-    suspend fun setDarkMode(isDarkMode: Boolean) {
+    open val profileSortOrderFlow: Flow<ProfileSortOrder>
+        get() = context.dataStore.data.map { preferences ->
+            ProfileSortOrder.fromId(preferences[PROFILE_SORT_ORDER])
+        }
+
+    open suspend fun setDarkMode(isDarkMode: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[IS_DARK_MODE] = isDarkMode
         }
     }
 
-    suspend fun setHasSeenOnboarding(hasSeen: Boolean) {
+    open suspend fun setHasSeenOnboarding(hasSeen: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[HAS_SEEN_ONBOARDING] = hasSeen
+        }
+    }
+
+    open suspend fun setProfileSortOrder(sortOrder: ProfileSortOrder) {
+        context.dataStore.edit { preferences ->
+            preferences[PROFILE_SORT_ORDER] = sortOrder.id
         }
     }
 }
