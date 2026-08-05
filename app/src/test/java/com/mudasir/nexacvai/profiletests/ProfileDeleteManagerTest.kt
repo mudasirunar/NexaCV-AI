@@ -260,6 +260,7 @@ class ProfileDeleteManagerTest {
         override suspend fun getProfileById(id: Long): UserProfile? = null
         override suspend fun insertProfile(profile: UserProfile): Long = 0
         override suspend fun updateProfile(profile: UserProfile) {}
+        override suspend fun dismissCopyTag(profileId: Long) {}
         
         override suspend fun deleteProfile(profile: UserProfile) {
             deletedProfiles.add(profile)

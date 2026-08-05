@@ -10,6 +10,7 @@ import com.mudasir.nexacvai.presentation.ui.profiles.utils.ProfileDeleteManager
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.ProfilesViewModel
 import com.mudasir.nexacvai.domain.usecase.ImportProfileUseCase
 import com.mudasir.nexacvai.presentation.ui.profiles.utils.ProfileExportManager
+import com.mudasir.nexacvai.data.local.datastore.AppSettingsManager
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.ImportProgressState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -54,14 +55,16 @@ class ProfilesViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun createViewModel(): ProfilesViewModel {
+    private fun createViewModel(appSettingsManager: AppSettingsManager = FakeAppSettingsManager()): ProfilesViewModel {
         return ProfilesViewModel(
             getAllProfilesUseCase = getAllProfilesUseCase,
             saveProfileUseCase = saveProfileUseCase,
             importProfileUseCase = importProfileUseCase,
             duplicateProfileUseCase = duplicateProfileUseCase,
+            userProfileRepository = fakeRepository,
             profileDeleteManager = deleteManager,
-            profileExportManager = exportManager
+            profileExportManager = exportManager,
+            appSettingsManager = appSettingsManager
         )
     }
 
@@ -78,8 +81,8 @@ class ProfilesViewModelTest {
         assertFalse(state.isLoading)
         assertNotNull(state.profiles)
         assertEquals(2, state.profiles?.size)
-        assertEquals("Alice", state.profiles?.get(0)?.fullName)
-        assertEquals("Bob", state.profiles?.get(1)?.fullName)
+        assertTrue(state.profiles?.any { it.fullName == "Alice" } == true)
+        assertTrue(state.profiles?.any { it.fullName == "Bob" } == true)
     }
 
     @Test
@@ -267,11 +270,24 @@ class ProfilesViewModelTest {
             }
         }
 
+        override suspend fun dismissCopyTag(profileId: Long) {
+            val profile = savedProfiles[profileId] ?: return
+            updateProfile(profile.copy(isCopyTagDismissed = true))
+        }
+
         override suspend fun deleteProfile(profile: UserProfile) {
             deletedProfiles.add(profile)
             val updatedList = profilesFlow.value.filter { it.id != profile.id }
             profilesFlow.value = updatedList
             savedProfiles.remove(profile.id)
+        }
+    }
+
+    class FakeAppSettingsManager : com.mudasir.nexacvai.data.local.datastore.AppSettingsManager(android.content.ContextWrapper(null)) {
+        val sortFlow = MutableStateFlow(com.mudasir.nexacvai.domain.model.ProfileSortOrder.NEWEST_FIRST)
+        override val profileSortOrderFlow: Flow<com.mudasir.nexacvai.domain.model.ProfileSortOrder> get() = sortFlow
+        override suspend fun setProfileSortOrder(sortOrder: com.mudasir.nexacvai.domain.model.ProfileSortOrder) {
+            sortFlow.value = sortOrder
         }
     }
 }

@@ -67,8 +67,10 @@ class ProfileCopyTest {
             saveProfileUseCase = saveProfileUseCase,
             importProfileUseCase = importProfileUseCase,
             duplicateProfileUseCase = duplicateProfileUseCase,
+            userProfileRepository = fakeRepository,
             profileDeleteManager = deleteManager,
-            profileExportManager = exportManager
+            profileExportManager = exportManager,
+            appSettingsManager = ProfilesViewModelTest.FakeAppSettingsManager()
         )
     }
 

@@ -521,6 +521,8 @@ class CreateProfileViewModelTest {
             profiles[profile.id] = profile
         }
         
+        override suspend fun dismissCopyTag(profileId: Long) {}
+        
         override suspend fun deleteProfile(profile: UserProfile) {
             profiles.remove(profile.id)
         }
