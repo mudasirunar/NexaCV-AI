@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 interface UserProfileDao {
 
     @Transaction
-    @Query("SELECT * FROM user_profiles ORDER BY updatedAt DESC")
+    @Query("SELECT * FROM user_profiles ORDER BY createdAt DESC")
     fun getAllProfilesWithDetails(): Flow<List<UserProfileWithDetails>>
 
     @Transaction

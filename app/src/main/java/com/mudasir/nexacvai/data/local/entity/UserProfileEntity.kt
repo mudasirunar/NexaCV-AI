@@ -6,7 +6,7 @@ import androidx.room.PrimaryKey
 
 @Entity(
     tableName = "user_profiles",
-    indices = [Index(value = ["updatedAt"])]
+    indices = [Index(value = ["createdAt"])]
 )
 data class UserProfileEntity(
     @PrimaryKey(autoGenerate = true)
