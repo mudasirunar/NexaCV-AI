@@ -2,6 +2,7 @@ package com.mudasir.nexacvai.core.utils
 
 import android.content.Context
 import android.net.Uri
+import androidx.annotation.Keep
 import com.mudasir.nexacvai.domain.model.UserProfile
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
@@ -21,6 +22,7 @@ object ProfileImportExportHelper {
 
     private val userProfileAdapter = moshi.adapter(UserProfile::class.java)
 
+    @Keep
     data class BundleManifest(
         val bundleVersion: Int = 1,
         val exportTimestamp: Long = System.currentTimeMillis(),
@@ -29,6 +31,7 @@ object ProfileImportExportHelper {
 
     private val bundleManifestAdapter = moshi.adapter(BundleManifest::class.java)
 
+    @Keep
     data class ImportedProfileData(
         val profile: UserProfile,
         val hasPicture: Boolean,

@@ -1,5 +1,8 @@
 package com.mudasir.nexacvai.domain.model
 
+import androidx.annotation.Keep
+
+@Keep
 data class Experience(
     val id: String = java.util.UUID.randomUUID().toString(),
     val jobTitle: String = "",
@@ -11,6 +14,7 @@ data class Experience(
     val description: String = ""
 )
 
+@Keep
 data class Education(
     val id: String = java.util.UUID.randomUUID().toString(),
     val degree: String = "",
@@ -23,6 +27,7 @@ data class Education(
     val description: String = ""
 )
 
+@Keep
 data class Project(
     val id: String = java.util.UUID.randomUUID().toString(),
     val projectName: String = "",
@@ -34,6 +39,7 @@ data class Project(
     val endDate: String = ""
 )
 
+@Keep
 data class Certification(
     val id: String = java.util.UUID.randomUUID().toString(),
     val certificationName: String = "",
@@ -43,18 +49,21 @@ data class Certification(
     val credentialUrl: String = ""
 )
 
+@Keep
 data class SocialLink(
     val id: String = java.util.UUID.randomUUID().toString(),
     val label: String = "", // e.g., LinkedIn, GitHub, Behance
     val url: String = ""
 )
 
+@Keep
 data class Language(
     val id: String = java.util.UUID.randomUUID().toString(),
     val languageName: String = "",
     val proficiency: String = ""
 )
 
+@Keep
 data class Reference(
     val id: String = java.util.UUID.randomUUID().toString(),
     val fullName: String = "",

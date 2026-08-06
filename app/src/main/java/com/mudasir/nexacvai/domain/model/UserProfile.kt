@@ -1,5 +1,8 @@
 package com.mudasir.nexacvai.domain.model
 
+import androidx.annotation.Keep
+
+@Keep
 data class UserProfile(
     val id: Long = 0,
     val fullName: String = "",
