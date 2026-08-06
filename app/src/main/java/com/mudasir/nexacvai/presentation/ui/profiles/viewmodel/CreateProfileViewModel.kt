@@ -330,6 +330,9 @@ class CreateProfileViewModel @Inject constructor(
             hobbies = upToDateState.hobbies,
             volunteerWork = upToDateState.volunteerWork,
             awards = upToDateState.awards,
+            sourceProfileId = initialProfile.sourceProfileId,
+            sourceProfileName = initialProfile.sourceProfileName,
+            isCopyTagDismissed = initialProfile.isCopyTagDismissed,
             createdAt = if (upToDateState.profileId == null || upToDateState.profileId == 0L) {
                 System.currentTimeMillis()
             } else {

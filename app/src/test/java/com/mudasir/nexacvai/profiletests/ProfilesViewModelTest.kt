@@ -188,8 +188,8 @@ class ProfilesViewModelTest {
             references = emptyList(),
             socialLinks = emptyList(),
             languages = emptyList(),
-            createdAt = System.currentTimeMillis(),
-            updatedAt = System.currentTimeMillis()
+            createdAt = 100000L - id * 1000L,
+            updatedAt = 100000L - id * 1000L
         )
     }
 
