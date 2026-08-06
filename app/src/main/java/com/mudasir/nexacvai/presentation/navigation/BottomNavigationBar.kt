@@ -38,7 +38,7 @@ fun BottomNavigationBar(navController: NavHostController) {
             NavigationBarItem(
                 selected = isSelected,
                 onClick = {
-                    if (!isSelected) {
+                    if (currentScreen?.route != screen.route) {
                         navController.navigate(screen.route) {
                             popUpTo(navController.graph.startDestinationId) {
                                 saveState = true
@@ -46,6 +46,11 @@ fun BottomNavigationBar(navController: NavHostController) {
                             launchSingleTop = true
                             restoreState = true
                         }
+                    } else {
+                        navController.currentBackStackEntry?.savedStateHandle?.set(
+                            "scrollToTop_${screen.route}",
+                            System.currentTimeMillis()
+                        )
                     }
                 },
                 icon = {

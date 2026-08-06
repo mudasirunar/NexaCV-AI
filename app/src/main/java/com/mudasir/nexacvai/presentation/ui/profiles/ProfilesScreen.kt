@@ -130,6 +130,18 @@ fun ProfilesScreen(
     val coroutineScope = rememberCoroutineScope()
     val gridState = rememberLazyGridState()
 
+    val currentBackStackEntry = navController.currentBackStackEntry
+    val scrollToTopTrigger by currentBackStackEntry?.savedStateHandle
+        ?.getStateFlow("scrollToTop_${Screen.Profiles.route}", 0L)
+        ?.collectAsState() ?: remember { mutableStateOf(0L) }
+
+    LaunchedEffect(scrollToTopTrigger) {
+        if (scrollToTopTrigger > 0L) {
+            gridState.animateScrollToItem(0)
+            currentBackStackEntry?.savedStateHandle?.remove<Long>("scrollToTop_${Screen.Profiles.route}")
+        }
+    }
+
     val exportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/octet-stream"),
         onResult = { uri ->
