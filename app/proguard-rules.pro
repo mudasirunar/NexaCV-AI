@@ -1,21 +1,44 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# ====================================================================
+# NexaCV AI ProGuard & R8 Optimization Rules
+# ====================================================================
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# 1. Kotlin Reflection & Metadata Rules (Required for Moshi KotlinJsonAdapterFactory)
+-keepattributes *Annotation*, Signature, InnerClasses, EnclosingMethod, RuntimeVisibleAnnotations, RuntimeInvisibleAnnotations, RuntimeVisibleParameterAnnotations, RuntimeInvisibleParameterAnnotations
+-keepclassmembers class * {
+    @kotlin.jvm.Transient *;
+}
+-keep class kotlin.reflect.** { *; }
+-keep class kotlin.Metadata { *; }
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# 2. Moshi JSON Serialization
+-keep class com.squareup.moshi.** { *; }
+-keepclassmembers class com.squareup.moshi.** { *; }
+-dontwarn com.squareup.moshi.**
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+-keepclassmembers class * {
+    @com.squareup.moshi.Json *;
+    @com.squareup.moshi.JsonClass *;
+}
+
+# 3. Custom App Domain & Core Serialization Data Models
+-keep class com.mudasir.nexacvai.domain.model.** { *; }
+-keepclassmembers class com.mudasir.nexacvai.domain.model.** { *; }
+
+-keep class com.mudasir.nexacvai.core.utils.ProfileImportExportHelper** { *; }
+-keepclassmembers class com.mudasir.nexacvai.core.utils.ProfileImportExportHelper** { *; }
+
+# 4. Room Database Entities & Type Converters
+-keep class com.mudasir.nexacvai.data.local.entity.** { *; }
+-keepclassmembers class com.mudasir.nexacvai.data.local.entity.** { *; }
+
+-keep class com.mudasir.nexacvai.data.local.Converters { *; }
+-keepclassmembers class com.mudasir.nexacvai.data.local.Converters { *; }
+-keepclassmembers class * {
+    @androidx.room.TypeConverter *;
+}
+
+# 5. Support for @Keep Annotation
+-keep @androidx.annotation.Keep class * { *; }
+-keepclassmembers class * {
+    @androidx.annotation.Keep *;
+}
