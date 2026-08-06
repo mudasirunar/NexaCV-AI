@@ -1,6 +1,7 @@
 package com.mudasir.nexacvai.presentation.ui.profiles.components.profiles_dashboard
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -10,6 +11,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.border
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -141,12 +143,12 @@ fun ProfilesOverflowMenu(
                 color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
             )
 
-            // Sorting menu item with animated trailing chevron arrow
+            // Sorting menu item with springy animated trailing chevron arrow
             val chevronRotation by animateFloatAsState(
                 targetValue = if (isSortSubMenuExpanded) 180f else 0f,
                 animationSpec = spring(
                     dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness = Spring.StiffnessLow
+                    stiffness = Spring.StiffnessMediumLow
                 ),
                 label = "sortChevronRotation"
             )
@@ -191,58 +193,57 @@ fun ProfilesOverflowMenu(
                 }
             )
 
-            AnimatedVisibility(
-                visible = isSortSubMenuExpanded,
-                enter = expandVertically(
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioMediumBouncy,
-                        stiffness = Spring.StiffnessLow
-                    )
-                ) + fadeIn(animationSpec = tween(150)),
-                exit = shrinkVertically(
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioNoBouncy,
-                        stiffness = Spring.StiffnessLow
-                    )
-                ) + fadeOut(animationSpec = tween(150))
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 2.dp)
-                ) {
-                    ProfileSortOrder.entries.forEach { sortOption ->
-                        val isSelected = currentSortOrder == sortOption
-                        DropdownMenuItem(
-                            text = {
-                                Text(
-                                    text = sortOption.displayName,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = if (isSelected) {
-                                        MaterialTheme.colorScheme.primary
-                                    } else {
-                                        MaterialTheme.colorScheme.onSurface
-                                    },
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                                )
-                            },
-                            trailingIcon = {
-                                if (isSelected) {
-                                    Icon(
-                                        imageVector = Icons.Default.Check,
-                                        contentDescription = "Selected Sort Option",
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                }
-                            },
-                            onClick = {
-                                isMenuExpanded = false
-                                isSortSubMenuExpanded = false
-                                onSortOrderSelected(sortOption)
-                            },
-                            modifier = Modifier.padding(start = 8.dp)
+            // Smooth springy expandable container using single-pass layout animateContentSize
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clipToBounds()
+                    .animateContentSize(
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                            stiffness = Spring.StiffnessMediumLow
                         )
+                    )
+            ) {
+                if (isSortSubMenuExpanded) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 2.dp)
+                    ) {
+                        ProfileSortOrder.entries.forEach { sortOption ->
+                            val isSelected = currentSortOrder == sortOption
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = sortOption.displayName,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = if (isSelected) {
+                                            MaterialTheme.colorScheme.primary
+                                        } else {
+                                            MaterialTheme.colorScheme.onSurface
+                                        },
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                    )
+                                },
+                                trailingIcon = {
+                                    if (isSelected) {
+                                        Icon(
+                                            imageVector = Icons.Default.Check,
+                                            contentDescription = "Selected Sort Option",
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                },
+                                onClick = {
+                                    isMenuExpanded = false
+                                    isSortSubMenuExpanded = false
+                                    onSortOrderSelected(sortOption)
+                                },
+                                modifier = Modifier.padding(start = 8.dp)
+                            )
+                        }
                     }
                 }
             }
