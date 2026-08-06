@@ -253,7 +253,7 @@ fun UserProfileCard(
             // SECTION 1: HEADLINE IDENTITY LAYER (Top Row)
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.Top
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 // Left Element: Circular Avatar with progress ring
                 UserProfileAvatar(
@@ -270,13 +270,13 @@ fun UserProfileCard(
                 // Center-Right Column
                 Column(
                     modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     // Row 1: Full Name and Social Links
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.Top
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
                             text = trimmedName.ifBlank { "Untitled Profile" },
