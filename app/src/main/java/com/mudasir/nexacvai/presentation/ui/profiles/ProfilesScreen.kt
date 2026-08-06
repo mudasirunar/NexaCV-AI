@@ -207,12 +207,18 @@ fun ProfilesScreen(
         }
     }
 
+    var previousSortOrder by remember { mutableStateOf<ProfileSortOrder?>(null) }
+
     LaunchedEffect(state.sortOrder) {
-        if (state.profiles?.isNotEmpty() == true) {
-            if (gridState.firstVisibleItemIndex > 0 || gridState.firstVisibleItemScrollOffset > 0) {
-                gridState.animateScrollToItem(0)
+        val currentSort = state.sortOrder
+        if (previousSortOrder != null && previousSortOrder != currentSort) {
+            if (state.profiles?.isNotEmpty() == true) {
+                if (gridState.firstVisibleItemIndex > 0 || gridState.firstVisibleItemScrollOffset > 0) {
+                    gridState.animateScrollToItem(0)
+                }
             }
         }
+        previousSortOrder = currentSort
     }
 
     var lastClickTime by remember { mutableStateOf(0L) }
