@@ -135,7 +135,10 @@ fun SettingsScreen(
             icon = Icons.Default.Info
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                SettingInfoRow(label = "Application Version", value = "v1.1.0 (Build 2)")
+                SettingInfoRow(
+                    label = "Application Version",
+                    value = "v${com.mudasir.nexacvai.BuildConfig.VERSION_NAME} (Build ${com.mudasir.nexacvai.BuildConfig.VERSION_CODE})"
+                )
                 SettingInfoRow(label = "PDF Document Engine", value = "Native Vector A4 Engine")
                 SettingInfoRow(label = "Architecture", value = "Clean Architecture + Hilt")
             }
