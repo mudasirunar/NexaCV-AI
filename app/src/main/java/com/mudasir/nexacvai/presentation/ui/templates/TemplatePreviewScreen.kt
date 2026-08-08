@@ -34,12 +34,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.mudasir.nexacvai.core.pdf.PdfGeneratorEngine
 import com.mudasir.nexacvai.domain.model.template.TemplateData
 import com.mudasir.nexacvai.domain.model.template.TemplateStyle
 import com.mudasir.nexacvai.domain.model.template.toTemplateData
+import com.mudasir.nexacvai.presentation.ui.components.PdfDocumentViewer
 import com.mudasir.nexacvai.presentation.ui.templates.components.ProfileSelectionBottomSheet
 import com.mudasir.nexacvai.presentation.ui.templates.components.shimmerEffect
 import com.mudasir.nexacvai.presentation.ui.templates.viewmodel.TemplatesViewModel
+import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -68,6 +71,25 @@ fun TemplatePreviewScreen(
 
     val activeData = remember(state.selectedProfile) {
         state.selectedProfile?.toTemplateData() ?: TemplateData.SAMPLE_FILLER
+    }
+
+    val pdfEngine = remember(context) { PdfGeneratorEngine(context) }
+    var generatedPdfFile by remember { mutableStateOf<File?>(null) }
+    var isGeneratingPdf by remember { mutableStateOf(true) }
+
+    val templateStyle = remember(previewPrimaryColor, state.showPhotoInTemplate, meta?.supportsPhoto) {
+        TemplateStyle(
+            primaryColor = previewPrimaryColor,
+            showPhoto = state.showPhotoInTemplate && (meta?.supportsPhoto == true)
+        )
+    }
+
+    LaunchedEffect(template, activeData, templateStyle) {
+        if (template != null) {
+            isGeneratingPdf = true
+            generatedPdfFile = pdfEngine.generateCvPdf(template, activeData, templateStyle)
+            isGeneratingPdf = false
+        }
     }
 
     Scaffold(
@@ -197,7 +219,7 @@ fun TemplatePreviewScreen(
 
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        text = state.selectedProfile?.fullName ?: "Sample Guidance Data",
+                                        text = state.selectedProfile?.fullName ?: "Sample Guidance Placeholder",
                                         style = MaterialTheme.typography.titleMedium.copy(
                                             fontWeight = FontWeight.Bold,
                                             color = MaterialTheme.colorScheme.onSurface
@@ -278,40 +300,26 @@ fun TemplatePreviewScreen(
                     }
                 }
 
-                // Realistic A4 Paper PDF Document Container with Studio Workbench background
+                // Interactive Real A4 PDF Document Viewer Container
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(680.dp)
-                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
-                        .padding(12.dp),
-                    contentAlignment = Alignment.Center
+                        .height(660.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f), RoundedCornerShape(16.dp))
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .shadow(8.dp, RoundedCornerShape(4.dp))
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(Color.White)
-                            .border(1.dp, Color(0xFFCBD5E1), RoundedCornerShape(4.dp))
-                    ) {
-                    if (state.isInjectingProfile) {
+                    if (isGeneratingPdf || state.isInjectingProfile) {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .shimmerEffect()
                         )
                     } else {
-                        template.Render(
-                            data = activeData,
-                            style = TemplateStyle(
-                                primaryColor = previewPrimaryColor,
-                                showPhoto = state.showPhotoInTemplate && (meta?.supportsPhoto == true)
-                            ),
+                        PdfDocumentViewer(
+                            pdfFile = generatedPdfFile,
                             modifier = Modifier.fillMaxSize()
                         )
                     }
-                }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
