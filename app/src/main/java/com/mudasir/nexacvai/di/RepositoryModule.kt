@@ -8,6 +8,9 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
+import com.mudasir.nexacvai.data.repository.TemplateRepositoryImpl
+import com.mudasir.nexacvai.domain.repository.TemplateRepository
+
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class RepositoryModule {
@@ -17,4 +20,10 @@ abstract class RepositoryModule {
     abstract fun bindUserProfileRepository(
         impl: UserProfileRepositoryImpl
     ): UserProfileRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindTemplateRepository(
+        impl: TemplateRepositoryImpl
+    ): TemplateRepository
 }

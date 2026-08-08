@@ -8,6 +8,8 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.ui.graphics.vector.ImageVector
 
+import androidx.compose.material.icons.filled.Style
+
 sealed class Screen(
     val route: String,
     val title: String,
@@ -23,6 +25,7 @@ sealed class Screen(
     // Sub-screens (Not in bottom nav)
     object CreateProfile : Screen("create_profile", "Create Profile", Icons.Default.Person, parentRoute = "profiles")
     object ViewProfile : Screen("view_profile", "View Profile", Icons.Default.Person, parentRoute = "profiles")
+    object Templates : Screen("templates", "Templates", Icons.Default.Style, parentRoute = "home")
 }
 
 val BottomNavScreens = listOf(
@@ -40,5 +43,6 @@ val AllScreens = listOf(
     Screen.History,
     Screen.Settings,
     Screen.CreateProfile,
-    Screen.ViewProfile
+    Screen.ViewProfile,
+    Screen.Templates
 )

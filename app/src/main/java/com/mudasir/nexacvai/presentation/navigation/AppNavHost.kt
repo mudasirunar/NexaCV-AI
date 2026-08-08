@@ -104,6 +104,20 @@ fun AppNavHost(
         ) {
             ViewProfileScreen(navController = navController)
         }
+        composable(Screen.Templates.route) {
+            com.mudasir.nexacvai.presentation.ui.templates.TemplatesScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onTemplateSelectedForCv = { templateId, profileId ->
+                    navController.navigate(Screen.Generate.route) {
+                        popUpTo(navController.graph.startDestinationId) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
+            )
+        }
     }
 }
 

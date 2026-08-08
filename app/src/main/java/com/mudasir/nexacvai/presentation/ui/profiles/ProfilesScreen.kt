@@ -43,6 +43,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import com.mudasir.nexacvai.presentation.ui.profiles.components.profiles_dashboard.EmptySearchResultScreen
@@ -385,6 +386,13 @@ fun ProfilesScreen(
                                     ) {
                                         Text("Profiles", style = MaterialTheme.typography.titleMedium)
                                         Spacer(modifier = Modifier.weight(1f))
+                                        IconButton(onClick = { navController.navigate(Screen.Templates.route) }) {
+                                            Icon(
+                                                imageVector = Icons.Default.Description,
+                                                contentDescription = "CV Templates",
+                                                tint = MaterialTheme.colorScheme.primary
+                                            )
+                                        }
                                         if (screenMode != ProfilesScreenMode.Empty) {
                                             IconButton(onClick = { viewModel.onSearchActiveChanged(true) }) {
                                                 Icon(
