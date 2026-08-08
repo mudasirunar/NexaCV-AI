@@ -26,84 +26,10 @@ data class TemplateData(
 ) {
     companion object {
         /**
-         * Sample Placeholder Guidance Data.
-         * Renders informative placeholder guidance text explaining what to write in each section.
+         * Default Sample Placeholder Guidance Data.
          */
-        val SAMPLE_FILLER = TemplateData(
-            fullName = "Alex Mercer",
-            professionalTitle = "Senior Software Architect & Mobile Lead",
-            email = "alex.mercer@example.com",
-            phone = "+1 (555) 234-5678",
-            location = "San Francisco, CA • Open to Remote",
-            summary = "Results-driven Software Engineer with 6+ years of experience designing scalable mobile architectures and high-performance cross-platform systems. Proven track record leading agile engineering teams and optimizing document processing pipelines.",
-            profilePictureUri = "android.resource://com.mudasir.nexacvai/drawable/profile_male_bluebg",
-            experiences = listOf(
-                TemplateExperienceData(
-                    jobTitle = "Lead Android Architect",
-                    company = "Apex Financial Technologies",
-                    startDate = "01/2021",
-                    endDate = "Present",
-                    location = "San Francisco, CA",
-                    responsibilities = listOf(
-                        "Architected offline-first mobile engine using Clean Architecture and Jetpack Compose, reducing app crash rate by 99.4%.",
-                        "Led a team of 8 mobile developers to deliver bi-weekly production releases, reducing app cold startup time by 45%.",
-                        "Implemented secure local PII encryption at rest using SQLCipher and Android Keystore."
-                    ),
-                    technologies = listOf("Kotlin", "Jetpack Compose", "Hilt", "Room", "Coroutines")
-                ),
-                TemplateExperienceData(
-                    jobTitle = "Senior Software Engineer",
-                    company = "Nexus Cloud Solutions",
-                    startDate = "06/2018",
-                    endDate = "12/2020",
-                    location = "Austin, TX",
-                    responsibilities = listOf(
-                        "Developed real-time document rendering pipeline handling 50,000+ daily export requests.",
-                        "Integrated REST & GraphQL backend services with offline caching and background synchronization."
-                    ),
-                    technologies = listOf("Kotlin", "Java", "RxJava", "Retrofit", "REST API")
-                )
-            ),
-            educations = listOf(
-                TemplateEducationData(
-                    degree = "B.S. in Computer Science & Engineering",
-                    institution = "University of California, Berkeley",
-                    startDate = "2014",
-                    endDate = "2018",
-                    gradeOrGpa = "3.85 GPA • Honors Graduate",
-                    relevantCoursework = "Distributed Systems, Operating Systems, Algorithm Analysis"
-                )
-            ),
-            projects = listOf(
-                TemplateProjectData(
-                    projectName = "Smart Document AI Engine",
-                    roleInProject = "Creator & Lead Developer",
-                    startDate = "2023",
-                    endDate = "Present",
-                    description = "An offline-first document rendering engine for Android capable of generating vector PDFs in under 300ms.",
-                    technologiesUsed = listOf("Kotlin", "Canvas", "PdfDocument", "KSP"),
-                    projectLink = "github.com/alexmercer/document-engine"
-                )
-            ),
-            skills = listOf(
-                "Kotlin", "Android SDK", "Jetpack Compose", "Clean Architecture",
-                "Dagger Hilt", "Coroutines & Flow", "Room Database", "Unit Testing",
-                "Git & CI/CD", "RESTful APIs", "System Design", "Agile Leadership"
-            ),
-            socialLinks = listOf(
-                TemplateSocialLinkData("LinkedIn", "linkedin.com/in/alexmercer"),
-                TemplateSocialLinkData("GitHub", "github.com/alexmercer"),
-                TemplateSocialLinkData("Portfolio", "alexmercer.dev")
-            ),
-            certifications = listOf(
-                TemplateCertData("Google Associate Android Developer", "Google", "2022")
-            ),
-            languages = listOf(
-                TemplateLanguageData("English", "Native / Full Professional"),
-                TemplateLanguageData("Spanish", "Intermediate Working")
-            ),
-            references = emptyList()
-        )
+        val SAMPLE_FILLER: TemplateData
+            get() = com.mudasir.nexacvai.domain.model.template.sampledata.SampleGuidanceProfiles.MALE_TECH_ARCHITECT
     }
 }
 

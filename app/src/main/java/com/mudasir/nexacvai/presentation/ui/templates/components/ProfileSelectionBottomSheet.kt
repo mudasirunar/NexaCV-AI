@@ -83,14 +83,26 @@ fun ProfileSelectionBottomSheet(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                // Sample Placeholder Guidance Item
+                // Section Header: Guidance Profiles
                 item {
-                    val isSampleSelected = selectedProfile == null
+                    Text(
+                        text = "Sample Industry Guidance Profiles",
+                        style = MaterialTheme.typography.labelMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        ),
+                        modifier = Modifier.padding(top = 4.dp, bottom = 2.dp)
+                    )
+                }
+
+                // Sample Guidance Profiles List
+                items(com.mudasir.nexacvai.domain.model.template.sampledata.SampleGuidanceProfiles.ALL_GUIDANCE_PROFILES) { guidance ->
+                    val isSelected = selectedProfile == null
                     ProfileSelectionItem(
-                        title = "Sample Guidance Placeholder Data",
-                        subtitle = "Informative placeholder text showing what to write",
-                        imageUri = "android.resource://com.mudasir.nexacvai/drawable/profile_male_bluebg",
-                        isSelected = isSampleSelected,
+                        title = guidance.fullName,
+                        subtitle = guidance.professionalTitle,
+                        imageUri = guidance.profilePictureUri,
+                        isSelected = isSelected,
                         onClick = {
                             onSelectProfile(null)
                             onDismissRequest()
@@ -98,27 +110,36 @@ fun ProfileSelectionBottomSheet(
                     )
                 }
 
-                // Divider
-                item {
-                    HorizontalDivider(
-                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f),
-                        modifier = Modifier.padding(vertical = 4.dp)
-                    )
-                }
+                if (profiles.isNotEmpty()) {
+                    item {
+                        HorizontalDivider(
+                            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f),
+                            modifier = Modifier.padding(vertical = 6.dp)
+                        )
+                        Text(
+                            text = "My Created Profiles",
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            ),
+                            modifier = Modifier.padding(bottom = 2.dp)
+                        )
+                    }
 
-                // User Profiles List Items
-                items(profiles, key = { it.id }) { profile ->
-                    val isSelected = selectedProfile?.id == profile.id
-                    ProfileSelectionItem(
-                        title = profile.fullName.ifBlank { "Unnamed Profile" },
-                        subtitle = profile.professionalTitle.ifBlank { "Professional Title" },
-                        imageUri = profile.profilePictureUri,
-                        isSelected = isSelected,
-                        onClick = {
-                            onSelectProfile(profile)
-                            onDismissRequest()
-                        }
-                    )
+                    // User Profiles List Items
+                    items(profiles, key = { it.id }) { profile ->
+                        val isSelected = selectedProfile?.id == profile.id
+                        ProfileSelectionItem(
+                            title = profile.fullName.ifBlank { "Unnamed Profile" },
+                            subtitle = profile.professionalTitle.ifBlank { "Professional Title" },
+                            imageUri = profile.profilePictureUri,
+                            isSelected = isSelected,
+                            onClick = {
+                                onSelectProfile(profile)
+                                onDismissRequest()
+                            }
+                        )
+                    }
                 }
             }
         }
