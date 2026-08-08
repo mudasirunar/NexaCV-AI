@@ -219,6 +219,12 @@ fun ProfilesScreen(
         }
     }
 
+    LaunchedEffect(state.searchQuery) {
+        if (state.searchQuery.isNotBlank()) {
+            gridState.scrollToItem(0)
+        }
+    }
+
     var previousSortOrder by remember { mutableStateOf<ProfileSortOrder?>(null) }
 
     LaunchedEffect(state.sortOrder) {
