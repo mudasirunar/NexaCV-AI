@@ -386,13 +386,6 @@ fun ProfilesScreen(
                                     ) {
                                         Text("Profiles", style = MaterialTheme.typography.titleMedium)
                                         Spacer(modifier = Modifier.weight(1f))
-                                        IconButton(onClick = { navController.navigate(Screen.Templates.route) }) {
-                                            Icon(
-                                                imageVector = Icons.Default.Description,
-                                                contentDescription = "CV Templates",
-                                                tint = MaterialTheme.colorScheme.primary
-                                            )
-                                        }
                                         if (screenMode != ProfilesScreenMode.Empty) {
                                             IconButton(onClick = { viewModel.onSearchActiveChanged(true) }) {
                                                 Icon(
