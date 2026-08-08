@@ -37,13 +37,36 @@ log/
 logs/
 
 # --------------------------------------------------------------------
-# 4. Keystores & Signing Keys (CRITICAL SECURITY)
+# 4. Keystores, Signing Keys & Release Secrets (CRITICAL SECURITY)
 # --------------------------------------------------------------------
 *.keystore
 *.jks
 *.pepk
+*.p12
+*.pem
+*.pfx
+*.asc
+key.properties
+keystore.properties
+signing.properties
+release.properties
+release-secrets.properties
 google-services.json
 GoogleService-Info.plist
+
+# --------------------------------------------------------------------
+# 4b. Release Bundles, APK Outputs & ProGuard/R8 Obfuscation Maps
+# --------------------------------------------------------------------
+/release/
+/app/release/
+**/build/outputs/apk/release/
+**/build/outputs/bundle/release/
+**/build/outputs/mapping/
+**/mapping/
+mapping.txt
+seeds.txt
+usage.txt
+resources.txt
 
 # --------------------------------------------------------------------
 # 5. OS & IDE Temporary / Scratch Files
