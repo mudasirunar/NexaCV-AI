@@ -15,6 +15,7 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -148,11 +149,12 @@ class MainActivity : ComponentActivity() {
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0.dp)
-                ) { innerPadding ->
-                    Box(modifier = Modifier.fillMaxSize()) {
+                ) { scaffoldPadding ->
+                    Box(modifier = Modifier
+                        .fillMaxSize()
+                        .padding(scaffoldPadding)) {
                         AppNavHost(
-                            navController = navController,
-                            innerPadding = innerPadding
+                            navController = navController
                         )
                         
                         val bottomBarOffset by animateDpAsState(

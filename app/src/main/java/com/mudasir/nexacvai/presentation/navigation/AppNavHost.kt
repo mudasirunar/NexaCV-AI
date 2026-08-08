@@ -8,7 +8,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.PaddingValues
+
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -35,8 +35,7 @@ private const val NAV_ANIM_DURATION = 180
 
 @Composable
 fun AppNavHost(
-    navController: NavHostController,
-    innerPadding: PaddingValues
+    navController: NavHostController
 ) {
     val routeIndices = BottomNavScreens.mapIndexed { index, screen -> screen.route to index }.toMap()
 
