@@ -11,7 +11,7 @@ interface ResumeTemplate {
     /** Metadata descriptor (id, name, category, supportsPhoto, isImported) */
     val metadata: TemplateMetadata
 
-    /** Default sample guidance data for MS Word-style placeholder rendering */
+    /** Default sample guidance data for template placeholder rendering */
     val defaultData: TemplateData
         get() = TemplateData.SAMPLE_FILLER
 

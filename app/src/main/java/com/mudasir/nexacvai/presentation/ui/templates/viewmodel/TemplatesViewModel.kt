@@ -41,8 +41,8 @@ class TemplatesViewModel @Inject constructor(
                 templates = templates,
                 filteredTemplates = filterTemplates(templates, _state.value.selectedCategory, _state.value.searchQuery),
                 profiles = profiles,
-                selectedProfile = profiles.firstOrNull(),
-                injectedTemplateData = profiles.firstOrNull()?.toTemplateData()
+                selectedProfile = null,
+                injectedTemplateData = null
             )
         }
     }

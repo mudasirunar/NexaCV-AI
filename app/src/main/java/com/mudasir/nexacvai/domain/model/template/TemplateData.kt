@@ -4,8 +4,8 @@ import com.mudasir.nexacvai.domain.model.UserProfile
 
 /**
  * Unified data container for rendering CV templates.
- * Contains MS Word-style placeholder guidance text when no profile is selected,
- * and maps cleanly from [UserProfile] for 1-tap profile auto-fill.
+ * Contains sample placeholder guidance text when no profile is selected,
+ * showing users where and how each section will be populated.
  */
 data class TemplateData(
     val fullName: String,
@@ -26,7 +26,7 @@ data class TemplateData(
 ) {
     companion object {
         /**
-         * MS Word-Style Sample Guidance Data.
+         * Sample Placeholder Guidance Data.
          * Renders informative placeholder guidance text explaining what to write in each section.
          */
         val SAMPLE_FILLER = TemplateData(
@@ -36,7 +36,7 @@ data class TemplateData(
             phone = "+1 (555) 234-5678",
             location = "San Francisco, CA • Open to Remote",
             summary = "Results-driven Software Engineer with 6+ years of experience designing scalable mobile architectures and high-performance cross-platform systems. Proven track record leading agile engineering teams and optimizing document processing pipelines.",
-            profilePictureUri = null,
+            profilePictureUri = "android.resource://com.mudasir.nexacvai/drawable/profile_male_bluebg",
             experiences = listOf(
                 TemplateExperienceData(
                     jobTitle = "Lead Android Architect",

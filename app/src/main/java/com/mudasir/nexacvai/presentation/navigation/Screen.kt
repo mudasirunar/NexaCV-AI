@@ -26,6 +26,7 @@ sealed class Screen(
     object CreateProfile : Screen("create_profile", "Create Profile", Icons.Default.Person, parentRoute = "profiles")
     object ViewProfile : Screen("view_profile", "View Profile", Icons.Default.Person, parentRoute = "profiles")
     object Templates : Screen("templates", "Templates", Icons.Default.Style, parentRoute = "home")
+    object TemplatePreview : Screen("template_preview", "Template Preview", Icons.Default.Style, parentRoute = "templates")
 }
 
 val BottomNavScreens = listOf(
@@ -44,5 +45,6 @@ val AllScreens = listOf(
     Screen.Settings,
     Screen.CreateProfile,
     Screen.ViewProfile,
-    Screen.Templates
+    Screen.Templates,
+    Screen.TemplatePreview
 )

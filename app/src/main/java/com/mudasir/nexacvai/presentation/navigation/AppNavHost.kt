@@ -107,7 +107,20 @@ fun AppNavHost(
         composable(Screen.Templates.route) {
             com.mudasir.nexacvai.presentation.ui.templates.TemplatesScreen(
                 onNavigateBack = { navController.popBackStack() },
-                onTemplateSelectedForCv = { templateId, profileId ->
+                onOpenTemplatePreview = { templateId ->
+                    navController.navigate("${Screen.TemplatePreview.route}?templateId=$templateId")
+                }
+            )
+        }
+        composable(
+            route = "${Screen.TemplatePreview.route}?templateId={templateId}",
+            arguments = listOf(navArgument("templateId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val templateId = backStackEntry.arguments?.getString("templateId") ?: "template_modern_tech"
+            com.mudasir.nexacvai.presentation.ui.templates.TemplatePreviewScreen(
+                templateId = templateId,
+                onNavigateBack = { navController.popBackStack() },
+                onConfirmCreateCv = { tId, pId ->
                     navController.navigate(Screen.Generate.route) {
                         popUpTo(navController.graph.startDestinationId) {
                             saveState = true

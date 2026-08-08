@@ -35,7 +35,7 @@ import com.mudasir.nexacvai.presentation.ui.templates.viewmodel.TemplatesViewMod
 @Composable
 fun TemplatesScreen(
     onNavigateBack: () -> Unit = {},
-    onTemplateSelectedForCv: (templateId: String, profileId: Long?) -> Unit = { _, _ -> },
+    onOpenTemplatePreview: (templateId: String) -> Unit = {},
     viewModel: TemplatesViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -143,13 +143,21 @@ fun TemplatesScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            val configuration = androidx.compose.ui.platform.LocalConfiguration.current
+            val gridColumnCount = if (configuration.screenWidthDp < 600) 1 else 2
+
             // Templates Grid View
             if (state.isLoading) {
-                Box(
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(gridColumnCount),
                     modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
+                    contentPadding = PaddingValues(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                    items(4) {
+                        TemplateCardSkeleton()
+                    }
                 }
             } else if (state.filteredTemplates.isEmpty()) {
                 Box(
@@ -165,7 +173,7 @@ fun TemplatesScreen(
                 }
             } else {
                 LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
+                    columns = GridCells.Fixed(gridColumnCount),
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(16.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -174,39 +182,12 @@ fun TemplatesScreen(
                     items(state.filteredTemplates, key = { it.metadata.id }) { template ->
                         TemplateCard(
                             template = template,
-                            onSelectTemplate = { viewModel.openTemplateDetail(template) }
+                            onSelectTemplate = { onOpenTemplatePreview(template.metadata.id) }
                         )
                     }
                 }
             }
         }
-    }
-
-    val context = androidx.compose.ui.platform.LocalContext.current
-
-    // Modal Template Preview & Profile Injector Bottom Sheet
-    state.selectedTemplateForDetail?.let { detailTemplate ->
-        TemplateDetailBottomSheet(
-            template = detailTemplate,
-            profiles = state.profiles,
-            selectedProfile = state.selectedProfile,
-            showPhoto = state.showPhotoInTemplate,
-            isInjectingProfile = state.isInjectingProfile,
-            onSelectProfile = { viewModel.selectProfileForInjection(it) },
-            onTogglePhoto = { viewModel.togglePhotoInTemplate(it) },
-            onConfirmCreateCv = {
-                android.widget.Toast.makeText(
-                    context,
-                    "Selected ${detailTemplate.metadata.name}",
-                    android.widget.Toast.LENGTH_SHORT
-                ).show()
-                onTemplateSelectedForCv(
-                    detailTemplate.metadata.id,
-                    state.selectedProfile?.id
-                )
-            },
-            onDismissRequest = { viewModel.closeTemplateDetail() }
-        )
     }
 
     // Custom Template JSON Import Dialog
