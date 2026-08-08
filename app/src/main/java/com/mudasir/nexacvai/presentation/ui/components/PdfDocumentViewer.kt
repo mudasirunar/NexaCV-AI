@@ -3,12 +3,18 @@ package com.mudasir.nexacvai.presentation.ui.components
 import android.graphics.Bitmap
 import android.graphics.pdf.PdfRenderer
 import android.os.ParcelFileDescriptor
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.VectorConverter
+import androidx.compose.animation.core.exponentialDecay
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.calculateCentroidSize
+import androidx.compose.foundation.gestures.calculatePan
+import androidx.compose.foundation.gestures.calculateZoom
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -20,18 +26,31 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChanged
+import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 
+/** Double-tap zoom threshold: below this → zoom in to TARGET, above → zoom out to 1x. */
+private const val DOUBLE_TAP_THRESHOLD = 1.5f
+/** Target zoom level on double-tap zoom-in. */
+private const val DOUBLE_TAP_ZOOM_TARGET = 2.5f
+/** Animation duration for double-tap zoom (ms). */
+private const val DOUBLE_TAP_ANIM_MS = 300
+
 /**
- * Interactive A4 PDF Document Viewer with Google Drive style Bounded Pinch-to-Zoom (1.0x - 4.0x) & Pan.
+ * Interactive A4 PDF Document Viewer with Google Drive style Bounded Pinch-to-Zoom (1.0x - 4.0x),
+ * direct 1:1 Pan with fling momentum, and double-tap to zoom in/out.
  */
 @Composable
 fun PdfDocumentViewer(
@@ -41,14 +60,12 @@ fun PdfDocumentViewer(
     var bitmapState by remember(pdfFile) { mutableStateOf<Bitmap?>(null) }
     var isLoading by remember(pdfFile) { mutableStateOf(true) }
 
-    // Pinch-to-Zoom & Pan Transform State
-    var scale by remember { mutableStateOf(1f) }
-    var offsetX by remember { mutableStateOf(0f) }
-    var offsetY by remember { mutableStateOf(0f) }
+    // Zoom state — Animatable for smooth double-tap and button-triggered zoom transitions
+    val scaleAnimatable = remember { Animatable(1f) }
+    val currentScale by remember { derivedStateOf { scaleAnimatable.value } }
 
-    val animatedScale by animateFloatAsState(targetValue = scale, label = "pdfZoomScale")
-    val animatedOffsetX by animateFloatAsState(targetValue = offsetX, label = "pdfPanX")
-    val animatedOffsetY by animateFloatAsState(targetValue = offsetY, label = "pdfPanY")
+    // Pan state — direct tracking with fling support (no animation lag)
+    val offsetAnimatable = remember { Animatable(Offset.Zero, Offset.VectorConverter) }
 
     // Render A4 PDF Page 0 asynchronously using Android PdfRenderer
     LaunchedEffect(pdfFile) {
@@ -110,27 +127,163 @@ fun PdfDocumentViewer(
             }
         } else {
             val bitmap = bitmapState!!
+            val scope = rememberCoroutineScope()
+
+            // Helper to clamp offset within allowed pan boundaries
+            fun clampOffset(offset: Offset, currentScale: Float): Offset {
+                if (currentScale <= 1.05f) return Offset.Zero
+                val maxPanX = (containerWidth * (currentScale - 1f) / 2f).coerceAtLeast(0f)
+                val maxPanY = (containerHeight * (currentScale - 1f) / 2f).coerceAtLeast(0f)
+                return Offset(
+                    offset.x.coerceIn(-maxPanX, maxPanX),
+                    offset.y.coerceIn(-maxPanY, maxPanY)
+                )
+            }
+
+            // Track last single-tap for manual double-tap detection
+            var lastTapTime by remember { mutableLongStateOf(0L) }
+            var lastTapPosition by remember { mutableStateOf(Offset.Zero) }
 
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .clipToBounds()
                     .pointerInput(Unit) {
-                        detectTransformGestures { _, pan, zoom, _ ->
-                            val newScale = (scale * zoom).coerceIn(1f, 4f)
-                            scale = newScale
+                        awaitEachGesture {
+                            val velocityTracker = VelocityTracker()
+                            val down = awaitFirstDown(requireUnconsumed = false)
+                            // Stop any ongoing fling or double-tap animation
+                            scope.launch {
+                                offsetAnimatable.stop()
+                                scaleAnimatable.stop()
+                            }
 
-                            if (newScale <= 1.05f) {
-                                scale = 1f
-                                offsetX = 0f
-                                offsetY = 0f
+                            var gestureScale = scaleAnimatable.value
+                            var previousPointerCount = 1
+                            var wasPinching = false
+                            var totalDragDistance = Offset.Zero
+
+                            do {
+                                val event = awaitPointerEvent()
+                                val activePointers = event.changes.count { it.pressed }
+                                val zoomChange = event.calculateZoom()
+                                val panChange = event.calculatePan()
+
+                                // Detect pointer count transition — skip this frame's pan
+                                val pointerCountChanged = activePointers != previousPointerCount
+                                previousPointerCount = activePointers
+
+                                val isPinching = activePointers >= 2
+                                if (isPinching) wasPinching = true
+
+                                // Track total drag distance to distinguish taps from drags
+                                totalDragDistance += panChange
+
+                                // Apply zoom
+                                val newScale = (gestureScale * zoomChange).coerceIn(1f, 4f)
+                                if (newScale <= 1.05f) {
+                                    gestureScale = 1f
+                                    scope.launch {
+                                        scaleAnimatable.snapTo(1f)
+                                        offsetAnimatable.snapTo(Offset.Zero)
+                                    }
+                                } else {
+                                    gestureScale = newScale
+                                    scope.launch { scaleAnimatable.snapTo(newScale) }
+
+                                    // Re-clamp offset to new scale boundaries
+                                    val clampedCurrent = clampOffset(offsetAnimatable.value, newScale)
+
+                                    if (!pointerCountChanged && !isPinching) {
+                                        val newOffset = clampOffset(
+                                            clampedCurrent + panChange,
+                                            newScale
+                                        )
+                                        scope.launch { offsetAnimatable.snapTo(newOffset) }
+                                    } else if (clampedCurrent != offsetAnimatable.value) {
+                                        scope.launch { offsetAnimatable.snapTo(clampedCurrent) }
+                                    }
+                                }
+
+                                // Track velocity for fling — only single-finger drag
+                                if (!isPinching && !pointerCountChanged) {
+                                    event.changes.forEach { change ->
+                                        if (change.positionChanged()) {
+                                            velocityTracker.addPosition(
+                                                change.uptimeMillis,
+                                                change.position
+                                            )
+                                        }
+                                    }
+                                }
+
+                                event.changes.forEach { it.consume() }
+                            } while (event.changes.any { it.pressed })
+
+                            // Detect if this was a tap (minimal drag, single finger, no pinch)
+                            val wasTap = !wasPinching &&
+                                    totalDragDistance.getDistance() < 20f
+
+                            if (wasTap) {
+                                val now = System.currentTimeMillis()
+                                val tapPos = down.position
+                                val timeSinceLastTap = now - lastTapTime
+                                val distFromLastTap = (tapPos - lastTapPosition).getDistance()
+
+                                if (timeSinceLastTap < 350L && distFromLastTap < 100f) {
+                                    // DOUBLE TAP detected
+                                    lastTapTime = 0L // Reset to avoid triple-tap
+                                    scope.launch {
+                                        val currentZoom = scaleAnimatable.value
+                                        if (currentZoom < DOUBLE_TAP_THRESHOLD) {
+                                            // Zoom IN centered on tap point
+                                            val targetScale = DOUBLE_TAP_ZOOM_TARGET
+                                            val centerX = containerWidth / 2f
+                                            val centerY = containerHeight / 2f
+                                            val tapDeltaX = centerX - tapPos.x
+                                            val tapDeltaY = centerY - tapPos.y
+                                            val targetOffset = clampOffset(
+                                                Offset(tapDeltaX * targetScale, tapDeltaY * targetScale),
+                                                targetScale
+                                            )
+                                            launch { scaleAnimatable.animateTo(targetScale, tween(DOUBLE_TAP_ANIM_MS)) }
+                                            launch { offsetAnimatable.animateTo(targetOffset, tween(DOUBLE_TAP_ANIM_MS)) }
+                                        } else {
+                                            // Zoom OUT to 1x
+                                            launch { scaleAnimatable.animateTo(1f, tween(DOUBLE_TAP_ANIM_MS)) }
+                                            launch { offsetAnimatable.animateTo(Offset.Zero, tween(DOUBLE_TAP_ANIM_MS)) }
+                                        }
+                                    }
+                                } else {
+                                    // Single tap — record for potential double-tap
+                                    lastTapTime = now
+                                    lastTapPosition = tapPos
+                                }
                             } else {
-                                // Strictly clamp pan boundaries to keep document inside container frame
-                                val maxPanX = (containerWidth * (newScale - 1f) / 2f).coerceAtLeast(0f)
-                                val maxPanY = (containerHeight * (newScale - 1f) / 2f).coerceAtLeast(0f)
+                                // Was a drag/pinch — reset tap tracking
+                                lastTapTime = 0L
+                            }
 
-                                offsetX = (offsetX + pan.x).coerceIn(-maxPanX, maxPanX)
-                                offsetY = (offsetY + pan.y).coerceIn(-maxPanY, maxPanY)
+                            // Fling on release — only for single-finger pan
+                            if (gestureScale > 1.05f && !wasPinching && !wasTap) {
+                                val velocity = velocityTracker.calculateVelocity()
+                                val maxPanX = (containerWidth * (gestureScale - 1f) / 2f).coerceAtLeast(0f)
+                                val maxPanY = (containerHeight * (gestureScale - 1f) / 2f).coerceAtLeast(0f)
+
+                                scope.launch {
+                                    offsetAnimatable.updateBounds(
+                                        lowerBound = Offset(-maxPanX, -maxPanY),
+                                        upperBound = Offset(maxPanX, maxPanY)
+                                    )
+                                    offsetAnimatable.animateDecay(
+                                        initialVelocity = Offset(velocity.x, velocity.y),
+                                        animationSpec = exponentialDecay(frictionMultiplier = 1.5f)
+                                    )
+                                    offsetAnimatable.updateBounds(
+                                        lowerBound = Offset(-Float.MAX_VALUE, -Float.MAX_VALUE),
+                                        upperBound = Offset(Float.MAX_VALUE, Float.MAX_VALUE)
+                                    )
+                                }
                             }
                         }
                     },
@@ -146,10 +299,10 @@ fun PdfDocumentViewer(
                         .fillMaxWidth(0.9f)
                         .fillMaxHeight(0.92f)
                         .graphicsLayer(
-                            scaleX = animatedScale,
-                            scaleY = animatedScale,
-                            translationX = animatedOffsetX,
-                            translationY = animatedOffsetY
+                            scaleX = currentScale,
+                            scaleY = currentScale,
+                            translationX = offsetAnimatable.value.x,
+                            translationY = offsetAnimatable.value.y
                         )
                 ) {
                     Image(
@@ -178,11 +331,16 @@ fun PdfDocumentViewer(
                 ) {
                     IconButton(
                         onClick = {
-                            val newScale = (scale - 0.5f).coerceIn(1f, 4f)
-                            scale = newScale
-                            if (newScale <= 1f) {
-                                offsetX = 0f
-                                offsetY = 0f
+                            val newScale = (currentScale - 0.5f).coerceIn(1f, 4f)
+                            scope.launch {
+                                scaleAnimatable.animateTo(newScale, tween(200))
+                                if (newScale <= 1f) {
+                                    offsetAnimatable.animateTo(Offset.Zero, tween(200))
+                                } else {
+                                    offsetAnimatable.snapTo(
+                                        clampOffset(offsetAnimatable.value, newScale)
+                                    )
+                                }
                             }
                         },
                         modifier = Modifier.size(32.dp)
@@ -195,13 +353,13 @@ fun PdfDocumentViewer(
                     }
 
                     Text(
-                        text = "${(scale * 100).toInt()}%",
+                        text = "${(currentScale * 100).toInt()}%",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurface
                     )
 
                     IconButton(
-                        onClick = { scale = (scale + 0.5f).coerceIn(1f, 4f) },
+                        onClick = { scope.launch { scaleAnimatable.animateTo((currentScale + 0.5f).coerceIn(1f, 4f), tween(200)) } },
                         modifier = Modifier.size(32.dp)
                     ) {
                         Icon(
@@ -213,9 +371,10 @@ fun PdfDocumentViewer(
 
                     IconButton(
                         onClick = {
-                            scale = 1f
-                            offsetX = 0f
-                            offsetY = 0f
+                            scope.launch {
+                                launch { scaleAnimatable.animateTo(1f, tween(200)) }
+                                launch { offsetAnimatable.animateTo(Offset.Zero, tween(200)) }
+                            }
                         },
                         modifier = Modifier.size(32.dp)
                     ) {
@@ -230,3 +389,4 @@ fun PdfDocumentViewer(
         }
     }
 }
+
