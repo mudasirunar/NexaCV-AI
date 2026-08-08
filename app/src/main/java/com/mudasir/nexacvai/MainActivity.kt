@@ -40,6 +40,12 @@ import com.mudasir.nexacvai.presentation.ui.profiles.components.NexaExportToast
 import com.mudasir.nexacvai.presentation.ui.profiles.utils.ProfileDeleteManager
 import com.mudasir.nexacvai.presentation.ui.profiles.utils.ProfileExportManager
 import com.mudasir.nexacvai.ui.theme.NexaCVAITheme
+import androidx.compose.runtime.remember
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
+import com.mudasir.nexacvai.data.local.datastore.AppSettingsManager
+import com.mudasir.nexacvai.domain.model.AppThemeMode
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -52,12 +58,36 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var profileExportManager: ProfileExportManager
 
+    @Inject
+    lateinit var appSettingsManager: AppSettingsManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            NexaCVAITheme {
+            val initialTheme = remember {
+                runBlocking(Dispatchers.IO) {
+                    appSettingsManager.themeModeFlow.first()
+                }
+            }
+            val themeMode by appSettingsManager.themeModeFlow.collectAsState(initial = initialTheme)
+            val systemInDark = androidx.compose.foundation.isSystemInDarkTheme()
+
+            val useDarkTheme = when (themeMode) {
+                AppThemeMode.LIGHT -> false
+                AppThemeMode.DARK -> true
+                AppThemeMode.SYSTEM -> systemInDark
+            }
+
+            androidx.compose.runtime.SideEffect {
+                androidx.core.view.WindowInsetsControllerCompat(window, window.decorView).apply {
+                    isAppearanceLightStatusBars = !useDarkTheme
+                    isAppearanceLightNavigationBars = !useDarkTheme
+                }
+            }
+
+            NexaCVAITheme(darkTheme = useDarkTheme) {
                 val navController = rememberNavController()
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = navBackStackEntry?.destination?.route

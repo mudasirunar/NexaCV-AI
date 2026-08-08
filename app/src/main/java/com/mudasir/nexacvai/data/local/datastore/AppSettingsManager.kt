@@ -23,14 +23,14 @@ open class AppSettingsManager @Inject constructor(
 ) {
 
     companion object {
-        val IS_DARK_MODE = booleanPreferencesKey("is_dark_mode")
         val HAS_SEEN_ONBOARDING = booleanPreferencesKey("has_seen_onboarding")
         val PROFILE_SORT_ORDER = stringPreferencesKey("profile_sort_order")
+        val THEME_MODE = stringPreferencesKey("app_theme_mode")
     }
 
-    open val isDarkModeFlow: Flow<Boolean?>
+    open val themeModeFlow: Flow<com.mudasir.nexacvai.domain.model.AppThemeMode>
         get() = context.dataStore.data.map { preferences ->
-            preferences[IS_DARK_MODE]
+            com.mudasir.nexacvai.domain.model.AppThemeMode.fromId(preferences[THEME_MODE])
         }
 
     open val hasSeenOnboardingFlow: Flow<Boolean>
@@ -43,11 +43,12 @@ open class AppSettingsManager @Inject constructor(
             ProfileSortOrder.fromId(preferences[PROFILE_SORT_ORDER])
         }
 
-    open suspend fun setDarkMode(isDarkMode: Boolean) {
+    open suspend fun setThemeMode(themeMode: com.mudasir.nexacvai.domain.model.AppThemeMode) {
         context.dataStore.edit { preferences ->
-            preferences[IS_DARK_MODE] = isDarkMode
+            preferences[THEME_MODE] = themeMode.id
         }
     }
+
 
     open suspend fun setHasSeenOnboarding(hasSeen: Boolean) {
         context.dataStore.edit { preferences ->
