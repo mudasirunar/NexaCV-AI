@@ -36,12 +36,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Phone
+import com.mudasir.nexacvai.ui.theme.IconColorJob
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.RadioButtonUnchecked
 import androidx.compose.material3.Card
@@ -398,13 +400,24 @@ fun UserProfileCard(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     if (experienceText.isNotBlank()) {
-                        Text(
-                            text = experienceText,
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            ),
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
                             modifier = Modifier.padding(vertical = 2.dp)
-                        )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Star,
+                                contentDescription = "Experience Level",
+                                tint = IconColorJob,
+                                modifier = Modifier.size(15.dp)
+                            )
+                            Text(
+                                text = experienceText,
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            )
+                        }
                     }
 
                     if (displaySkills.isNotEmpty()) {
@@ -827,25 +840,25 @@ private fun formatExperienceText(experience: String): String {
 
     // Format based on type
     return when (selectedType) {
-        "Fresh" -> "📊 Fresh Candidate"
+        "Fresh" -> "Fresh Candidate"
         "Months" -> {
             val numberOnly = valueTrimmed.filter { it.isDigit() }
             val count = numberOnly.toIntOrNull()
             if (count == null || count <= 0) {
-                if (valueTrimmed.isNotBlank()) "📊 $valueTrimmed Experience" else ""
+                if (valueTrimmed.isNotBlank()) "$valueTrimmed Experience" else ""
             } else {
                 val hasPlus = valueTrimmed.contains("+")
                 if (count < 12) {
                     val unit = if (count == 1 && !hasPlus) "Month" else "Months"
                     val plusStr = if (hasPlus) "+" else ""
-                    "📊 $count$plusStr $unit Experience"
+                    "$count$plusStr $unit Experience"
                 } else {
                     val years = count / 12
                     val remainder = count % 12
                     val isPlural = years > 1 || remainder > 0 || hasPlus
                     val unit = if (isPlural) "Years" else "Year"
                     val suffix = if (remainder > 0 || hasPlus) "+" else ""
-                    "📊 $years$suffix $unit Experience"
+                    "$years$suffix $unit Experience"
                 }
             }
         }
@@ -853,17 +866,17 @@ private fun formatExperienceText(experience: String): String {
             val numberOnly = valueTrimmed.filter { it.isDigit() }
             val count = numberOnly.toIntOrNull()
             if (count == null || count < 0) {
-                if (valueTrimmed.isNotBlank()) "📊 $valueTrimmed Experience" else ""
+                if (valueTrimmed.isNotBlank()) "$valueTrimmed Experience" else ""
             } else {
                 val hasPlus = valueTrimmed.contains("+")
                 val isPlural = count > 1 || hasPlus
                 val unit = if (isPlural) "Years" else "Year"
                 val plusStr = if (hasPlus) "+" else ""
-                "📊 $count$plusStr $unit Experience"
+                "$count$plusStr $unit Experience"
             }
         }
         else -> {
-            if (valueTrimmed.isBlank()) "" else "📊 $valueTrimmed Experience"
+            if (valueTrimmed.isBlank()) "" else "$valueTrimmed Experience"
         }
     }
 }
