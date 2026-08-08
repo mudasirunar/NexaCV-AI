@@ -15,10 +15,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowLeft
 import androidx.compose.material.icons.automirrored.filled.ArrowRight
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -129,127 +131,184 @@ fun MonthYearPickerDialog(
 
     val configuration = LocalConfiguration.current
     val isLandscapePhone = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE && configuration.smallestScreenWidthDp < 600
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val iconContainerBg = primaryColor.copy(alpha = 0.12f)
 
-    AlertDialog(
+    androidx.compose.ui.window.Dialog(
         onDismissRequest = onDismissRequest,
-        properties = androidx.compose.ui.window.DialogProperties(decorFitsSystemWindows = !isLandscapePhone),
-        modifier = Modifier
-            .padding(horizontal = 24.dp)
-            .widthIn(max = 360.dp)
-            .fillMaxWidth(),
-        confirmButton = {
-            Button(
-                onClick = { onConfirm(selectedMonth, selectedYear) },
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Text("Confirm")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismissRequest) {
-                Text("Cancel")
-            }
-        },
-        title = {
-            Text(
-                text = "Select Month & Year",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-        },
-        text = {
+        properties = androidx.compose.ui.window.DialogProperties(
+            usePlatformDefaultWidth = false,
+            decorFitsSystemWindows = !isLandscapePhone
+        )
+    ) {
+        Card(
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 10.dp),
+            modifier = Modifier
+                .padding(horizontal = 24.dp)
+                .widthIn(max = 380.dp)
+                .fillMaxWidth()
+        ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .padding(24.dp)
                     .verticalScroll(rememberScrollState()),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Year Selector Row
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                // Header Icon Badge
+                Box(
+                    modifier = Modifier
+                        .size(52.dp)
+                        .clip(androidx.compose.foundation.shape.CircleShape)
+                        .background(iconContainerBg)
+                        .border(
+                            BorderStroke(1.dp, primaryColor.copy(alpha = 0.25f)),
+                            androidx.compose.foundation.shape.CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
                 ) {
-                    IconButton(onClick = { 
-                        selectedYear-- 
-                        yearInputText = androidx.compose.ui.text.input.TextFieldValue(text = selectedYear.toString(), selection = androidx.compose.ui.text.TextRange(selectedYear.toString().length))
-                    }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowLeft, contentDescription = "Previous Year")
-                    }
-                    
-                    if (isEditingYear) {
-                        androidx.compose.foundation.text.BasicTextField(
-                            value = yearInputText,
-                            onValueChange = { newValue ->
-                                if (newValue.text.length <= 4 && newValue.text.all { it.isDigit() }) {
-                                    yearInputText = newValue
-                                    val parsedYear = newValue.text.toIntOrNull()
-                                    if (parsedYear != null && parsedYear in 1900..2100) {
-                                        selectedYear = parsedYear
-                                    }
-                                }
-                            },
-                            textStyle = TextStyle(
-                                color = MaterialTheme.colorScheme.primary,
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.Bold,
-                                textAlign = TextAlign.Center
-                            ),
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Number,
-                                imeAction = ImeAction.Done
-                            ),
-                            keyboardActions = KeyboardActions(
-                                onDone = {
-                                    val parsedYear = yearInputText.text.toIntOrNull()
-                                    if (parsedYear != null && parsedYear in 1900..2100) {
-                                        selectedYear = parsedYear
-                                    }
-                                    isEditingYear = false
-                                }
-                            ),
-                            modifier = Modifier
-                                .width(80.dp)
-                                .focusRequester(focusRequester)
-                                .background(
-                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                                    RoundedCornerShape(8.dp)
-                                )
-                                .padding(vertical = 4.dp, horizontal = 8.dp),
-                            singleLine = true
-                        )
-                    } else {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier.clickable {
-                                isEditingYear = true
-                                yearInputText = androidx.compose.ui.text.input.TextFieldValue(text = selectedYear.toString(), selection = androidx.compose.ui.text.TextRange(selectedYear.toString().length))
-                            }
-                        ) {
-                            Text(
+                    Icon(
+                        imageVector = Icons.Default.DateRange,
+                        contentDescription = null,
+                        tint = primaryColor,
+                        modifier = Modifier.size(26.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "Select Month & Year",
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp,
+                        letterSpacing = (-0.3).sp,
+                        color = MaterialTheme.colorScheme.onSurface
+                    ),
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Year Selector Container
+                Surface(
+                    shape = RoundedCornerShape(16.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconButton(onClick = {
+                            selectedYear--
+                            yearInputText = androidx.compose.ui.text.input.TextFieldValue(
                                 text = selectedYear.toString(),
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
+                                selection = androidx.compose.ui.text.TextRange(selectedYear.toString().length)
                             )
+                        }) {
                             Icon(
-                                imageVector = Icons.Default.Edit,
-                                contentDescription = "Edit Year",
-                                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
-                                modifier = Modifier.size(16.dp)
+                                imageVector = Icons.AutoMirrored.Filled.ArrowLeft,
+                                contentDescription = "Previous Year",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+
+                        if (isEditingYear) {
+                            androidx.compose.foundation.text.BasicTextField(
+                                value = yearInputText,
+                                onValueChange = { newValue ->
+                                    if (newValue.text.length <= 4 && newValue.text.all { it.isDigit() }) {
+                                        yearInputText = newValue
+                                        val parsedYear = newValue.text.toIntOrNull()
+                                        if (parsedYear != null && parsedYear in 1900..2100) {
+                                            selectedYear = parsedYear
+                                        }
+                                    }
+                                },
+                                textStyle = TextStyle(
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    textAlign = TextAlign.Center
+                                ),
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Number,
+                                    imeAction = ImeAction.Done
+                                ),
+                                keyboardActions = KeyboardActions(
+                                    onDone = {
+                                        val parsedYear = yearInputText.text.toIntOrNull()
+                                        if (parsedYear != null && parsedYear in 1900..2100) {
+                                            selectedYear = parsedYear
+                                        }
+                                        isEditingYear = false
+                                    }
+                                ),
+                                modifier = Modifier
+                                    .width(90.dp)
+                                    .focusRequester(focusRequester)
+                                    .background(
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                                        RoundedCornerShape(10.dp)
+                                    )
+                                    .padding(vertical = 6.dp, horizontal = 8.dp),
+                                singleLine = true
+                            )
+                        } else {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .clickable {
+                                        isEditingYear = true
+                                        yearInputText = androidx.compose.ui.text.input.TextFieldValue(
+                                            text = selectedYear.toString(),
+                                            selection = androidx.compose.ui.text.TextRange(selectedYear.toString().length)
+                                        )
+                                    }
+                                    .padding(horizontal = 12.dp, vertical = 6.dp)
+                            ) {
+                                Text(
+                                    text = selectedYear.toString(),
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = "Edit Year",
+                                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
+
+                        IconButton(onClick = {
+                            selectedYear++
+                            yearInputText = androidx.compose.ui.text.input.TextFieldValue(
+                                text = selectedYear.toString(),
+                                selection = androidx.compose.ui.text.TextRange(selectedYear.toString().length)
+                            )
+                        }) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowRight,
+                                contentDescription = "Next Year",
+                                tint = MaterialTheme.colorScheme.primary
                             )
                         }
                     }
-                    
-                    IconButton(onClick = { 
-                        selectedYear++ 
-                        yearInputText = androidx.compose.ui.text.input.TextFieldValue(text = selectedYear.toString(), selection = androidx.compose.ui.text.TextRange(selectedYear.toString().length))
-                    }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowRight, contentDescription = "Next Year")
-                    }
                 }
+
+                Spacer(modifier = Modifier.height(20.dp))
 
                 // Months Grid (Adaptive columns based on screen height/orientation)
                 val columns = if (isLandscapePhone) 4 else 3
@@ -271,19 +330,21 @@ fun MonthYearPickerDialog(
                                     Box(
                                         modifier = Modifier
                                             .weight(1f)
-                                            .clip(RoundedCornerShape(10.dp))
+                                            .clip(RoundedCornerShape(12.dp))
                                             .background(
                                                 if (isSelected) MaterialTheme.colorScheme.primary
-                                                else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                                                else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
                                             )
                                             .clickable { selectedMonth = monthIndex + 1 }
-                                            .padding(vertical = if (isLandscapePhone) 6.dp else 10.dp),
+                                            .padding(vertical = if (isLandscapePhone) 8.dp else 12.dp),
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Text(
                                             text = months[monthIndex],
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                            style = MaterialTheme.typography.bodyMedium.copy(
+                                                fontSize = 14.sp
+                                            ),
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                             color = if (isSelected) MaterialTheme.colorScheme.onPrimary
                                             else MaterialTheme.colorScheme.onSurface
                                         )
@@ -295,11 +356,56 @@ fun MonthYearPickerDialog(
                         }
                     }
                 }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Dialog Action Buttons
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedButton(
+                        onClick = onDismissRequest,
+                        shape = RoundedCornerShape(14.dp),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        ),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp)
+                    ) {
+                        Text(
+                            text = "Cancel",
+                            style = MaterialTheme.typography.labelLarge.copy(
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        )
+                    }
+
+                    Button(
+                        onClick = { onConfirm(selectedMonth, selectedYear) },
+                        shape = RoundedCornerShape(14.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        ),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp)
+                    ) {
+                        Text(
+                            text = "Confirm",
+                            style = MaterialTheme.typography.labelLarge.copy(
+                                fontWeight = FontWeight.Bold
+                            )
+                        )
+                    }
+                }
             }
-        },
-        shape = RoundedCornerShape(16.dp),
-        containerColor = MaterialTheme.colorScheme.surface
-    )
+        }
+    }
 }
 
 @Composable
