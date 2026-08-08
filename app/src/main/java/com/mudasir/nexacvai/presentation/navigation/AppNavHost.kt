@@ -24,8 +24,14 @@ import com.mudasir.nexacvai.presentation.ui.profiles.ProfilesScreen
 import com.mudasir.nexacvai.presentation.ui.profiles.ViewProfileScreen
 import com.mudasir.nexacvai.presentation.ui.settings.SettingsScreen
 
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+
 // Shared transition durations for consistent, snappy navigation feel
-private const val NAV_ANIM_DURATION = 300
+private const val NAV_ANIM_DURATION = 180
 
 @Composable
 fun AppNavHost(
@@ -34,43 +40,51 @@ fun AppNavHost(
 ) {
     val routeIndices = BottomNavScreens.mapIndexed { index, screen -> screen.route to index }.toMap()
 
-    NavHost(
-        navController = navController,
-        startDestination = Screen.Home.route,
+    Surface(
         modifier = Modifier.fillMaxSize(),
-        enterTransition = {
-            // For sub-screens that are not in the bottom nav, slide in from the right fully
-            if (!routeIndices.containsKey(targetState.destination.route?.split("?")?.get(0))) {
-                return@NavHost slideInHorizontally(tween(NAV_ANIM_DURATION, easing = LinearOutSlowInEasing)) { it }
-            }
-            // Simple instant change for bottom nav screens
-            EnterTransition.None
-        },
-        exitTransition = {
-            // When navigating to a sub-screen, slide current screen out to the left fully
-            if (!routeIndices.containsKey(targetState.destination.route?.split("?")?.get(0))) {
-                return@NavHost slideOutHorizontally(tween(NAV_ANIM_DURATION, easing = FastOutLinearInEasing)) { -it }
-            }
-            // Simple instant change for bottom nav screens
-            ExitTransition.None
-        },
-        popEnterTransition = {
-            // When popping back from a sub-screen, slide current screen back in from the left fully
-            if (!routeIndices.containsKey(initialState.destination.route?.split("?")?.get(0))) {
-                return@NavHost slideInHorizontally(tween(NAV_ANIM_DURATION, easing = LinearOutSlowInEasing)) { -it }
-            }
-            // Simple instant change for bottom nav screens
-            EnterTransition.None
-        },
-        popExitTransition = {
-            // When popping back from a sub-screen, slide it out to the right fully
-            if (!routeIndices.containsKey(initialState.destination.route?.split("?")?.get(0))) {
-                return@NavHost slideOutHorizontally(tween(NAV_ANIM_DURATION, easing = FastOutLinearInEasing)) { it }
-            }
-            // Simple instant change for bottom nav screens
-            ExitTransition.None
-        }
+        color = MaterialTheme.colorScheme.background
     ) {
+        NavHost(
+            navController = navController,
+            startDestination = Screen.Home.route,
+            modifier = Modifier.fillMaxSize(),
+            enterTransition = {
+                val targetRoute = targetState.destination.route?.split("?")?.get(0)
+                if (!routeIndices.containsKey(targetRoute)) {
+                    slideInHorizontally(tween(NAV_ANIM_DURATION, easing = FastOutSlowInEasing)) { width -> width / 3 } +
+                            fadeIn(tween(NAV_ANIM_DURATION))
+                } else {
+                    fadeIn(tween(120))
+                }
+            },
+            exitTransition = {
+                val targetRoute = targetState.destination.route?.split("?")?.get(0)
+                if (!routeIndices.containsKey(targetRoute)) {
+                    slideOutHorizontally(tween(NAV_ANIM_DURATION, easing = FastOutSlowInEasing)) { width -> -width / 3 } +
+                            fadeOut(tween(NAV_ANIM_DURATION))
+                } else {
+                    fadeOut(tween(120))
+                }
+            },
+            popEnterTransition = {
+                val initialRoute = initialState.destination.route?.split("?")?.get(0)
+                if (!routeIndices.containsKey(initialRoute)) {
+                    slideInHorizontally(tween(NAV_ANIM_DURATION, easing = FastOutSlowInEasing)) { width -> -width / 3 } +
+                            fadeIn(tween(NAV_ANIM_DURATION))
+                } else {
+                    fadeIn(tween(120))
+                }
+            },
+            popExitTransition = {
+                val initialRoute = initialState.destination.route?.split("?")?.get(0)
+                if (!routeIndices.containsKey(initialRoute)) {
+                    slideOutHorizontally(tween(NAV_ANIM_DURATION, easing = FastOutSlowInEasing)) { width -> width / 3 } +
+                            fadeOut(tween(NAV_ANIM_DURATION))
+                } else {
+                    fadeOut(tween(120))
+                }
+            }
+        ) {
         composable(Screen.Home.route) {
             HomeScreen(navController = navController)
         }
@@ -132,5 +146,6 @@ fun AppNavHost(
             )
         }
     }
+}
 }
 
