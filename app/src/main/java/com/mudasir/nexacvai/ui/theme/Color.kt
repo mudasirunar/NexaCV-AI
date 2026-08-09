@@ -1,5 +1,7 @@
 package com.mudasir.nexacvai.ui.theme
 
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 // 🟦 Primary Theme (Professional Blue)
@@ -119,36 +121,49 @@ val ProgressAccent = Color(0xFF38BDF8)
 val ProgressGreen = Color(0xFF22C55E)
 
 // 🥛 Transparent Overlay Background
-val GlassOverlayBg = Color(0x73000000)     // Color.Black.copy(alpha = 0.45f)
+val GlassOverlayBg = Color(0x73000000)
 
 // 🎨 Realistic Statistics Icon Colors 
-val IconColorJob = Color(0xFF854D0E)       // Rich leather bronze/brown for BusinessCenter/Briefcase
-val IconColorProject = Color(0xFFCA8A04)   // Golden manila yellow/amber for Folder
-val IconColorCert = Color(0xFF059669)      // Vibrant emerald green for Verified badge
-val IconColorEmail = Color(0xFFEA4335)     // Gmail envelope red for mail icon
-val IconColorPhone = Color(0xFF16A34A)     // Vibrant green dialer for phone icon
+val IconColorJob = Color(0xFF854D0E)
+val IconColorProject = Color(0xFFCA8A04)
+val IconColorCert = Color(0xFF059669)
+val IconColorEmail = Color(0xFFEA4335)
+val IconColorPhone = Color(0xFF16A34A)
 
 // 🎨 Custom Snackbar Colors
-val SnackbarBgDark = Color(0xFF1E293B)     // Premium dark slate/charcoal for dark mode snackbars
-val SnackbarTextDark = Color(0xFFF8FAFC)   // Warm white/off-white for dark mode text readability
-val SnackbarBgLight = Color(0xFFF1F5F9)    // Soft light slate/gray for light mode snackbars
-val SnackbarTextLight = Color(0xFF1E293B)  // Dark slate for light mode text readability
+val SnackbarBgDark = Color(0xFF1E293B)
+val SnackbarTextDark = Color(0xFFF8FAFC)
+val SnackbarBgLight = Color(0xFFF1F5F9)
+val SnackbarTextLight = Color(0xFF1E293B)
 
 // 📦 Import/Export Bottom Sheet Icon Tints
-val SheetIconSuccessGreen = Color(0xFF22C55E)  // Green check for import success state
-val SheetIconWarningAmber = Color(0xFFF59E0B)  // Amber warning for duplicate conflicts
+val SheetIconSuccessGreen = Color(0xFF22C55E)
+val SheetIconWarningAmber = Color(0xFFF59E0B)
 
 // 🔍 Search Bar Result Colors
-val SearchMatchContainer = Color(0xFF22C55E)     // green container tint
-val SearchMatchBorder = Color(0xFF16A34A)        // green border tint
-val SearchNoMatchContainer = Color(0xFFEF4444)   // red container tint
-val SearchNoMatchBorder = Color(0xFFDC2626)      // red border tint
+val SearchMatchContainer = Color(0xFF22C55E)
+val SearchMatchBorder = Color(0xFF16A34A)
+val SearchNoMatchContainer = Color(0xFFEF4444)
+val SearchNoMatchBorder = Color(0xFFDC2626)
 
-// 📄 PDF Document Viewer Theme Tokens
-val PdfViewerCanvasBg = Color(0xFFF1F5F9)
-const val PdfViewerCanvasBgHex = "#F1F5F9"
+// 📄 PDF Document Viewer Theme Tokens (Dynamic Light Slate / Dark Slate)
+val PdfCanvasLightBg = Color(0xFFE2E8F0) // Slate 200 light grey for clear TopBar contrast
+val PdfCanvasDarkBg = Color(0xFF0B1220)  // Deep slate for dark mode
+
+const val PdfCanvasLightBgHex = "#E2E8F0"
+const val PdfCanvasDarkBgHex = "#0B1220"
+
 val PdfControlsContainerBg = Color(0xEE0F172A)
 val PdfControlsBorder = Color(0x33FFFFFF)
 val PdfControlsPillBg = Color(0x26FFFFFF)
 val PdfControlsIconTintEnabled = Color.White
 val PdfControlsIconTintDisabled = Color(0x59FFFFFF)
+
+@Composable
+fun getPdfCanvasBgColor(isDark: Boolean = isSystemInDarkTheme()): Color {
+    return if (isDark) PdfCanvasDarkBg else PdfCanvasLightBg
+}
+
+fun getPdfCanvasBgHex(isDark: Boolean): String {
+    return if (isDark) PdfCanvasDarkBgHex else PdfCanvasLightBgHex
+}

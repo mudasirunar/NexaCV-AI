@@ -7,6 +7,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -33,39 +34,113 @@ private const val MIN_ZOOM_LEVEL = 1.0f
 private const val MID_ZOOM_LEVEL = 2.5f
 private const val MAX_ZOOM_LEVEL = 5.0f
 
-/**
- * Professional Native A4 PDF Viewer powered by [PDFView].
- * Configured with [FitPolicy.WIDTH] and 5.0x max zoom (100%, 250%, 500%),
- * 60 FPS multi-page vertical scrolling, equal top/left/right spacing, and floating auto-hiding controls.
- */
 @Composable
 fun PdfDocumentViewer(
     pdfFile: File?,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isTopBarVisible: Boolean = true,
+    onToggleTopBar: (Boolean) -> Unit = {}
 ) {
-    var pdfViewInstance by remember { mutableStateOf<PDFView?>(null) }
+    var pdfViewRef by remember { mutableStateOf<PDFView?>(null) }
     var currentPage by remember { mutableIntStateOf(1) }
     var totalPages by remember { mutableIntStateOf(1) }
     var currentZoom by remember { mutableFloatStateOf(1.0f) }
 
-    // Inactivity Auto-Hide state for floating controls bar
-    var lastInteractionTime by remember { mutableLongStateOf(System.currentTimeMillis()) }
-    var isControlsVisible by remember { mutableStateOf(true) }
+    val isDark = isSystemInDarkTheme()
+    val canvasBgColor = getPdfCanvasBgColor(isDark)
+    val canvasBgHex = getPdfCanvasBgHex(isDark)
 
-    LaunchedEffect(lastInteractionTime) {
-        isControlsVisible = true
-        delay(3500L) // Auto-hide controls after 3.5 seconds of inactivity
-        isControlsVisible = false
-    }
+    var isControlsVisible by remember { mutableStateOf(true) }
+    var lastInteractionTime by remember { mutableLongStateOf(System.currentTimeMillis()) }
 
     fun wakeUpControls() {
         lastInteractionTime = System.currentTimeMillis()
+        isControlsVisible = true
+    }
+
+    // 3s Inactivity Auto-Hide timer ONLY for floating zoom controls
+    LaunchedEffect(lastInteractionTime) {
+        isControlsVisible = true
+        delay(3000L)
+        isControlsVisible = false
+    }
+
+    val currentTopBarVisible by rememberUpdatedState(isTopBarVisible)
+    val currentToggleTopBar by rememberUpdatedState(onToggleTopBar)
+
+    LaunchedEffect(pdfFile, pdfViewRef) {
+        val view = pdfViewRef ?: return@LaunchedEffect
+        val file = pdfFile ?: return@LaunchedEffect
+        if (!file.exists()) return@LaunchedEffect
+
+        var lastYOffset = 0f
+
+        view.fromFile(file)
+            .defaultPage(0)
+            .enableAnnotationRendering(true)
+            .swipeHorizontal(false)
+            .spacing(16) // Equal 16dp spacing between multi-page breaks
+            .pageFitPolicy(FitPolicy.WIDTH)
+            .enableDoubletap(true)
+            .enableAntialiasing(true)
+            .onPageChange(OnPageChangeListener { page, pageCount ->
+                currentPage = page + 1
+                totalPages = pageCount
+                currentZoom = view.zoom
+                wakeUpControls()
+            })
+            .onDraw(OnDrawListener { canvas, pageWidth, pageHeight, _ ->
+                val z = view.zoom
+                if (kotlin.math.abs(z - currentZoom) > 0.01f) {
+                    currentZoom = z
+                    wakeUpControls()
+                }
+
+                // TopBar scroll rules: Scrolling DOWN hides TopBar, reaching TOP shows TopBar
+                val yOffset = view.currentYOffset
+                if (view.currentPage == 0 && yOffset >= -60f) {
+                    if (!currentTopBarVisible) {
+                        currentToggleTopBar(true)
+                    }
+                } else {
+                    val deltaY = lastYOffset - yOffset
+                    if (deltaY > 15f) {
+                        if (currentTopBarVisible) {
+                            currentToggleTopBar(false)
+                        }
+                    }
+                }
+                lastYOffset = yOffset
+
+                val shadowGradient = android.graphics.LinearGradient(
+                    0f, pageHeight,
+                    0f, pageHeight + 12f,
+                    intArrayOf(
+                        android.graphics.Color.parseColor("#28000000"),
+                        android.graphics.Color.parseColor("#0F000000"),
+                        android.graphics.Color.TRANSPARENT
+                    ),
+                    null,
+                    android.graphics.Shader.TileMode.CLAMP
+                )
+                val shadowPaint = android.graphics.Paint().apply {
+                    shader = shadowGradient
+                    style = android.graphics.Paint.Style.FILL
+                }
+                canvas.drawRect(0f, pageHeight, pageWidth, pageHeight + 12f, shadowPaint)
+            })
+            .onTap(OnTapListener {
+                currentToggleTopBar(!currentTopBarVisible)
+                wakeUpControls()
+                true
+            })
+            .load()
     }
 
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(PdfViewerCanvasBg),
+            .background(canvasBgColor),
         contentAlignment = Alignment.Center
     ) {
         if (pdfFile == null || !pdfFile.exists()) {
@@ -74,73 +149,26 @@ fun PdfDocumentViewer(
             AndroidView(
                 factory = { context ->
                     PDFView(context, null).apply {
-                        setBackgroundColor(android.graphics.Color.parseColor(PdfViewerCanvasBgHex))
+                        setBackgroundColor(android.graphics.Color.parseColor(canvasBgHex))
                         setMinZoom(MIN_ZOOM_LEVEL)
                         setMidZoom(MID_ZOOM_LEVEL)
                         setMaxZoom(MAX_ZOOM_LEVEL)
-                        pdfViewInstance = this
+                        pdfViewRef = this
                     }
                 },
                 update = { pdfView ->
-                    pdfViewInstance = pdfView
-                    pdfView.setMinZoom(MIN_ZOOM_LEVEL)
-                    pdfView.setMidZoom(MID_ZOOM_LEVEL)
-                    pdfView.setMaxZoom(MAX_ZOOM_LEVEL)
-                    pdfView.fromFile(pdfFile)
-                        .defaultPage(0)
-                        .enableAnnotationRendering(true)
-                        .swipeHorizontal(false) // Vertical multi-page scrolling!
-                        .spacing(20) // 20dp page break gap between A4 pages
-                        .pageFitPolicy(FitPolicy.WIDTH) // Exact 100% width fit scale
-                        .enableDoubletap(true)
-                        .enableAntialiasing(true)
-                        .onPageChange(OnPageChangeListener { page, pageCount ->
-                            currentPage = page + 1
-                            totalPages = pageCount
-                            currentZoom = pdfView.zoom
-                            wakeUpControls()
-                        })
-                        .onDraw(OnDrawListener { canvas, pageWidth, pageHeight, _ ->
-                            val z = pdfView.zoom
-                            if (kotlin.math.abs(z - currentZoom) > 0.01f) {
-                                currentZoom = z
-                                wakeUpControls()
-                            }
-                            // Ultra-smooth page-bottom paper drop shadow gradient fade
-                            val shadowGradient = android.graphics.LinearGradient(
-                                0f, pageHeight,
-                                0f, pageHeight + 12f,
-                                intArrayOf(
-                                    android.graphics.Color.parseColor("#28000000"), // 16% alpha soft dark edge
-                                    android.graphics.Color.parseColor("#0F000000"), // 6% alpha mid shadow
-                                    android.graphics.Color.TRANSPARENT              // Smooth transparent falloff
-                                ),
-                                null,
-                                android.graphics.Shader.TileMode.CLAMP
-                            )
-                            val shadowPaint = android.graphics.Paint().apply {
-                                shader = shadowGradient
-                                style = android.graphics.Paint.Style.FILL
-                            }
-                            canvas.drawRect(0f, pageHeight, pageWidth, pageHeight + 12f, shadowPaint)
-                        })
-                        .onTap(OnTapListener {
-                            wakeUpControls()
-                            true
-                        })
-                        .load()
+                    pdfViewRef = pdfView
+                    pdfView.setBackgroundColor(android.graphics.Color.parseColor(canvasBgHex))
                 },
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 56.dp) // Equal 16dp top, left, and right spacing
+                    .padding(all = 16.dp) // Equal 16dp spacing on all 4 sides (left, right, top, bottom)
             )
 
-            // Synchronized Zoom state bounds (1.0x - 5.0x)
             val isCanZoomOut = currentZoom > (MIN_ZOOM_LEVEL + 0.05f)
             val isCanZoomIn = currentZoom < (MAX_ZOOM_LEVEL - 0.05f)
             val isCanReset = currentZoom > (MIN_ZOOM_LEVEL + 0.05f)
 
-            // Clean percentage snapping for 100%, 250%, and 500% display
             val rawPercent = (currentZoom * 100).roundToInt()
             val displayZoomPercent = when {
                 rawPercent in 98..102 -> 100
@@ -155,6 +183,7 @@ fun PdfDocumentViewer(
                 else -> rawPercent
             }
 
+            // Floating Zoom Controls (Independent 3.5s inactivity auto-hide)
             AnimatedVisibility(
                 visible = isControlsVisible,
                 enter = fadeIn() + slideInVertically(initialOffsetY = { it / 2 }),
@@ -175,15 +204,13 @@ fun PdfDocumentViewer(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        // Zoom Out (-)
                         IconButton(
                             onClick = {
                                 wakeUpControls()
-                                pdfViewInstance?.let { view ->
+                                pdfViewRef?.let { view ->
                                     val target = (view.zoom - 1.0f).coerceAtLeast(MIN_ZOOM_LEVEL)
                                     view.zoomWithAnimation(target)
                                     view.invalidate()
-                                    currentZoom = target
                                 }
                             },
                             enabled = isCanZoomOut
@@ -195,7 +222,6 @@ fun PdfDocumentViewer(
                             )
                         }
 
-                        // Page Counter / Zoom Status Pill
                         Surface(
                             shape = RoundedCornerShape(14.dp),
                             color = PdfControlsPillBg
@@ -208,15 +234,13 @@ fun PdfDocumentViewer(
                             )
                         }
 
-                        // Zoom In (+)
                         IconButton(
                             onClick = {
                                 wakeUpControls()
-                                pdfViewInstance?.let { view ->
+                                pdfViewRef?.let { view ->
                                     val target = (view.zoom + 1.0f).coerceAtMost(MAX_ZOOM_LEVEL)
                                     view.zoomWithAnimation(target)
                                     view.invalidate()
-                                    currentZoom = target
                                 }
                             },
                             enabled = isCanZoomIn
@@ -228,13 +252,12 @@ fun PdfDocumentViewer(
                             )
                         }
 
-                        // Reset Zoom Button (ONLY resets zoom level, retains current scroll position)
                         IconButton(
                             onClick = {
                                 wakeUpControls()
-                                pdfViewInstance?.let { view ->
+                                pdfViewRef?.let { view ->
                                     view.resetZoomWithAnimation()
-                                    currentZoom = MIN_ZOOM_LEVEL
+                                    view.invalidate()
                                 }
                             },
                             enabled = isCanReset

@@ -1,7 +1,13 @@
 package com.mudasir.nexacvai.presentation.ui.templates
 
 import android.widget.Toast
+import androidx.activity.compose.LocalActivity
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -18,6 +24,8 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.mudasir.nexacvai.core.pdf.PdfGeneratorEngine
 import com.mudasir.nexacvai.domain.model.template.TemplateData
@@ -25,13 +33,9 @@ import com.mudasir.nexacvai.domain.model.template.TemplateStyle
 import com.mudasir.nexacvai.presentation.ui.components.PdfDocumentViewer
 import com.mudasir.nexacvai.presentation.ui.templates.components.shimmerEffect
 import com.mudasir.nexacvai.presentation.ui.templates.viewmodel.TemplatesViewModel
+import com.mudasir.nexacvai.ui.theme.getPdfCanvasBgColor
 import java.io.File
 
-/**
- * Fully immersive A4 PDF Document Preview Screen.
- * Renders high-fidelity PDF documents using the default template guidance profile.
- * Profile selection and custom data injection are handled during document creation.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TemplatePreviewScreen(
@@ -64,6 +68,29 @@ fun TemplatePreviewScreen(
     var generatedPdfFile by remember { mutableStateOf<File?>(null) }
     var isGeneratingPdf by remember { mutableStateOf(true) }
 
+    var isTopBarVisible by remember { mutableStateOf(true) }
+
+    // Dynamic dark / light theme canvas color
+    val canvasBgColor = getPdfCanvasBgColor()
+
+    // Synchronize System Status Bar visibility with TopBar state
+    val activity = LocalActivity.current
+    val window = activity?.window
+    val insetsController = remember(window) {
+        window?.let { WindowCompat.getInsetsController(it, it.decorView) }
+    }
+
+    DisposableEffect(isTopBarVisible) {
+        if (!isTopBarVisible) {
+            insetsController?.hide(WindowInsetsCompat.Type.statusBars())
+        } else {
+            insetsController?.show(WindowInsetsCompat.Type.statusBars())
+        }
+        onDispose {
+            insetsController?.show(WindowInsetsCompat.Type.statusBars())
+        }
+    }
+
     val templateStyle = remember(previewPrimaryColor, meta?.supportsPhoto) {
         TemplateStyle(
             primaryColor = previewPrimaryColor,
@@ -79,8 +106,38 @@ fun TemplatePreviewScreen(
         }
     }
 
-    Scaffold(
-        topBar = {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(canvasBgColor) // Seamless background matching viewer canvas in both Light and Dark mode
+    ) {
+        if (isGeneratingPdf || template == null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .shimmerEffect()
+            )
+        } else {
+            // Reserved top padding (104.dp = 88.dp TopBar height + 16.dp top spacing) ensures TopBar never obstructs page 1
+            PdfDocumentViewer(
+                pdfFile = generatedPdfFile,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = 104.dp),
+                isTopBarVisible = isTopBarVisible,
+                onToggleTopBar = { visible ->
+                    isTopBarVisible = visible
+                }
+            )
+        }
+
+        // Floating TopAppBar Overlay
+        AnimatedVisibility(
+            visible = isTopBarVisible,
+            enter = slideInVertically(initialOffsetY = { -it }) + fadeIn(),
+            exit = slideOutVertically(targetOffsetY = { -it }) + fadeOut(),
+            modifier = Modifier.align(Alignment.TopCenter)
+        ) {
             TopAppBar(
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
@@ -108,11 +165,7 @@ fun TemplatePreviewScreen(
 
                         Button(
                             onClick = {
-                                Toast.makeText(
-                                    context,
-                                    "Selected ${it.name}",
-                                    Toast.LENGTH_SHORT
-                                ).show()
+                                Toast.makeText(context, "Selected ${it.name}", Toast.LENGTH_SHORT).show()
                                 onConfirmCreateCv(it.id, null)
                             },
                             interactionSource = confirmInteractionSource,
@@ -131,29 +184,6 @@ fun TemplatePreviewScreen(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
             )
-        },
-        containerColor = MaterialTheme.colorScheme.background
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)),
-            contentAlignment = Alignment.Center
-        ) {
-            if (isGeneratingPdf || template == null) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .shimmerEffect()
-                )
-            } else {
-                PdfDocumentViewer(
-                    pdfFile = generatedPdfFile,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
         }
     }
 }
-
