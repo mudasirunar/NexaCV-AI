@@ -25,6 +25,7 @@ import com.github.barteksc.pdfviewer.listener.OnDrawListener
 import com.github.barteksc.pdfviewer.listener.OnPageChangeListener
 import com.github.barteksc.pdfviewer.listener.OnTapListener
 import com.github.barteksc.pdfviewer.util.FitPolicy
+import com.github.barteksc.pdfviewer.util.Constants
 import com.mudasir.nexacvai.ui.theme.*
 import kotlinx.coroutines.delay
 import java.io.File
@@ -75,11 +76,14 @@ fun PdfDocumentViewer(
 
         var lastYOffset = 0f
 
+        Constants.THUMBNAIL_RATIO = 1f
+        Constants.PRELOAD_OFFSET = 100
+
         view.fromFile(file)
             .defaultPage(0)
             .enableAnnotationRendering(true)
             .swipeHorizontal(false)
-            .spacing(16) // Equal 16dp spacing between multi-page breaks
+            .spacing(16)
             .pageFitPolicy(FitPolicy.WIDTH)
             .enableDoubletap(true)
             .enableAntialiasing(true)
@@ -146,23 +150,31 @@ fun PdfDocumentViewer(
         if (pdfFile == null || !pdfFile.exists()) {
             CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
         } else {
+            var lastAppliedBgHex by remember { mutableStateOf<String?>(null) }
+
             AndroidView(
                 factory = { context ->
                     PDFView(context, null).apply {
                         setBackgroundColor(android.graphics.Color.parseColor(canvasBgHex))
+                        lastAppliedBgHex = canvasBgHex
                         setMinZoom(MIN_ZOOM_LEVEL)
                         setMidZoom(MID_ZOOM_LEVEL)
                         setMaxZoom(MAX_ZOOM_LEVEL)
+                        useBestQuality(true)
+                        enableRenderDuringScale(true)
                         pdfViewRef = this
                     }
                 },
                 update = { pdfView ->
                     pdfViewRef = pdfView
-                    pdfView.setBackgroundColor(android.graphics.Color.parseColor(canvasBgHex))
+                    if (lastAppliedBgHex != canvasBgHex) {
+                        pdfView.setBackgroundColor(android.graphics.Color.parseColor(canvasBgHex))
+                        lastAppliedBgHex = canvasBgHex
+                    }
                 },
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(all = 16.dp) // Equal 16dp spacing on all 4 sides (left, right, top, bottom)
+                    .padding(all = 16.dp)
             )
 
             val isCanZoomOut = currentZoom > (MIN_ZOOM_LEVEL + 0.05f)
