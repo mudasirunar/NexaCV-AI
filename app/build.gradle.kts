@@ -90,4 +90,7 @@ dependencies {
 
     // lottie animation
     implementation("com.airbnb.android:lottie-compose:6.4.0")
+
+    // Industry-Standard Native PDF Viewer
+    implementation("com.github.mhiew:android-pdf-viewer:3.2.0-beta.1")
 }

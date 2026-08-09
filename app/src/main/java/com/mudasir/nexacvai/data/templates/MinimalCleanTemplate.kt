@@ -35,6 +35,9 @@ class MinimalCleanTemplate : ResumeTemplate {
         previewAccentColorHex = "#52525B"
     )
 
+    override val defaultData: TemplateData =
+        com.mudasir.nexacvai.domain.model.template.sampledata.SampleGuidanceProfiles.MALE_FINANCE_DIRECTOR
+
     @Composable
     override fun Render(
         data: TemplateData,

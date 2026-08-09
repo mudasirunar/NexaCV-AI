@@ -35,6 +35,9 @@ class ModernTechTemplate : ResumeTemplate {
         previewAccentColorHex = "#3B82F6"
     )
 
+    override val defaultData: TemplateData =
+        com.mudasir.nexacvai.domain.model.template.sampledata.SampleGuidanceProfiles.MALE_TECH_ARCHITECT
+
     @Composable
     override fun Render(
         data: TemplateData,

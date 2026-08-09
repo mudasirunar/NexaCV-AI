@@ -25,6 +25,15 @@ class TemplatesViewModel @Inject constructor(
 
     init {
         loadData()
+        observeProfiles()
+    }
+
+    private fun observeProfiles() {
+        profileRepository.getAllProfiles()
+            .onEach { profiles ->
+                _state.value = _state.value.copy(profiles = profiles)
+            }
+            .launchIn(viewModelScope)
     }
 
     fun loadData() {
@@ -40,9 +49,7 @@ class TemplatesViewModel @Inject constructor(
                 isLoading = false,
                 templates = templates,
                 filteredTemplates = filterTemplates(templates, _state.value.selectedCategory, _state.value.searchQuery),
-                profiles = profiles,
-                selectedProfile = null,
-                injectedTemplateData = null
+                profiles = profiles
             )
         }
     }

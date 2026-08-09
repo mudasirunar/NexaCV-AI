@@ -1,26 +1,12 @@
 package com.mudasir.nexacvai.presentation.ui.components
 
-import android.graphics.Bitmap
-import android.graphics.pdf.PdfRenderer
-import android.os.ParcelFileDescriptor
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.VectorConverter
-import androidx.compose.animation.core.exponentialDecay
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.calculateCentroid
-import androidx.compose.foundation.gestures.calculateCentroidSize
-import androidx.compose.foundation.gestures.calculatePan
-import androidx.compose.foundation.gestures.calculateZoom
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -31,48 +17,36 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.input.pointer.positionChanged
-import androidx.compose.ui.input.pointer.util.VelocityTracker
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.coroutineScope
+import androidx.compose.ui.viewinterop.AndroidView
+import com.github.barteksc.pdfviewer.PDFView
+import com.github.barteksc.pdfviewer.listener.OnDrawListener
+import com.github.barteksc.pdfviewer.listener.OnPageChangeListener
+import com.github.barteksc.pdfviewer.listener.OnTapListener
+import com.github.barteksc.pdfviewer.util.FitPolicy
+import com.mudasir.nexacvai.ui.theme.*
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.io.File
+import kotlin.math.roundToInt
 
-/** Double-tap zoom threshold: below this → zoom in to TARGET, above → zoom out to 1x. */
-private const val DOUBLE_TAP_THRESHOLD = 1.5f
-/** Target zoom level on double-tap zoom-in. */
-private const val DOUBLE_TAP_ZOOM_TARGET = 2.5f
-/** Animation duration for double-tap zoom (ms). */
-private const val DOUBLE_TAP_ANIM_MS = 300
+private const val MIN_ZOOM_LEVEL = 1.0f
+private const val MID_ZOOM_LEVEL = 2.5f
+private const val MAX_ZOOM_LEVEL = 5.0f
 
 /**
- * Interactive A4 PDF Document Viewer with Google Drive style Bounded Pinch-to-Zoom (1.0x - 4.0x),
- * direct 1:1 Pan with fling momentum, double-tap to zoom in/out, and auto-hiding bottom-center controls.
+ * Professional Native A4 PDF Viewer powered by [PDFView].
+ * Configured with [FitPolicy.WIDTH] and 5.0x max zoom (100%, 250%, 500%),
+ * 60 FPS multi-page vertical scrolling, equal top/left/right spacing, and floating auto-hiding controls.
  */
 @Composable
 fun PdfDocumentViewer(
     pdfFile: File?,
     modifier: Modifier = Modifier
 ) {
-    var bitmapState by remember(pdfFile) { mutableStateOf<Bitmap?>(null) }
-    var isLoading by remember(pdfFile) { mutableStateOf(true) }
-
-    // Zoom state — Animatable for smooth double-tap and button-triggered zoom transitions
-    val scaleAnimatable = remember { Animatable(1f) }
-    val currentScale by remember { derivedStateOf { scaleAnimatable.value } }
-
-    // Pan state — direct tracking with fling support (no animation lag)
-    val offsetAnimatable = remember { Animatable(Offset.Zero, Offset.VectorConverter) }
+    var pdfViewInstance by remember { mutableStateOf<PDFView?>(null) }
+    var currentPage by remember { mutableIntStateOf(1) }
+    var totalPages by remember { mutableIntStateOf(1) }
+    var currentZoom by remember { mutableFloatStateOf(1.0f) }
 
     // Inactivity Auto-Hide state for floating controls bar
     var lastInteractionTime by remember { mutableLongStateOf(System.currentTimeMillis()) }
@@ -80,7 +54,7 @@ fun PdfDocumentViewer(
 
     LaunchedEffect(lastInteractionTime) {
         isControlsVisible = true
-        delay(3000L) // Auto-hide controls after 3 seconds of inactivity
+        delay(3500L) // Auto-hide controls after 3.5 seconds of inactivity
         isControlsVisible = false
     }
 
@@ -88,360 +62,187 @@ fun PdfDocumentViewer(
         lastInteractionTime = System.currentTimeMillis()
     }
 
-    // Render A4 PDF Page 0 asynchronously using Android PdfRenderer
-    LaunchedEffect(pdfFile) {
-        if (pdfFile == null || !pdfFile.exists()) {
-            isLoading = false
-            return@LaunchedEffect
-        }
-
-        isLoading = true
-        withContext(Dispatchers.IO) {
-            try {
-                val fileDescriptor = ParcelFileDescriptor.open(pdfFile, ParcelFileDescriptor.MODE_READ_ONLY)
-                val pdfRenderer = PdfRenderer(fileDescriptor)
-
-                if (pdfRenderer.pageCount > 0) {
-                    val page = pdfRenderer.openPage(0)
-                    // Render page at 2.5x density for sharp vector rendering
-                    val bitmap = Bitmap.createBitmap(
-                        page.width * 2 + 300,
-                        page.height * 2 + 420,
-                        Bitmap.Config.ARGB_8888
-                    )
-
-                    // Draw White paper background
-                    val canvas = android.graphics.Canvas(bitmap)
-                    canvas.drawColor(android.graphics.Color.WHITE)
-
-                    page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
-                    page.close()
-                    bitmapState = bitmap
-                }
-
-                pdfRenderer.close()
-                fileDescriptor.close()
-            } catch (e: Exception) {
-                e.printStackTrace()
-            } finally {
-                isLoading = false
-            }
-        }
-    }
-
-    BoxWithConstraints(
+    Box(
         modifier = modifier
             .fillMaxSize()
-            .clipToBounds()
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)),
+            .background(PdfViewerCanvasBg),
         contentAlignment = Alignment.Center
     ) {
-        val containerWidth = constraints.maxWidth.toFloat()
-        val containerHeight = constraints.maxHeight.toFloat()
-
-        if (isLoading || bitmapState == null) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-            }
+        if (pdfFile == null || !pdfFile.exists()) {
+            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
         } else {
-            val bitmap = bitmapState!!
-            val scope = rememberCoroutineScope()
-
-            // Helper to clamp offset within allowed pan boundaries
-            fun clampOffset(offset: Offset, currentScale: Float): Offset {
-                if (currentScale <= 1.05f) return Offset.Zero
-                val maxPanX = (containerWidth * (currentScale - 1f) / 2f).coerceAtLeast(0f)
-                val maxPanY = (containerHeight * (currentScale - 1f) / 2f).coerceAtLeast(0f)
-                return Offset(
-                    offset.x.coerceIn(-maxPanX, maxPanX),
-                    offset.y.coerceIn(-maxPanY, maxPanY)
-                )
-            }
-
-            // Track last single-tap for manual double-tap detection
-            var lastTapTime by remember { mutableLongStateOf(0L) }
-            var lastTapPosition by remember { mutableStateOf(Offset.Zero) }
-
-            Box(
+            AndroidView(
+                factory = { context ->
+                    PDFView(context, null).apply {
+                        setBackgroundColor(android.graphics.Color.parseColor(PdfViewerCanvasBgHex))
+                        setMinZoom(MIN_ZOOM_LEVEL)
+                        setMidZoom(MID_ZOOM_LEVEL)
+                        setMaxZoom(MAX_ZOOM_LEVEL)
+                        pdfViewInstance = this
+                    }
+                },
+                update = { pdfView ->
+                    pdfViewInstance = pdfView
+                    pdfView.setMinZoom(MIN_ZOOM_LEVEL)
+                    pdfView.setMidZoom(MID_ZOOM_LEVEL)
+                    pdfView.setMaxZoom(MAX_ZOOM_LEVEL)
+                    pdfView.fromFile(pdfFile)
+                        .defaultPage(0)
+                        .enableAnnotationRendering(true)
+                        .swipeHorizontal(false) // Vertical multi-page scrolling!
+                        .spacing(20) // 20dp page break gap between A4 pages
+                        .pageFitPolicy(FitPolicy.WIDTH) // Exact 100% width fit scale
+                        .enableDoubletap(true)
+                        .enableAntialiasing(true)
+                        .onPageChange(OnPageChangeListener { page, pageCount ->
+                            currentPage = page + 1
+                            totalPages = pageCount
+                            currentZoom = pdfView.zoom
+                            wakeUpControls()
+                        })
+                        .onDraw(OnDrawListener { canvas, pageWidth, pageHeight, _ ->
+                            val z = pdfView.zoom
+                            if (kotlin.math.abs(z - currentZoom) > 0.01f) {
+                                currentZoom = z
+                                wakeUpControls()
+                            }
+                            // Ultra-smooth page-bottom paper drop shadow gradient fade
+                            val shadowGradient = android.graphics.LinearGradient(
+                                0f, pageHeight,
+                                0f, pageHeight + 12f,
+                                intArrayOf(
+                                    android.graphics.Color.parseColor("#28000000"), // 16% alpha soft dark edge
+                                    android.graphics.Color.parseColor("#0F000000"), // 6% alpha mid shadow
+                                    android.graphics.Color.TRANSPARENT              // Smooth transparent falloff
+                                ),
+                                null,
+                                android.graphics.Shader.TileMode.CLAMP
+                            )
+                            val shadowPaint = android.graphics.Paint().apply {
+                                shader = shadowGradient
+                                style = android.graphics.Paint.Style.FILL
+                            }
+                            canvas.drawRect(0f, pageHeight, pageWidth, pageHeight + 12f, shadowPaint)
+                        })
+                        .onTap(OnTapListener {
+                            wakeUpControls()
+                            true
+                        })
+                        .load()
+                },
                 modifier = Modifier
                     .fillMaxSize()
-                    .clipToBounds()
-                    .pointerInput(Unit) {
-                        awaitEachGesture {
-                            val velocityTracker = VelocityTracker()
-                            val down = awaitFirstDown(requireUnconsumed = false)
-                            wakeUpControls()
-                            // Stop any ongoing fling or double-tap animation
-                            scope.launch {
-                                offsetAnimatable.stop()
-                                scaleAnimatable.stop()
-                            }
+                    .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 56.dp) // Equal 16dp top, left, and right spacing
+            )
 
-                            var gestureScale = scaleAnimatable.value
-                            var previousPointerCount = 1
-                            var wasPinching = false
-                            var totalDragDistance = Offset.Zero
+            // Synchronized Zoom state bounds (1.0x - 5.0x)
+            val isCanZoomOut = currentZoom > (MIN_ZOOM_LEVEL + 0.05f)
+            val isCanZoomIn = currentZoom < (MAX_ZOOM_LEVEL - 0.05f)
+            val isCanReset = currentZoom > (MIN_ZOOM_LEVEL + 0.05f)
 
-                            do {
-                                val event = awaitPointerEvent()
-                                val activePointers = event.changes.count { it.pressed }
-                                val zoomChange = event.calculateZoom()
-                                val panChange = event.calculatePan()
-
-                                if (event.changes.any { it.pressed }) {
-                                    wakeUpControls()
-                                }
-
-                                // Detect pointer count transition — skip this frame's pan
-                                val pointerCountChanged = activePointers != previousPointerCount
-                                previousPointerCount = activePointers
-
-                                val isPinching = activePointers >= 2
-                                if (isPinching) wasPinching = true
-
-                                // Track total drag distance to distinguish taps from drags
-                                totalDragDistance += panChange
-
-                                // Apply zoom
-                                val newScale = (gestureScale * zoomChange).coerceIn(1f, 4f)
-                                if (newScale <= 1.05f) {
-                                    gestureScale = 1f
-                                    scope.launch {
-                                        scaleAnimatable.snapTo(1f)
-                                        offsetAnimatable.snapTo(Offset.Zero)
-                                    }
-                                } else {
-                                    gestureScale = newScale
-                                    scope.launch { scaleAnimatable.snapTo(newScale) }
-
-                                    if (!pointerCountChanged && isPinching && zoomChange != 1f) {
-                                        // Focal-point zoom: adjust offset so content under fingers stays in place
-                                        val centroid = event.calculateCentroid(useCurrent = true)
-                                        val center = Offset(containerWidth / 2f, containerHeight / 2f)
-                                        val focalAdjust = (centroid - center) * (1f - zoomChange)
-                                        val newOffset = clampOffset(
-                                            offsetAnimatable.value * zoomChange + focalAdjust,
-                                            newScale
-                                        )
-                                        scope.launch { offsetAnimatable.snapTo(newOffset) }
-                                    } else if (!pointerCountChanged && !isPinching) {
-                                        // Single-finger pan
-                                        val clampedCurrent = clampOffset(offsetAnimatable.value, newScale)
-                                        val newOffset = clampOffset(
-                                            clampedCurrent + panChange,
-                                            newScale
-                                        )
-                                        scope.launch { offsetAnimatable.snapTo(newOffset) }
-                                    } else {
-                                        // Re-clamp offset to new scale boundaries (pointer transition or no zoom change)
-                                        val clampedCurrent = clampOffset(offsetAnimatable.value, newScale)
-                                        if (clampedCurrent != offsetAnimatable.value) {
-                                            scope.launch { offsetAnimatable.snapTo(clampedCurrent) }
-                                        }
-                                    }
-                                }
-
-                                // Track velocity for fling — only single-finger drag
-                                if (!isPinching && !pointerCountChanged) {
-                                    event.changes.forEach { change ->
-                                        if (change.positionChanged()) {
-                                            velocityTracker.addPosition(
-                                                change.uptimeMillis,
-                                                change.position
-                                            )
-                                        }
-                                    }
-                                }
-
-                                event.changes.forEach { it.consume() }
-                            } while (event.changes.any { it.pressed })
-
-                            // Detect if this was a tap (minimal drag, single finger, no pinch)
-                            val wasTap = !wasPinching &&
-                                    totalDragDistance.getDistance() < 20f
-
-                            if (wasTap) {
-                                wakeUpControls()
-                                val now = System.currentTimeMillis()
-                                val tapPos = down.position
-                                val timeSinceLastTap = now - lastTapTime
-                                val distFromLastTap = (tapPos - lastTapPosition).getDistance()
-
-                                if (timeSinceLastTap < 350L && distFromLastTap < 100f) {
-                                    // DOUBLE TAP detected
-                                    lastTapTime = 0L // Reset to avoid triple-tap
-                                    scope.launch {
-                                        val currentZoom = scaleAnimatable.value
-                                        if (currentZoom < DOUBLE_TAP_THRESHOLD) {
-                                            // Zoom IN centered on tap point
-                                            val targetScale = DOUBLE_TAP_ZOOM_TARGET
-                                            val centerX = containerWidth / 2f
-                                            val centerY = containerHeight / 2f
-                                            val tapDeltaX = centerX - tapPos.x
-                                            val tapDeltaY = centerY - tapPos.y
-                                            val targetOffset = clampOffset(
-                                                Offset(tapDeltaX * targetScale, tapDeltaY * targetScale),
-                                                targetScale
-                                            )
-                                            launch { scaleAnimatable.animateTo(targetScale, tween(DOUBLE_TAP_ANIM_MS)) }
-                                            launch { offsetAnimatable.animateTo(targetOffset, tween(DOUBLE_TAP_ANIM_MS)) }
-                                        } else {
-                                            // Zoom OUT to 1x
-                                            launch { scaleAnimatable.animateTo(1f, tween(DOUBLE_TAP_ANIM_MS)) }
-                                            launch { offsetAnimatable.animateTo(Offset.Zero, tween(DOUBLE_TAP_ANIM_MS)) }
-                                        }
-                                    }
-                                } else {
-                                    // Single tap — record for potential double-tap
-                                    lastTapTime = now
-                                    lastTapPosition = tapPos
-                                }
-                            } else {
-                                // Was a drag/pinch — reset tap tracking
-                                lastTapTime = 0L
-                            }
-
-                            // Fling on release — only for single-finger pan
-                            if (gestureScale > 1.05f && !wasPinching && !wasTap) {
-                                val velocity = velocityTracker.calculateVelocity()
-                                val maxPanX = (containerWidth * (gestureScale - 1f) / 2f).coerceAtLeast(0f)
-                                val maxPanY = (containerHeight * (gestureScale - 1f) / 2f).coerceAtLeast(0f)
-
-                                scope.launch {
-                                    offsetAnimatable.updateBounds(
-                                        lowerBound = Offset(-maxPanX, -maxPanY),
-                                        upperBound = Offset(maxPanX, maxPanY)
-                                    )
-                                    offsetAnimatable.animateDecay(
-                                        initialVelocity = Offset(velocity.x, velocity.y),
-                                        animationSpec = exponentialDecay(frictionMultiplier = 1.5f)
-                                    )
-                                    offsetAnimatable.updateBounds(
-                                        lowerBound = Offset(-Float.MAX_VALUE, -Float.MAX_VALUE),
-                                        upperBound = Offset(Float.MAX_VALUE, Float.MAX_VALUE)
-                                    )
-                                }
-                            }
-                        }
-                    },
-                contentAlignment = Alignment.Center
-            ) {
-                // Real A4 Paper Document Sheet Card
-                Surface(
-                    shape = RoundedCornerShape(4.dp),
-                    color = Color.White,
-                    border = BorderStroke(1.dp, Color(0xFFCBD5E1)),
-                    shadowElevation = 8.dp,
-                    modifier = Modifier
-                        .fillMaxWidth(0.9f)
-                        .fillMaxHeight(0.92f)
-                        .graphicsLayer(
-                            scaleX = currentScale,
-                            scaleY = currentScale,
-                            translationX = offsetAnimatable.value.x,
-                            translationY = offsetAnimatable.value.y
-                        )
-                ) {
-                    Image(
-                        bitmap = bitmap.asImageBitmap(),
-                        contentDescription = "A4 PDF Document Preview",
-                        contentScale = ContentScale.Fit,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
+            // Clean percentage snapping for 100%, 250%, and 500% display
+            val rawPercent = (currentZoom * 100).roundToInt()
+            val displayZoomPercent = when {
+                rawPercent in 98..102 -> 100
+                rawPercent in 148..152 -> 150
+                rawPercent in 198..202 -> 200
+                rawPercent in 247..253 -> 250
+                rawPercent in 298..302 -> 300
+                rawPercent in 348..352 -> 350
+                rawPercent in 398..402 -> 400
+                rawPercent in 448..452 -> 450
+                rawPercent in 495..505 -> 500
+                else -> rawPercent
             }
-
-            // Floating Interactive Zoom Controls Bar (Bottom-Center Stacked over PDF preview)
-            val isCanZoomOut = currentScale > 1.05f
-            val isCanZoomIn = currentScale < 3.95f
-            val isCanReset = currentScale > 1.05f || kotlin.math.abs(offsetAnimatable.value.x) > 1f || kotlin.math.abs(offsetAnimatable.value.y) > 1f
 
             AnimatedVisibility(
                 visible = isControlsVisible,
-                enter = fadeIn(tween(250)) + slideInVertically(tween(250)) { it / 2 },
-                exit = fadeOut(tween(250)) + slideOutVertically(tween(250)) { it / 2 },
+                enter = fadeIn() + slideInVertically(initialOffsetY = { it / 2 }),
+                exit = fadeOut() + slideOutVertically(targetOffsetY = { it / 2 }),
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = 12.dp)
+                    .padding(bottom = 16.dp)
             ) {
                 Surface(
-                    shape = RoundedCornerShape(24.dp),
-                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f),
-                    shadowElevation = 6.dp,
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+                    shape = RoundedCornerShape(28.dp),
+                    color = PdfControlsContainerBg,
+                    border = BorderStroke(1.dp, PdfControlsBorder),
+                    shadowElevation = 12.dp,
+                    modifier = Modifier.padding(horizontal = 16.dp)
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
+                        // Zoom Out (-)
                         IconButton(
-                            enabled = isCanZoomOut,
                             onClick = {
                                 wakeUpControls()
-                                val newScale = (currentScale - 0.5f).coerceIn(1f, 4f)
-                                scope.launch {
-                                    scaleAnimatable.animateTo(newScale, tween(200))
-                                    if (newScale <= 1f) {
-                                        offsetAnimatable.animateTo(Offset.Zero, tween(200))
-                                    } else {
-                                        offsetAnimatable.snapTo(
-                                            clampOffset(offsetAnimatable.value, newScale)
-                                        )
-                                    }
+                                pdfViewInstance?.let { view ->
+                                    val target = (view.zoom - 1.0f).coerceAtLeast(MIN_ZOOM_LEVEL)
+                                    view.zoomWithAnimation(target)
+                                    view.invalidate()
+                                    currentZoom = target
                                 }
                             },
-                            modifier = Modifier.size(32.dp)
+                            enabled = isCanZoomOut
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Remove,
                                 contentDescription = "Zoom Out",
-                                modifier = Modifier.size(18.dp),
-                                tint = if (isCanZoomOut) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f)
+                                tint = if (isCanZoomOut) PdfControlsIconTintEnabled else PdfControlsIconTintDisabled
                             )
                         }
 
-                        Text(
-                            text = "${(currentScale * 100).toInt()}%",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
+                        // Page Counter / Zoom Status Pill
+                        Surface(
+                            shape = RoundedCornerShape(14.dp),
+                            color = PdfControlsPillBg
+                        ) {
+                            Text(
+                                text = if (totalPages > 1) "Page $currentPage of $totalPages" else "$displayZoomPercent%",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = PdfControlsIconTintEnabled,
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
+                            )
+                        }
 
+                        // Zoom In (+)
                         IconButton(
-                            enabled = isCanZoomIn,
                             onClick = {
                                 wakeUpControls()
-                                scope.launch { scaleAnimatable.animateTo((currentScale + 0.5f).coerceIn(1f, 4f), tween(200)) }
+                                pdfViewInstance?.let { view ->
+                                    val target = (view.zoom + 1.0f).coerceAtMost(MAX_ZOOM_LEVEL)
+                                    view.zoomWithAnimation(target)
+                                    view.invalidate()
+                                    currentZoom = target
+                                }
                             },
-                            modifier = Modifier.size(32.dp)
+                            enabled = isCanZoomIn
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Add,
                                 contentDescription = "Zoom In",
-                                modifier = Modifier.size(18.dp),
-                                tint = if (isCanZoomIn) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f)
+                                tint = if (isCanZoomIn) PdfControlsIconTintEnabled else PdfControlsIconTintDisabled
                             )
                         }
 
+                        // Reset Zoom Button (ONLY resets zoom level, retains current scroll position)
                         IconButton(
-                            enabled = isCanReset,
                             onClick = {
                                 wakeUpControls()
-                                scope.launch {
-                                    launch { scaleAnimatable.animateTo(1f, tween(200)) }
-                                    launch { offsetAnimatable.animateTo(Offset.Zero, tween(200)) }
+                                pdfViewInstance?.let { view ->
+                                    view.resetZoomWithAnimation()
+                                    currentZoom = MIN_ZOOM_LEVEL
                                 }
                             },
-                            modifier = Modifier.size(32.dp)
+                            enabled = isCanReset
                         ) {
                             Icon(
                                 imageVector = Icons.Default.RestartAlt,
                                 contentDescription = "Reset Zoom",
-                                modifier = Modifier.size(18.dp),
-                                tint = if (isCanReset) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f)
+                                tint = if (isCanReset) PdfControlsIconTintEnabled else PdfControlsIconTintDisabled
                             )
                         }
                     }
@@ -450,5 +251,3 @@ fun PdfDocumentViewer(
         }
     }
 }
-
-

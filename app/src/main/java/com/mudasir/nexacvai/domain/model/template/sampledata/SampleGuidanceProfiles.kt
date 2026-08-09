@@ -40,17 +40,30 @@ object SampleGuidanceProfiles {
                 location = "Austin, TX",
                 responsibilities = listOf(
                     "Developed high-throughput REST APIs and GraphQL microservices processing over 12M daily document requests.",
-                    "Migrated legacy codebase to modular multi-module Kotlin architecture."
+                    "Migrated legacy monolithic codebase to modular multi-module Kotlin architecture.",
+                    "Optimized database query performance with custom Room indices and Coroutines Flow."
                 ),
                 technologies = listOf("Kotlin", "Java", "Docker", "AWS", "Ktor")
+            ),
+            TemplateExperienceData(
+                jobTitle = "Android Developer & Core Lead",
+                company = "Vanguard Digital Labs",
+                startDate = "05/2016",
+                endDate = "05/2018",
+                location = "Seattle, WA",
+                responsibilities = listOf(
+                    "Built custom UI design systems with hardware-accelerated canvas rendering.",
+                    "Integrated OAuth 2.0 authentication and biometric sign-in security protocols."
+                ),
+                technologies = listOf("Kotlin", "Android SDK", "RxJava", "Retrofit")
             )
         ),
         educations = listOf(
             TemplateEducationData(
                 degree = "B.S. in Computer Science & Software Engineering",
                 institution = "University of California, Berkeley",
-                startDate = "2014",
-                endDate = "2018",
+                startDate = "2012",
+                endDate = "2016",
                 gradeOrGpa = "3.9 / 4.0",
                 relevantCoursework = "Distributed Systems, Operating Systems, Algorithm Analysis"
             )
@@ -58,14 +71,30 @@ object SampleGuidanceProfiles {
         projects = listOf(
             TemplateProjectData(
                 projectName = "NexaCV AI Engine",
-                roleInProject = "Lead Creator",
+                roleInProject = "Lead Creator & Architect",
                 startDate = "2024",
                 endDate = "Present",
-                description = "Offline-first intelligent resume builder with pluggable AI engine and real-time PDF preview.",
-                technologiesUsed = listOf("Kotlin", "Canvas", "PdfDocument", "KSP")
+                description = "Offline-first intelligent resume builder with pluggable AI engine, multi-profile management, and real-time A4 PDF rendering.",
+                technologiesUsed = listOf("Kotlin", "Canvas", "PdfDocument", "KSP", "Hilt")
+            ),
+            TemplateProjectData(
+                projectName = "Enterprise Cloud Storage Vault",
+                roleInProject = "Core Infrastructure Lead",
+                startDate = "2022",
+                endDate = "2023",
+                description = "End-to-end encrypted document storage pipeline handling over 5TB of encrypted asset backups.",
+                technologiesUsed = listOf("Kotlin", "Ktor", "AWS S3", "SQLCipher")
+            ),
+            TemplateProjectData(
+                projectName = "Vector Search PDF Indexer",
+                roleInProject = "Principal Contributor",
+                startDate = "2021",
+                endDate = "2022",
+                description = "High-speed document parsing engine converting PDF files to structured vector embeddings for local semantic search.",
+                technologiesUsed = listOf("C++", "Java JNI", "Android NDK")
             )
         ),
-        skills = listOf("Kotlin", "Jetpack Compose", "Clean Architecture", "Dagger Hilt", "Room DB", "Coroutines", "System Design"),
+        skills = listOf("Kotlin", "Jetpack Compose", "Clean Architecture", "Dagger Hilt", "Room DB", "Coroutines", "System Design", "PDF Generation", "Performance Tuning"),
         certifications = listOf(
             TemplateCertData("AWS Certified Solutions Architect", "Amazon Web Services", "2023"),
             TemplateCertData("Google Associate Android Developer", "Google", "2021")
@@ -79,7 +108,8 @@ object SampleGuidanceProfiles {
             TemplateSocialLinkData("LinkedIn", "https://linkedin.com/in/alexmercer")
         ),
         references = listOf(
-            TemplateReferenceData("Sarah Jenkins", "VP of Engineering", "Apex Financial Technologies", "sarah.j@apexfin.com")
+            TemplateReferenceData("Sarah Jenkins", "VP of Engineering", "Apex Financial Technologies", "sarah.j@apexfin.com"),
+            TemplateReferenceData("Michael Chang", "Principal Systems Architect", "Nexus Cloud", "m.chang@nexuscloud.io")
         )
     )
 

@@ -28,6 +28,9 @@ class ExecutiveSlateTemplate : ResumeTemplate {
         previewAccentColorHex = "#475569"
     )
 
+    override val defaultData: TemplateData =
+        com.mudasir.nexacvai.domain.model.template.sampledata.SampleGuidanceProfiles.FEMALE_EXECUTIVE_LEADER
+
     @Composable
     override fun Render(
         data: TemplateData,

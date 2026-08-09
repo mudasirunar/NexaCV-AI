@@ -143,3 +143,12 @@ val SearchMatchContainer = Color(0xFF22C55E)     // green container tint
 val SearchMatchBorder = Color(0xFF16A34A)        // green border tint
 val SearchNoMatchContainer = Color(0xFFEF4444)   // red container tint
 val SearchNoMatchBorder = Color(0xFFDC2626)      // red border tint
+
+// 📄 PDF Document Viewer Theme Tokens
+val PdfViewerCanvasBg = Color(0xFFF1F5F9)
+const val PdfViewerCanvasBgHex = "#F1F5F9"
+val PdfControlsContainerBg = Color(0xEE0F172A)
+val PdfControlsBorder = Color(0x33FFFFFF)
+val PdfControlsPillBg = Color(0x26FFFFFF)
+val PdfControlsIconTintEnabled = Color.White
+val PdfControlsIconTintDisabled = Color(0x59FFFFFF)
