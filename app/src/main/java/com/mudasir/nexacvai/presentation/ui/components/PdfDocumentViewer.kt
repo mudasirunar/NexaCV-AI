@@ -3,10 +3,15 @@ package com.mudasir.nexacvai.presentation.ui.components
 import android.graphics.Bitmap
 import android.graphics.pdf.PdfRenderer
 import android.os.ParcelFileDescriptor
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.exponentialDecay
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -20,8 +25,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -38,6 +43,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -51,7 +57,7 @@ private const val DOUBLE_TAP_ANIM_MS = 300
 
 /**
  * Interactive A4 PDF Document Viewer with Google Drive style Bounded Pinch-to-Zoom (1.0x - 4.0x),
- * direct 1:1 Pan with fling momentum, and double-tap to zoom in/out.
+ * direct 1:1 Pan with fling momentum, double-tap to zoom in/out, and auto-hiding bottom-center controls.
  */
 @Composable
 fun PdfDocumentViewer(
@@ -67,6 +73,20 @@ fun PdfDocumentViewer(
 
     // Pan state — direct tracking with fling support (no animation lag)
     val offsetAnimatable = remember { Animatable(Offset.Zero, Offset.VectorConverter) }
+
+    // Inactivity Auto-Hide state for floating controls bar
+    var lastInteractionTime by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    var isControlsVisible by remember { mutableStateOf(true) }
+
+    LaunchedEffect(lastInteractionTime) {
+        isControlsVisible = true
+        delay(3000L) // Auto-hide controls after 3 seconds of inactivity
+        isControlsVisible = false
+    }
+
+    fun wakeUpControls() {
+        lastInteractionTime = System.currentTimeMillis()
+    }
 
     // Render A4 PDF Page 0 asynchronously using Android PdfRenderer
     LaunchedEffect(pdfFile) {
@@ -153,6 +173,7 @@ fun PdfDocumentViewer(
                         awaitEachGesture {
                             val velocityTracker = VelocityTracker()
                             val down = awaitFirstDown(requireUnconsumed = false)
+                            wakeUpControls()
                             // Stop any ongoing fling or double-tap animation
                             scope.launch {
                                 offsetAnimatable.stop()
@@ -169,6 +190,10 @@ fun PdfDocumentViewer(
                                 val activePointers = event.changes.count { it.pressed }
                                 val zoomChange = event.calculateZoom()
                                 val panChange = event.calculatePan()
+
+                                if (event.changes.any { it.pressed }) {
+                                    wakeUpControls()
+                                }
 
                                 // Detect pointer count transition — skip this frame's pan
                                 val pointerCountChanged = activePointers != previousPointerCount
@@ -239,6 +264,7 @@ fun PdfDocumentViewer(
                                     totalDragDistance.getDistance() < 20f
 
                             if (wasTap) {
+                                wakeUpControls()
                                 val now = System.currentTimeMillis()
                                 val tapPos = down.position
                                 val timeSinceLastTap = now - lastTapTime
@@ -328,79 +354,101 @@ fun PdfDocumentViewer(
                 }
             }
 
-            // Floating Interactive Zoom Controls Bar
-            Surface(
-                shape = RoundedCornerShape(24.dp),
-                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f),
-                shadowElevation = 6.dp,
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
+            // Floating Interactive Zoom Controls Bar (Bottom-Center Stacked over PDF preview)
+            val isCanZoomOut = currentScale > 1.05f
+            val isCanZoomIn = currentScale < 3.95f
+            val isCanReset = currentScale > 1.05f || kotlin.math.abs(offsetAnimatable.value.x) > 1f || kotlin.math.abs(offsetAnimatable.value.y) > 1f
+
+            AnimatedVisibility(
+                visible = isControlsVisible,
+                enter = fadeIn(tween(250)) + slideInVertically(tween(250)) { it / 2 },
+                exit = fadeOut(tween(250)) + slideOutVertically(tween(250)) { it / 2 },
                 modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(16.dp)
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 12.dp)
             ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                Surface(
+                    shape = RoundedCornerShape(24.dp),
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f),
+                    shadowElevation = 6.dp,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
                 ) {
-                    IconButton(
-                        onClick = {
-                            val newScale = (currentScale - 0.5f).coerceIn(1f, 4f)
-                            scope.launch {
-                                scaleAnimatable.animateTo(newScale, tween(200))
-                                if (newScale <= 1f) {
-                                    offsetAnimatable.animateTo(Offset.Zero, tween(200))
-                                } else {
-                                    offsetAnimatable.snapTo(
-                                        clampOffset(offsetAnimatable.value, newScale)
-                                    )
+                    Row(
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        IconButton(
+                            enabled = isCanZoomOut,
+                            onClick = {
+                                wakeUpControls()
+                                val newScale = (currentScale - 0.5f).coerceIn(1f, 4f)
+                                scope.launch {
+                                    scaleAnimatable.animateTo(newScale, tween(200))
+                                    if (newScale <= 1f) {
+                                        offsetAnimatable.animateTo(Offset.Zero, tween(200))
+                                    } else {
+                                        offsetAnimatable.snapTo(
+                                            clampOffset(offsetAnimatable.value, newScale)
+                                        )
+                                    }
                                 }
-                            }
-                        },
-                        modifier = Modifier.size(32.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Remove,
-                            contentDescription = "Zoom Out",
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
+                            },
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Remove,
+                                contentDescription = "Zoom Out",
+                                modifier = Modifier.size(18.dp),
+                                tint = if (isCanZoomOut) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f)
+                            )
+                        }
 
-                    Text(
-                        text = "${(currentScale * 100).toInt()}%",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-
-                    IconButton(
-                        onClick = { scope.launch { scaleAnimatable.animateTo((currentScale + 0.5f).coerceIn(1f, 4f), tween(200)) } },
-                        modifier = Modifier.size(32.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = "Zoom In",
-                            modifier = Modifier.size(18.dp)
+                        Text(
+                            text = "${(currentScale * 100).toInt()}%",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
-                    }
 
-                    IconButton(
-                        onClick = {
-                            scope.launch {
-                                launch { scaleAnimatable.animateTo(1f, tween(200)) }
-                                launch { offsetAnimatable.animateTo(Offset.Zero, tween(200)) }
-                            }
-                        },
-                        modifier = Modifier.size(32.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = "Reset Zoom",
-                            modifier = Modifier.size(18.dp)
-                        )
+                        IconButton(
+                            enabled = isCanZoomIn,
+                            onClick = {
+                                wakeUpControls()
+                                scope.launch { scaleAnimatable.animateTo((currentScale + 0.5f).coerceIn(1f, 4f), tween(200)) }
+                            },
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "Zoom In",
+                                modifier = Modifier.size(18.dp),
+                                tint = if (isCanZoomIn) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f)
+                            )
+                        }
+
+                        IconButton(
+                            enabled = isCanReset,
+                            onClick = {
+                                wakeUpControls()
+                                scope.launch {
+                                    launch { scaleAnimatable.animateTo(1f, tween(200)) }
+                                    launch { offsetAnimatable.animateTo(Offset.Zero, tween(200)) }
+                                }
+                            },
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.RestartAlt,
+                                contentDescription = "Reset Zoom",
+                                modifier = Modifier.size(18.dp),
+                                tint = if (isCanReset) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f)
+                            )
+                        }
                     }
                 }
             }
         }
     }
 }
+
 
