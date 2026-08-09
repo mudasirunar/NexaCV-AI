@@ -3,6 +3,15 @@ package com.mudasir.nexacvai.domain.model.template
 import androidx.compose.ui.graphics.Color
 
 /**
+ * Visual shape options for profile photo frames across different resume templates.
+ */
+enum class PhotoShape {
+    CIRCLE,          // Executive & classic round avatar
+    ROUNDED_SQUARE,  // Modern tech rounded rectangle
+    PASSPORT_RECT    // Corporate passport size 3:4 aspect ratio
+}
+
+/**
  * Visual styling configuration for a rendered template instance.
  */
 data class TemplateStyle(
@@ -13,5 +22,6 @@ data class TemplateStyle(
     val secondaryTextColor: Color = Color(0xFF6B7280),// Subtle Gray Secondary Text
     val fontFamilyName: String = "Inter",
     val showPhoto: Boolean = true,
+    val photoShape: PhotoShape = PhotoShape.CIRCLE,
     val fontSizeScale: Float = 1.0f
 )

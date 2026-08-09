@@ -15,13 +15,13 @@ object ImageCompressionHelper {
 
     /**
      * Copies, resizes, and compresses an image from [sourceUri] into the app's internal files directory.
-     * Corrects image orientation using EXIF data.
+     * Corrects image orientation using EXIF data. Maintains high HD resolution (2048px max dimension @ 95% quality).
      *
      * @param context Android context
      * @param sourceUri Camera or gallery URI to process
      * @param subDirectory Subdirectory name under context.filesDir (e.g., "profile_pictures")
      * @param fileName Target file name (e.g., "profile_123.jpg")
-     * @return Path to the local compressed image, or null if processing fails
+     * @return Path to the local persistent image, or null if processing fails
      */
     suspend fun compressAndSaveImage(
         context: Context,
@@ -53,7 +53,7 @@ object ImageCompressionHelper {
                     e.printStackTrace()
                 }
 
-                // 2. Decode bounds to determine scaling factor (memory-friendly)
+                // 2. Decode bounds to determine scaling factor
                 val options = BitmapFactory.Options().apply {
                     inJustDecodeBounds = true
                 }
@@ -61,7 +61,7 @@ object ImageCompressionHelper {
                     BitmapFactory.decodeStream(inputStream, null, options)
                 }
 
-                val maxDimension = 1200
+                val maxDimension = 2048 // HD high resolution
                 var srcWidth = options.outWidth
                 var srcHeight = options.outHeight
 
@@ -102,11 +102,11 @@ object ImageCompressionHelper {
                     bitmap = processedBitmap
                 }
 
-                // 5. Save bitmap to app's secure internal persistent folder
+                // 5. Save high quality bitmap to internal persistent folder
                 val outputDir = File(context.filesDir, subDirectory).apply { mkdirs() }
                 val outputFile = File(outputDir, fileName)
                 FileOutputStream(outputFile).use { outputStream ->
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 85, outputStream)
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 95, outputStream) // 95% ultra-crisp quality
                 }
                 bitmap.recycle()
 
