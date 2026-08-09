@@ -12,6 +12,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.calculateCentroid
 import androidx.compose.foundation.gestures.calculateCentroidSize
 import androidx.compose.foundation.gestures.calculatePan
 import androidx.compose.foundation.gestures.calculateZoom
@@ -191,17 +192,30 @@ fun PdfDocumentViewer(
                                     gestureScale = newScale
                                     scope.launch { scaleAnimatable.snapTo(newScale) }
 
-                                    // Re-clamp offset to new scale boundaries
-                                    val clampedCurrent = clampOffset(offsetAnimatable.value, newScale)
-
-                                    if (!pointerCountChanged && !isPinching) {
+                                    if (!pointerCountChanged && isPinching && zoomChange != 1f) {
+                                        // Focal-point zoom: adjust offset so content under fingers stays in place
+                                        val centroid = event.calculateCentroid(useCurrent = true)
+                                        val center = Offset(containerWidth / 2f, containerHeight / 2f)
+                                        val focalAdjust = (centroid - center) * (1f - zoomChange)
+                                        val newOffset = clampOffset(
+                                            offsetAnimatable.value * zoomChange + focalAdjust,
+                                            newScale
+                                        )
+                                        scope.launch { offsetAnimatable.snapTo(newOffset) }
+                                    } else if (!pointerCountChanged && !isPinching) {
+                                        // Single-finger pan
+                                        val clampedCurrent = clampOffset(offsetAnimatable.value, newScale)
                                         val newOffset = clampOffset(
                                             clampedCurrent + panChange,
                                             newScale
                                         )
                                         scope.launch { offsetAnimatable.snapTo(newOffset) }
-                                    } else if (clampedCurrent != offsetAnimatable.value) {
-                                        scope.launch { offsetAnimatable.snapTo(clampedCurrent) }
+                                    } else {
+                                        // Re-clamp offset to new scale boundaries (pointer transition or no zoom change)
+                                        val clampedCurrent = clampOffset(offsetAnimatable.value, newScale)
+                                        if (clampedCurrent != offsetAnimatable.value) {
+                                            scope.launch { offsetAnimatable.snapTo(clampedCurrent) }
+                                        }
                                     }
                                 }
 
