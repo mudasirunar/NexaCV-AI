@@ -160,10 +160,16 @@ val PdfControlsIconTintEnabled = Color.White
 val PdfControlsIconTintDisabled = Color(0x59FFFFFF)
 
 @Composable
-fun getPdfCanvasBgColor(isDark: Boolean = isSystemInDarkTheme()): Color {
+fun isAppInDarkTheme(): Boolean {
+    return androidx.compose.material3.MaterialTheme.colorScheme.background == DarkBackground
+}
+
+@Composable
+fun getPdfCanvasBgColor(isDark: Boolean = isAppInDarkTheme()): Color {
     return if (isDark) PdfCanvasDarkBg else PdfCanvasLightBg
 }
 
-fun getPdfCanvasBgHex(isDark: Boolean): String {
+@Composable
+fun getPdfCanvasBgHex(isDark: Boolean = isAppInDarkTheme()): String {
     return if (isDark) PdfCanvasDarkBgHex else PdfCanvasLightBgHex
 }

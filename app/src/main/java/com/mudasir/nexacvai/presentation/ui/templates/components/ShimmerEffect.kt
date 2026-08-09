@@ -9,13 +9,18 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 
+import androidx.compose.material3.MaterialTheme
+
 /**
  * Shimmer Skeleton Animation Modifier for Template Preview & Profile Injection.
  */
 fun Modifier.shimmerEffect(
-    shimmerColor: Color = Color.LightGray.copy(alpha = 0.4f),
-    backgroundColor: Color = Color.LightGray.copy(alpha = 0.15f)
+    shimmerColor: Color? = null,
+    backgroundColor: Color? = null
 ): Modifier = composed {
+    val defaultShimmer = shimmerColor ?: MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+    val defaultBg = backgroundColor ?: MaterialTheme.colorScheme.onSurface.copy(alpha = 0.04f)
+
     val transition = rememberInfiniteTransition(label = "shimmerTransition")
     val translateAnim by transition.animateFloat(
         initialValue = 0f,
@@ -29,9 +34,9 @@ fun Modifier.shimmerEffect(
 
     val brush = Brush.linearGradient(
         colors = listOf(
-            backgroundColor,
-            shimmerColor,
-            backgroundColor
+            defaultBg,
+            defaultShimmer,
+            defaultBg
         ),
         start = Offset(translateAnim - 300f, translateAnim - 300f),
         end = Offset(translateAnim, translateAnim)

@@ -47,7 +47,7 @@ fun PdfDocumentViewer(
     var totalPages by remember { mutableIntStateOf(1) }
     var currentZoom by remember { mutableFloatStateOf(1.0f) }
 
-    val isDark = isSystemInDarkTheme()
+    val isDark = isAppInDarkTheme()
     val canvasBgColor = getPdfCanvasBgColor(isDark)
     val canvasBgHex = getPdfCanvasBgHex(isDark)
 
