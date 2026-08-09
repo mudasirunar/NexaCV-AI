@@ -22,13 +22,12 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
-            //isShrinkResources = true
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            //signingConfig = signingConfigs.getByName("debug")
         }
     }
     compileOptions {
@@ -41,6 +40,11 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+    }
+    packaging {
+        jniLibs {
+            useLegacyPackaging = false
+        }
     }
 }
 
@@ -91,6 +95,6 @@ dependencies {
     // lottie animation
     implementation("com.airbnb.android:lottie-compose:6.4.0")
 
-    // Industry-Standard Native PDF Viewer
-    implementation("com.github.mhiew:android-pdf-viewer:3.2.0-beta.1")
+    // Native PDF Viewer
+    implementation("io.github.oothp:android-pdf-viewer:3.2.0-beta06")
 }
