@@ -6,6 +6,8 @@ import androidx.lifecycle.viewModelScope
 import com.mudasir.nexacvai.domain.model.*
 import com.mudasir.nexacvai.domain.usecase.GetProfileUseCase
 import com.mudasir.nexacvai.domain.usecase.SaveProfileUseCase
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -174,20 +176,52 @@ class CreateProfileViewModel @Inject constructor(
         )
     }
 
+    private var duplicateSkillErrorJob: Job? = null
+
     fun addSkill(skill: String) {
-        if (skill.isNotBlank() && !_state.value.skills.contains(skill)) {
-            val newSkills = _state.value.skills + skill.trim()
-            _state.value = _state.value.copy(skills = newSkills, currentSkillInput = "")
+        val trimmedSkill = skill.trim()
+        if (trimmedSkill.isBlank()) return
+
+        val exists = _state.value.skills.any { it.equals(trimmedSkill, ignoreCase = true) }
+        if (exists) {
+            duplicateSkillErrorJob?.cancel()
+            _state.value = _state.value.copy(
+                duplicateSkillError = "Skill '$trimmedSkill' has already been added."
+            )
+            duplicateSkillErrorJob = viewModelScope.launch {
+                delay(3000L)
+                _state.value = _state.value.copy(duplicateSkillError = null)
+            }
+        } else {
+            duplicateSkillErrorJob?.cancel()
+            val newSkills = _state.value.skills + trimmedSkill
+            _state.value = _state.value.copy(
+                skills = newSkills,
+                currentSkillInput = "",
+                duplicateSkillError = null
+            )
         }
     }
 
     fun removeSkill(skill: String) {
+        duplicateSkillErrorJob?.cancel()
         val newSkills = _state.value.skills.filter { it != skill }
-        _state.value = _state.value.copy(skills = newSkills)
+        _state.value = _state.value.copy(
+            skills = newSkills,
+            duplicateSkillError = null
+        )
     }
     
     fun updateSkillInput(input: String) {
-        _state.value = _state.value.copy(currentSkillInput = input)
+        if (_state.value.duplicateSkillError != null) {
+            duplicateSkillErrorJob?.cancel()
+            _state.value = _state.value.copy(
+                currentSkillInput = input,
+                duplicateSkillError = null
+            )
+        } else {
+            _state.value = _state.value.copy(currentSkillInput = input)
+        }
     }
 
     fun addExperience(exp: Experience) {

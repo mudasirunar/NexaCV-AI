@@ -124,11 +124,12 @@ fun CreateProfileScreen(
         )
     }
 
-    val summaryState = remember(state.professionalSummary, state.skills, state.currentSkillInput) {
+    val summaryState = remember(state.professionalSummary, state.skills, state.currentSkillInput, state.duplicateSkillError) {
         SummaryStepState(
             professionalSummary = state.professionalSummary,
             skills = state.skills,
-            currentSkillInput = state.currentSkillInput
+            currentSkillInput = state.currentSkillInput,
+            duplicateSkillError = state.duplicateSkillError
         )
     }
 

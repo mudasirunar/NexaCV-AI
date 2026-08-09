@@ -21,7 +21,8 @@ data class BasicInfoStepState(
 data class SummaryStepState(
     val professionalSummary: String,
     val skills: List<String>,
-    val currentSkillInput: String
+    val currentSkillInput: String,
+    val duplicateSkillError: String? = null
 )
 
 @Immutable

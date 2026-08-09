@@ -32,6 +32,7 @@ data class CreateProfileState(
     val professionalSummary: String = "",
     val skills: List<String> = emptyList(),
     val currentSkillInput: String = "",
+    val duplicateSkillError: String? = null,
     
     // Step 3: Experience & Projects
     val experiences: List<Experience> = emptyList(),
