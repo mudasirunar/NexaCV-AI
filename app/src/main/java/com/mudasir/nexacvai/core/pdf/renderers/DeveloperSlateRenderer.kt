@@ -86,38 +86,44 @@ class DeveloperSlateRenderer(private val context: Context) : PdfTemplateRenderer
             }
         }
 
-        // GitHub / Developer Badge Box - Positioned safely to left of photo (or far right if no photo)
-        val photoSpaceOffset = if (hasPhoto) 75f else 0f
-        val badgePaint = Paint().apply {
-            color = Color.parseColor("#1E293B")
-            style = Paint.Style.FILL
+        // GitHub / Developer Badge Box - Render ONLY if social link / badge text is present (disappears cleanly if blank)
+        val githubLink = data.socialLinks.firstOrNull { it.platform.equals("GitHub", ignoreCase = true) }?.url
+            ?: data.socialLinks.firstOrNull()?.url
+        val devBadgeRaw = if (!githubLink.isNullOrBlank()) githubLink.replace("https://", "").replace("github.com/", "@") else ""
+        
+        if (devBadgeRaw.isNotBlank()) {
+            val devBadgeText = "[ GITHUB: $devBadgeRaw ]"
+            val photoSpaceOffset = if (hasPhoto) 75f else 0f
+            val badgePaint = Paint().apply {
+                color = Color.parseColor("#1E293B")
+                style = Paint.Style.FILL
+            }
+            val badgeBorderPaint = Paint().apply {
+                color = Color.parseColor("#38BDF8")
+                strokeWidth = 1f
+                style = Paint.Style.STROKE
+                isAntiAlias = true
+            }
+            val badgeTextPaint = Paint().apply {
+                color = Color.parseColor("#7DD3FC")
+                textSize = 8f
+                typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
+                isAntiAlias = true
+            }
+            val devBadgeW = badgeTextPaint.measureText(devBadgeText) + 14f
+            val badgeRightX = width - 32f - photoSpaceOffset
+            val devBadgeRect = RectF(badgeRightX - devBadgeW, 16f, badgeRightX, 36f)
+            pageManager.canvas.drawRoundRect(devBadgeRect, 4f, 4f, badgePaint)
+            pageManager.canvas.drawRoundRect(devBadgeRect, 4f, 4f, badgeBorderPaint)
+            pageManager.canvas.drawText(devBadgeText, badgeRightX - devBadgeW + 7f, 29f, badgeTextPaint)
         }
-        val badgeBorderPaint = Paint().apply {
-            color = Color.parseColor("#38BDF8")
-            strokeWidth = 1f
-            style = Paint.Style.STROKE
-            isAntiAlias = true
-        }
-        val badgeTextPaint = Paint().apply {
-            color = Color.parseColor("#7DD3FC")
-            textSize = 8f
-            typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
-            isAntiAlias = true
-        }
-        val devBadgeText = "[ GITHUB: alexmercer ]"
-        val devBadgeW = badgeTextPaint.measureText(devBadgeText) + 14f
-        val badgeRightX = width - 32f - photoSpaceOffset
-        val devBadgeRect = RectF(badgeRightX - devBadgeW, 16f, badgeRightX, 36f)
-        pageManager.canvas.drawRoundRect(devBadgeRect, 4f, 4f, badgePaint)
-        pageManager.canvas.drawRoundRect(devBadgeRect, 4f, 4f, badgeBorderPaint)
-        pageManager.canvas.drawText(devBadgeText, badgeRightX - devBadgeW + 7f, 29f, badgeTextPaint)
 
         pageManager.currentY = bannerHeight + 24f
 
         // 1. Monospace Overview
         if (data.summary.isNotBlank()) {
             pageManager.ensureSpace(50f)
-            drawDevSectionHeader(pageManager, "// OVERVIEW", primaryColorInt, width)
+            drawDevSectionHeader(pageManager, "// " + data.getSectionTitle("SUMMARY", "OVERVIEW"), primaryColorInt, width)
             val summaryPaint = Paint().apply {
                 color = Color.parseColor("#1E293B")
                 textSize = 9.5f
@@ -141,7 +147,7 @@ class DeveloperSlateRenderer(private val context: Context) : PdfTemplateRenderer
 
         if (categoriesToRender.isNotEmpty()) {
             pageManager.ensureSpace(50f)
-            drawDevSectionHeader(pageManager, "// TECHNICAL_SKILLS_MATRIX", primaryColorInt, width)
+            drawDevSectionHeader(pageManager, "// " + data.getSectionTitle("SKILLS", "TECHNICAL_SKILLS_MATRIX"), primaryColorInt, width)
 
             val catNamePaint = Paint().apply {
                 color = Color.parseColor("#0F172A")
@@ -179,7 +185,7 @@ class DeveloperSlateRenderer(private val context: Context) : PdfTemplateRenderer
         // 3. Work Experience & Tech Stack Highlights
         if (data.experiences.isNotEmpty()) {
             pageManager.ensureSpace(40f)
-            drawDevSectionHeader(pageManager, "// WORK_EXPERIENCE", primaryColorInt, width)
+            drawDevSectionHeader(pageManager, "// " + data.getSectionTitle("EXPERIENCE", "WORK_EXPERIENCE"), primaryColorInt, width)
 
             for (exp in data.experiences) {
                 pageManager.ensureSpace(45f)
@@ -243,7 +249,7 @@ class DeveloperSlateRenderer(private val context: Context) : PdfTemplateRenderer
         // 4. Education
         if (data.educations.isNotEmpty()) {
             pageManager.ensureSpace(40f)
-            drawDevSectionHeader(pageManager, "// EDUCATION", primaryColorInt, width)
+            drawDevSectionHeader(pageManager, "// " + data.getSectionTitle("EDUCATION", "EDUCATION"), primaryColorInt, width)
 
             for (edu in data.educations) {
                 pageManager.ensureSpace(30f)
@@ -280,7 +286,7 @@ class DeveloperSlateRenderer(private val context: Context) : PdfTemplateRenderer
         // 5. Featured Projects (With Git Repo Links & Tech Tags)
         if (data.projects.isNotEmpty()) {
             pageManager.ensureSpace(40f)
-            drawDevSectionHeader(pageManager, "// FEATURED_PROJECTS", primaryColorInt, width)
+            drawDevSectionHeader(pageManager, "// " + data.getSectionTitle("PROJECTS", "FEATURED_PROJECTS"), primaryColorInt, width)
 
             for (proj in data.projects) {
                 pageManager.ensureSpace(35f)
@@ -335,7 +341,7 @@ class DeveloperSlateRenderer(private val context: Context) : PdfTemplateRenderer
         // 6. Certifications
         if (data.certifications.isNotEmpty()) {
             pageManager.ensureSpace(35f)
-            drawDevSectionHeader(pageManager, "// CERTIFICATIONS", primaryColorInt, width)
+            drawDevSectionHeader(pageManager, "// " + data.getSectionTitle("CERTIFICATIONS", "CERTIFICATIONS"), primaryColorInt, width)
             val certPaint = Paint().apply {
                 color = Color.parseColor("#334155")
                 textSize = 9.5f
@@ -352,7 +358,7 @@ class DeveloperSlateRenderer(private val context: Context) : PdfTemplateRenderer
         // 7. Languages & References
         if (data.languages.isNotEmpty()) {
             pageManager.ensureSpace(30f)
-            drawDevSectionHeader(pageManager, "// LANGUAGES", primaryColorInt, width)
+            drawDevSectionHeader(pageManager, "// " + data.getSectionTitle("LANGUAGES", "LANGUAGES"), primaryColorInt, width)
             val langPaint = Paint().apply {
                 color = Color.parseColor("#334155")
                 textSize = 9.5f
@@ -365,7 +371,7 @@ class DeveloperSlateRenderer(private val context: Context) : PdfTemplateRenderer
 
         if (data.references.isNotEmpty()) {
             pageManager.ensureSpace(35f)
-            drawDevSectionHeader(pageManager, "// REFERENCES", primaryColorInt, width)
+            drawDevSectionHeader(pageManager, "// " + data.getSectionTitle("REFERENCES", "REFERENCES"), primaryColorInt, width)
             val refPaint = Paint().apply {
                 color = Color.parseColor("#334155")
                 textSize = 9.5f

@@ -88,7 +88,7 @@ class CreativePortfolioRenderer(private val context: Context) : PdfTemplateRende
         // 2. Featured Projects Highlight Block (Floating Cards)
         if (data.projects.isNotEmpty()) {
             pageManager.ensureSpace(50f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "FEATURED PORTFOLIO PROJECTS", primaryColorInt, 28f, width - 28f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("PROJECTS", "FEATURED PORTFOLIO PROJECTS"), primaryColorInt, 28f, width - 28f)
 
             for (proj in data.projects) {
                 pageManager.ensureSpace(45f)
@@ -122,7 +122,7 @@ class CreativePortfolioRenderer(private val context: Context) : PdfTemplateRende
         // 3. Work Experience
         if (data.experiences.isNotEmpty()) {
             pageManager.ensureSpace(40f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "WORK EXPERIENCE", primaryColorInt, 28f, width - 28f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("EXPERIENCE", "WORK EXPERIENCE"), primaryColorInt, 28f, width - 28f)
 
             for (exp in data.experiences) {
                 pageManager.ensureSpace(45f)
@@ -164,7 +164,7 @@ class CreativePortfolioRenderer(private val context: Context) : PdfTemplateRende
         // 4. Education
         if (data.educations.isNotEmpty()) {
             pageManager.ensureSpace(40f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "EDUCATION & TRAINING", primaryColorInt, 28f, width - 28f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("EDUCATION", "EDUCATION & TRAINING"), primaryColorInt, 28f, width - 28f)
 
             for (edu in data.educations) {
                 pageManager.ensureSpace(30f)
@@ -199,7 +199,7 @@ class CreativePortfolioRenderer(private val context: Context) : PdfTemplateRende
         // 5. Creative Skills
         if (data.skills.isNotEmpty()) {
             pageManager.ensureSpace(35f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "CREATIVE SKILLS & SOFTWARE", primaryColorInt, 28f, width - 28f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("SKILLS", "CREATIVE SKILLS & SOFTWARE"), primaryColorInt, 28f, width - 28f)
             val skillPaint = Paint().apply {
                 color = Color.parseColor("#334155")
                 textSize = 9.5f
@@ -218,7 +218,7 @@ class CreativePortfolioRenderer(private val context: Context) : PdfTemplateRende
         // 6. Certifications & Honors
         if (data.certifications.isNotEmpty()) {
             pageManager.ensureSpace(35f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "CERTIFICATIONS & CREDENTIALS", primaryColorInt, 28f, width - 28f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("CERTIFICATIONS", "CERTIFICATIONS & CREDENTIALS"), primaryColorInt, 28f, width - 28f)
             val certPaint = Paint().apply {
                 color = Color.parseColor("#334155")
                 textSize = 9.5f
@@ -235,7 +235,7 @@ class CreativePortfolioRenderer(private val context: Context) : PdfTemplateRende
         // 7. Hobbies & References
         if (data.hobbies.isNotEmpty()) {
             pageManager.ensureSpace(30f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "CREATIVE INTERESTS & HOBBIES", primaryColorInt, 28f, width - 28f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("HOBBIES", "CREATIVE INTERESTS & HOBBIES"), primaryColorInt, 28f, width - 28f)
             val hobbyPaint = Paint().apply {
                 color = Color.parseColor("#334155")
                 textSize = 9.5f
@@ -247,7 +247,7 @@ class CreativePortfolioRenderer(private val context: Context) : PdfTemplateRende
 
         if (data.references.isNotEmpty()) {
             pageManager.ensureSpace(35f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "PORTFOLIO REFERENCES", primaryColorInt, 28f, width - 28f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("REFERENCES", "PORTFOLIO REFERENCES"), primaryColorInt, 28f, width - 28f)
             val refPaint = Paint().apply {
                 color = Color.parseColor("#334155")
                 textSize = 9.5f

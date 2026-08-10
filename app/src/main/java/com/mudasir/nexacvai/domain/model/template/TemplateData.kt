@@ -36,8 +36,18 @@ data class TemplateData(
     val references: List<TemplateReferenceData> = emptyList(),
     val hobbies: List<String> = emptyList(),
     val volunteerWork: List<String> = emptyList(),
-    val awards: List<String> = emptyList()
+    val awards: List<String> = emptyList(),
+    val sectionTitleOverrides: Map<String, String> = emptyMap()
 ) {
+    /**
+     * Resolves the section heading title, preferring a custom user override if provided,
+     * otherwise falling back to the template's default section title.
+     */
+    fun getSectionTitle(sectionKey: String, defaultTitle: String): String {
+        val override = sectionTitleOverrides[sectionKey.uppercase()] ?: sectionTitleOverrides[sectionKey]
+        return if (!override.isNullOrBlank()) override else defaultTitle
+    }
+
     companion object {
         /**
          * Default Sample Placeholder Guidance Data.

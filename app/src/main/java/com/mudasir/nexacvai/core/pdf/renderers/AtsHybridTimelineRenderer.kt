@@ -93,7 +93,7 @@ class AtsHybridTimelineRenderer(private val context: Context) : PdfTemplateRende
         // 1. Professional Summary
         if (data.summary.isNotBlank()) {
             pageManager.ensureSpace(50f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "SUMMARY & OBJECTIVE", primaryColorInt, 36f, width - 36f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("SUMMARY", "SUMMARY & OBJECTIVE"), primaryColorInt, 36f, width - 36f)
             val summaryPaint = Paint().apply {
                 color = Color.parseColor("#334155")
                 textSize = 9.5f
@@ -111,7 +111,7 @@ class AtsHybridTimelineRenderer(private val context: Context) : PdfTemplateRende
         // 2. Education & Academic Honors (Priority #1 for Fresh Graduates)
         if (data.educations.isNotEmpty()) {
             pageManager.ensureSpace(40f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "EDUCATION & ACADEMIC CREDENTIALS", primaryColorInt, 36f, width - 36f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("EDUCATION", "EDUCATION & ACADEMIC CREDENTIALS"), primaryColorInt, 36f, width - 36f)
 
             for (edu in data.educations) {
                 pageManager.ensureSpace(35f)
@@ -162,7 +162,7 @@ class AtsHybridTimelineRenderer(private val context: Context) : PdfTemplateRende
         // 3. Key Projects & Capstones
         if (data.projects.isNotEmpty()) {
             pageManager.ensureSpace(40f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "FEATURED PROJECTS & CAPSTONES", primaryColorInt, 36f, width - 36f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("PROJECTS", "FEATURED PROJECTS & CAPSTONES"), primaryColorInt, 36f, width - 36f)
 
             for (proj in data.projects) {
                 pageManager.ensureSpace(35f)
@@ -216,7 +216,7 @@ class AtsHybridTimelineRenderer(private val context: Context) : PdfTemplateRende
         // 4. Work & Internship Experience
         if (data.experiences.isNotEmpty()) {
             pageManager.ensureSpace(40f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "EXPERIENCE & INTERNSHIPS", primaryColorInt, 36f, width - 36f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("EXPERIENCE", "EXPERIENCE & INTERNSHIPS"), primaryColorInt, 36f, width - 36f)
 
             for (exp in data.experiences) {
                 pageManager.ensureSpace(45f)
@@ -270,7 +270,7 @@ class AtsHybridTimelineRenderer(private val context: Context) : PdfTemplateRende
         // 5. Technical Skills & Tools
         if (data.skills.isNotEmpty()) {
             pageManager.ensureSpace(40f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "TECHNICAL SKILLS & TOOLS", primaryColorInt, 36f, width - 36f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("SKILLS", "TECHNICAL SKILLS & TOOLS"), primaryColorInt, 36f, width - 36f)
 
             val skillPaint = Paint().apply {
                 color = Color.parseColor("#334155")
@@ -290,7 +290,7 @@ class AtsHybridTimelineRenderer(private val context: Context) : PdfTemplateRende
         // 6. Certifications
         if (data.certifications.isNotEmpty()) {
             pageManager.ensureSpace(40f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "CERTIFICATIONS", primaryColorInt, 36f, width - 36f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("CERTIFICATIONS", "CERTIFICATIONS"), primaryColorInt, 36f, width - 36f)
             val certPaint = Paint().apply {
                 color = Color.parseColor("#334155")
                 textSize = 9.5f
@@ -311,7 +311,7 @@ class AtsHybridTimelineRenderer(private val context: Context) : PdfTemplateRende
         // 7. Languages & Hobbies
         if (data.languages.isNotEmpty()) {
             pageManager.ensureSpace(35f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "LANGUAGES", primaryColorInt, 36f, width - 36f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("LANGUAGES", "LANGUAGES"), primaryColorInt, 36f, width - 36f)
             val langPaint = Paint().apply {
                 color = Color.parseColor("#334155")
                 textSize = 9.5f
@@ -324,7 +324,7 @@ class AtsHybridTimelineRenderer(private val context: Context) : PdfTemplateRende
 
         if (data.hobbies.isNotEmpty()) {
             pageManager.ensureSpace(30f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "INTERESTS & ACTIVITIES", primaryColorInt, 36f, width - 36f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("HOBBIES", "INTERESTS & ACTIVITIES"), primaryColorInt, 36f, width - 36f)
             val hobbyPaint = Paint().apply {
                 color = Color.parseColor("#334155")
                 textSize = 9.5f
@@ -338,7 +338,7 @@ class AtsHybridTimelineRenderer(private val context: Context) : PdfTemplateRende
         // 8. References
         if (data.references.isNotEmpty()) {
             pageManager.ensureSpace(35f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "REFERENCES", primaryColorInt, 36f, width - 36f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("REFERENCES", "REFERENCES"), primaryColorInt, 36f, width - 36f)
             val refPaint = Paint().apply {
                 color = Color.parseColor("#334155")
                 textSize = 9.5f

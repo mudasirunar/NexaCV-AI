@@ -86,10 +86,10 @@ class ModernWavyRenderer(private val context: Context) : PdfTemplateRenderer {
 
         pageManager.currentY = headerHeight + 20f
 
-        // 1. Professional Summary
+        // 1. Professional Profile Summary
         if (data.summary.isNotBlank()) {
             pageManager.ensureSpace(50f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "ABOUT ME", primaryColorInt, 32f, width - 32f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("SUMMARY", "ABOUT ME"), primaryColorInt, 32f, width - 32f)
             val summaryPaint = Paint().apply {
                 color = Color.parseColor("#334155")
                 textSize = 9.5f
@@ -107,7 +107,7 @@ class ModernWavyRenderer(private val context: Context) : PdfTemplateRenderer {
         // 2. Work Experience
         if (data.experiences.isNotEmpty()) {
             pageManager.ensureSpace(40f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "EXPERIENCE & ACHIEVEMENTS", primaryColorInt, 32f, width - 32f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("EXPERIENCE", "EXPERIENCE & ACHIEVEMENTS"), primaryColorInt, 32f, width - 32f)
 
             for (exp in data.experiences) {
                 pageManager.ensureSpace(45f)
@@ -159,7 +159,7 @@ class ModernWavyRenderer(private val context: Context) : PdfTemplateRenderer {
         // 3. Education
         if (data.educations.isNotEmpty()) {
             pageManager.ensureSpace(40f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "EDUCATION & QUALIFICATIONS", primaryColorInt, 32f, width - 32f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("EDUCATION", "EDUCATION & QUALIFICATIONS"), primaryColorInt, 32f, width - 32f)
 
             for (edu in data.educations) {
                 pageManager.ensureSpace(30f)
@@ -194,7 +194,7 @@ class ModernWavyRenderer(private val context: Context) : PdfTemplateRenderer {
         // 4. Projects
         if (data.projects.isNotEmpty()) {
             pageManager.ensureSpace(40f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "KEY PROJECTS", primaryColorInt, 32f, width - 32f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("PROJECTS", "KEY PROJECTS"), primaryColorInt, 32f, width - 32f)
 
             for (proj in data.projects) {
                 pageManager.ensureSpace(35f)
@@ -225,7 +225,7 @@ class ModernWavyRenderer(private val context: Context) : PdfTemplateRenderer {
         // 5. Skills Pill Section
         if (data.skills.isNotEmpty()) {
             pageManager.ensureSpace(40f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "CORE SKILLS & TOOLS", primaryColorInt, 32f, width - 32f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("SKILLS", "CORE SKILLS & TOOLS"), primaryColorInt, 32f, width - 32f)
 
             val pillBgPaint = Paint().apply {
                 color = Color.parseColor("#F1F5F9")
@@ -263,7 +263,7 @@ class ModernWavyRenderer(private val context: Context) : PdfTemplateRenderer {
         // 6. Certifications & Credentials
         if (data.certifications.isNotEmpty()) {
             pageManager.ensureSpace(35f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "CERTIFICATIONS & LICENSES", primaryColorInt, 32f, width - 32f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("CERTIFICATIONS", "CERTIFICATIONS & LICENSES"), primaryColorInt, 32f, width - 32f)
             val certPaint = Paint().apply {
                 color = Color.parseColor("#334155")
                 textSize = 9.5f
@@ -280,7 +280,7 @@ class ModernWavyRenderer(private val context: Context) : PdfTemplateRenderer {
         // 7. Languages
         if (data.languages.isNotEmpty()) {
             pageManager.ensureSpace(35f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "LANGUAGES", primaryColorInt, 32f, width - 32f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("LANGUAGES", "LANGUAGES"), primaryColorInt, 32f, width - 32f)
             val langPaint = Paint().apply {
                 color = Color.parseColor("#334155")
                 textSize = 9.5f
@@ -294,7 +294,7 @@ class ModernWavyRenderer(private val context: Context) : PdfTemplateRenderer {
         // 8. Hobbies & References
         if (data.hobbies.isNotEmpty()) {
             pageManager.ensureSpace(30f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "INTERESTS & HOBBIES", primaryColorInt, 32f, width - 32f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("HOBBIES", "INTERESTS & HOBBIES"), primaryColorInt, 32f, width - 32f)
             val hobbyPaint = Paint().apply {
                 color = Color.parseColor("#334155")
                 textSize = 9.5f
@@ -306,7 +306,7 @@ class ModernWavyRenderer(private val context: Context) : PdfTemplateRenderer {
 
         if (data.references.isNotEmpty()) {
             pageManager.ensureSpace(35f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "REFERENCES", primaryColorInt, 32f, width - 32f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("REFERENCES", "REFERENCES"), primaryColorInt, 32f, width - 32f)
             val refPaint = Paint().apply {
                 color = Color.parseColor("#334155")
                 textSize = 9.5f

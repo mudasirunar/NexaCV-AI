@@ -88,38 +88,45 @@ class CyberSecurityMatrixRenderer(private val context: Context) : PdfTemplateRen
             }
         }
 
-        // Compact Security Clearance Badge Box (Positioned safely without prompt or photo collision)
-        val photoSpaceOffset = if (hasPhoto) 70f else 0f
-        val badgePaint = Paint().apply {
-            color = Color.parseColor("#064E3B") // Dark Emerald Fill
-            style = Paint.Style.FILL
+        // Compact Security Clearance Badge Box - Render ONLY if clearance text is present (disappears cleanly if blank)
+        val clearanceText = if (data.location.contains("Clearance", ignoreCase = true)) {
+            "[ " + data.location.split("•").lastOrNull { it.contains("Clearance", ignoreCase = true) }?.trim() + " ]"
+        } else if (data.socialLinks.any { it.platform.contains("Clearance", ignoreCase = true) }) {
+            "[ " + data.socialLinks.first { it.platform.contains("Clearance", ignoreCase = true) }.url + " ]"
+        } else ""
+
+        if (clearanceText.isNotBlank()) {
+            val photoSpaceOffset = if (hasPhoto) 70f else 0f
+            val badgePaint = Paint().apply {
+                color = Color.parseColor("#064E3B") // Dark Emerald Fill
+                style = Paint.Style.FILL
+            }
+            val badgeBorderPaint = Paint().apply {
+                color = Color.parseColor("#10B981") // Emerald Border
+                strokeWidth = 1f
+                style = Paint.Style.STROKE
+                isAntiAlias = true
+            }
+            val badgeTextPaint = Paint().apply {
+                color = Color.parseColor("#A7F3D0")
+                textSize = 8f
+                typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
+                isAntiAlias = true
+            }
+            val badgeW = badgeTextPaint.measureText(clearanceText) + 12f
+            val badgeRightX = width - 32f - photoSpaceOffset
+            val devBadgeRect = RectF(badgeRightX - badgeW, 14f, badgeRightX, 32f)
+            pageManager.canvas.drawRoundRect(devBadgeRect, 4f, 4f, badgePaint)
+            pageManager.canvas.drawRoundRect(devBadgeRect, 4f, 4f, badgeBorderPaint)
+            pageManager.canvas.drawText(clearanceText, badgeRightX - badgeW + 6f, 25f, badgeTextPaint)
         }
-        val badgeBorderPaint = Paint().apply {
-            color = Color.parseColor("#10B981") // Emerald Border
-            strokeWidth = 1f
-            style = Paint.Style.STROKE
-            isAntiAlias = true
-        }
-        val badgeTextPaint = Paint().apply {
-            color = Color.parseColor("#A7F3D0")
-            textSize = 8f
-            typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
-            isAntiAlias = true
-        }
-        val badgeText = "[ TOP SECRET CLEARANCE ]"
-        val badgeW = badgeTextPaint.measureText(badgeText) + 12f
-        val badgeRightX = width - 32f - photoSpaceOffset
-        val devBadgeRect = RectF(badgeRightX - badgeW, 14f, badgeRightX, 32f)
-        pageManager.canvas.drawRoundRect(devBadgeRect, 4f, 4f, badgePaint)
-        pageManager.canvas.drawRoundRect(devBadgeRect, 4f, 4f, badgeBorderPaint)
-        pageManager.canvas.drawText(badgeText, badgeRightX - badgeW + 6f, 25f, badgeTextPaint)
 
         pageManager.currentY = bannerHeight + 24f
 
         // 1. Executive Security Summary
         if (data.summary.isNotBlank()) {
             pageManager.ensureSpace(50f)
-            drawCyberHeader(pageManager, "// 01. SECURITY_EXECUTIVE_SUMMARY", primaryColorInt, width)
+            drawCyberHeader(pageManager, "// " + data.getSectionTitle("SUMMARY", "01. SECURITY_EXECUTIVE_SUMMARY"), primaryColorInt, width)
             val summaryPaint = Paint().apply {
                 color = Color.parseColor("#1E293B")
                 textSize = 9.5f
@@ -143,7 +150,7 @@ class CyberSecurityMatrixRenderer(private val context: Context) : PdfTemplateRen
 
         if (categoriesToRender.isNotEmpty()) {
             pageManager.ensureSpace(50f)
-            drawCyberHeader(pageManager, "// 02. SECURITY_COMPETENCIES_MATRIX", primaryColorInt, width)
+            drawCyberHeader(pageManager, "// " + data.getSectionTitle("SKILLS", "02. SECURITY_COMPETENCIES_MATRIX"), primaryColorInt, width)
 
             val catNamePaint = Paint().apply {
                 color = Color.parseColor("#0F172A")
@@ -181,7 +188,7 @@ class CyberSecurityMatrixRenderer(private val context: Context) : PdfTemplateRen
         // 3. Work Experience & Incident Response History
         if (data.experiences.isNotEmpty()) {
             pageManager.ensureSpace(40f)
-            drawCyberHeader(pageManager, "// 03. INCIDENT_RESPONSE_&_WORK_HISTORY", primaryColorInt, width)
+            drawCyberHeader(pageManager, "// " + data.getSectionTitle("EXPERIENCE", "03. INCIDENT_RESPONSE_&_WORK_HISTORY"), primaryColorInt, width)
 
             for (exp in data.experiences) {
                 pageManager.ensureSpace(45f)
@@ -233,7 +240,7 @@ class CyberSecurityMatrixRenderer(private val context: Context) : PdfTemplateRen
         // 4. Education & Academic Credentials
         if (data.educations.isNotEmpty()) {
             pageManager.ensureSpace(40f)
-            drawCyberHeader(pageManager, "// 04. ACADEMIC_CREDENTIALS", primaryColorInt, width)
+            drawCyberHeader(pageManager, "// " + data.getSectionTitle("EDUCATION", "04. ACADEMIC_CREDENTIALS"), primaryColorInt, width)
 
             for (edu in data.educations) {
                 pageManager.ensureSpace(30f)
@@ -269,7 +276,7 @@ class CyberSecurityMatrixRenderer(private val context: Context) : PdfTemplateRen
         // 5. Security Projects & Infrastructure
         if (data.projects.isNotEmpty()) {
             pageManager.ensureSpace(40f)
-            drawCyberHeader(pageManager, "// 05. SECURITY_PROJECTS_&_INFRASTRUCTURE", primaryColorInt, width)
+            drawCyberHeader(pageManager, "// " + data.getSectionTitle("PROJECTS", "05. SECURITY_PROJECTS_&_INFRASTRUCTURE"), primaryColorInt, width)
 
             for (proj in data.projects) {
                 pageManager.ensureSpace(35f)
@@ -300,7 +307,7 @@ class CyberSecurityMatrixRenderer(private val context: Context) : PdfTemplateRen
         // 6. Certifications & Clearances
         if (data.certifications.isNotEmpty()) {
             pageManager.ensureSpace(35f)
-            drawCyberHeader(pageManager, "// 06. CERTIFICATIONS_&_CLEARANCES", primaryColorInt, width)
+            drawCyberHeader(pageManager, "// " + data.getSectionTitle("CERTIFICATIONS", "06. CERTIFICATIONS_&_CLEARANCES"), primaryColorInt, width)
             val certPaint = Paint().apply {
                 color = Color.parseColor("#334155")
                 textSize = 9.5f
@@ -317,7 +324,7 @@ class CyberSecurityMatrixRenderer(private val context: Context) : PdfTemplateRen
         // 7. Languages & References
         if (data.languages.isNotEmpty()) {
             pageManager.ensureSpace(30f)
-            drawCyberHeader(pageManager, "// 07. LANGUAGES", primaryColorInt, width)
+            drawCyberHeader(pageManager, "// " + data.getSectionTitle("LANGUAGES", "07. LANGUAGES"), primaryColorInt, width)
             val langPaint = Paint().apply {
                 color = Color.parseColor("#334155")
                 textSize = 9.5f
@@ -330,7 +337,7 @@ class CyberSecurityMatrixRenderer(private val context: Context) : PdfTemplateRen
 
         if (data.references.isNotEmpty()) {
             pageManager.ensureSpace(35f)
-            drawCyberHeader(pageManager, "// 08. PROFESSIONAL_REFERENCES", primaryColorInt, width)
+            drawCyberHeader(pageManager, "// " + data.getSectionTitle("REFERENCES", "08. PROFESSIONAL_REFERENCES"), primaryColorInt, width)
             val refPaint = Paint().apply {
                 color = Color.parseColor("#334155")
                 textSize = 9.5f

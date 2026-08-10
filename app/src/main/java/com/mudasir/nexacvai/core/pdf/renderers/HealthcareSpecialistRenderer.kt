@@ -94,7 +94,7 @@ class HealthcareSpecialistRenderer(private val context: Context) : PdfTemplateRe
         // 1. Clinical Profile Summary
         if (data.summary.isNotBlank()) {
             pageManager.ensureSpace(35f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "CLINICAL PROFILE & SPECIALTIES", medicalGreen, 36f, width - 36f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("SUMMARY", "CLINICAL PROFILE & SPECIALTIES"), medicalGreen, 36f, width - 36f)
             val summaryPaint = Paint().apply {
                 color = Color.parseColor("#1F2937")
                 textSize = 9f
@@ -112,7 +112,7 @@ class HealthcareSpecialistRenderer(private val context: Context) : PdfTemplateRe
         // 2. Education & Medical Residencies
         if (data.educations.isNotEmpty()) {
             pageManager.ensureSpace(35f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "MEDICAL DEGREES & RESIDENCY", medicalGreen, 36f, width - 36f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("EDUCATION", "MEDICAL DEGREES & RESIDENCY"), medicalGreen, 36f, width - 36f)
 
             for (edu in data.educations) {
                 pageManager.ensureSpace(28f)
@@ -161,7 +161,7 @@ class HealthcareSpecialistRenderer(private val context: Context) : PdfTemplateRe
         // 3. Clinical Appointments & Experience
         if (data.experiences.isNotEmpty()) {
             pageManager.ensureSpace(35f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "CLINICAL APPOINTMENTS & EXPERIENCE", medicalGreen, 36f, width - 36f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("EXPERIENCE", "CLINICAL APPOINTMENTS & EXPERIENCE"), medicalGreen, 36f, width - 36f)
 
             for (exp in data.experiences) {
                 pageManager.ensureSpace(32f)
@@ -214,7 +214,7 @@ class HealthcareSpecialistRenderer(private val context: Context) : PdfTemplateRe
         // 4. Clinical Research & Quality Projects
         if (data.projects.isNotEmpty()) {
             pageManager.ensureSpace(32f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "CLINICAL RESEARCH & INITIATIVES", medicalGreen, 36f, width - 36f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("PROJECTS", "CLINICAL RESEARCH & INITIATIVES"), medicalGreen, 36f, width - 36f)
 
             for (proj in data.projects) {
                 pageManager.ensureSpace(28f)
@@ -247,7 +247,7 @@ class HealthcareSpecialistRenderer(private val context: Context) : PdfTemplateRe
         // 5. Board Certifications & Medical Licenses
         if (data.certifications.isNotEmpty()) {
             pageManager.ensureSpace(28f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "BOARD CERTIFICATIONS & LICENSES", medicalGreen, 36f, width - 36f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("CERTIFICATIONS", "BOARD CERTIFICATIONS & LICENSES"), medicalGreen, 36f, width - 36f)
             val certPaint = Paint().apply {
                 color = Color.parseColor("#1F2937")
                 textSize = 9f
@@ -264,7 +264,7 @@ class HealthcareSpecialistRenderer(private val context: Context) : PdfTemplateRe
         // 6. Medical References
         if (data.references.isNotEmpty()) {
             pageManager.ensureSpace(28f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "MEDICAL REFERENCES", medicalGreen, 36f, width - 36f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("REFERENCES", "MEDICAL REFERENCES"), medicalGreen, 36f, width - 36f)
             val refPaint = Paint().apply {
                 color = Color.parseColor("#1F2937")
                 textSize = 9f

@@ -85,7 +85,7 @@ class ExecutiveCompetencyRenderer(private val context: Context) : PdfTemplateRen
         // 1. Executive Summary
         if (data.summary.isNotBlank()) {
             pageManager.ensureSpace(50f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "EXECUTIVE PROFILE", primaryColorInt, 36f, width - 36f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("SUMMARY", "EXECUTIVE PROFILE"), primaryColorInt, 36f, width - 36f)
             val summaryPaint = Paint().apply {
                 color = Color.parseColor("#1E293B")
                 textSize = 9.5f
@@ -103,7 +103,7 @@ class ExecutiveCompetencyRenderer(private val context: Context) : PdfTemplateRen
         // 2. Core Leadership Competencies (Grid Matrix)
         if (data.skills.isNotEmpty()) {
             pageManager.ensureSpace(40f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "CORE LEADERSHIP COMPETENCIES", primaryColorInt, 36f, width - 36f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("SKILLS", "CORE LEADERSHIP COMPETENCIES"), primaryColorInt, 36f, width - 36f)
 
             val compPaint = Paint().apply {
                 color = Color.parseColor("#0F172A")
@@ -133,7 +133,7 @@ class ExecutiveCompetencyRenderer(private val context: Context) : PdfTemplateRen
         // 3. Professional Experience & P&L
         if (data.experiences.isNotEmpty()) {
             pageManager.ensureSpace(40f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "EXECUTIVE EXPERIENCE & CAREER HISTORY", primaryColorInt, 36f, width - 36f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("EXPERIENCE", "EXECUTIVE EXPERIENCE & CAREER HISTORY"), primaryColorInt, 36f, width - 36f)
 
             for (exp in data.experiences) {
                 pageManager.ensureSpace(45f)
@@ -185,7 +185,7 @@ class ExecutiveCompetencyRenderer(private val context: Context) : PdfTemplateRen
         // 4. Education & Executive Credentials
         if (data.educations.isNotEmpty()) {
             pageManager.ensureSpace(40f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "EDUCATION & EXECUTIVE CREDENTIALS", primaryColorInt, 36f, width - 36f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("EDUCATION", "EDUCATION & EXECUTIVE CREDENTIALS"), primaryColorInt, 36f, width - 36f)
 
             for (edu in data.educations) {
                 pageManager.ensureSpace(30f)
@@ -220,7 +220,7 @@ class ExecutiveCompetencyRenderer(private val context: Context) : PdfTemplateRen
         // 5. Strategic Projects
         if (data.projects.isNotEmpty()) {
             pageManager.ensureSpace(40f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "STRATEGIC CORPORATE INITIATIVES", primaryColorInt, 36f, width - 36f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("PROJECTS", "STRATEGIC CORPORATE INITIATIVES"), primaryColorInt, 36f, width - 36f)
 
             for (proj in data.projects) {
                 pageManager.ensureSpace(35f)
@@ -251,7 +251,7 @@ class ExecutiveCompetencyRenderer(private val context: Context) : PdfTemplateRen
         // 6. Certifications & Board Governance
         if (data.certifications.isNotEmpty()) {
             pageManager.ensureSpace(35f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "BOARD CERTIFICATIONS & LICENSES", primaryColorInt, 36f, width - 36f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("CERTIFICATIONS", "BOARD CERTIFICATIONS & LICENSES"), primaryColorInt, 36f, width - 36f)
             val certPaint = Paint().apply {
                 color = Color.parseColor("#334155")
                 textSize = 9.5f
@@ -268,7 +268,7 @@ class ExecutiveCompetencyRenderer(private val context: Context) : PdfTemplateRen
         // 7. Languages & References
         if (data.languages.isNotEmpty()) {
             pageManager.ensureSpace(30f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "LANGUAGES & INTERNATIONAL MOBILITY", primaryColorInt, 36f, width - 36f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("LANGUAGES", "LANGUAGES & INTERNATIONAL MOBILITY"), primaryColorInt, 36f, width - 36f)
             val langPaint = Paint().apply {
                 color = Color.parseColor("#334155")
                 textSize = 9.5f
@@ -281,7 +281,7 @@ class ExecutiveCompetencyRenderer(private val context: Context) : PdfTemplateRen
 
         if (data.references.isNotEmpty()) {
             pageManager.ensureSpace(35f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "BOARD REFERENCES & ENDORSEMENTS", primaryColorInt, 36f, width - 36f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("REFERENCES", "BOARD REFERENCES & ENDORSEMENTS"), primaryColorInt, 36f, width - 36f)
             val refPaint = Paint().apply {
                 color = Color.parseColor("#334155")
                 textSize = 9.5f

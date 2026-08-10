@@ -93,7 +93,7 @@ class AtsCleanRenderer(private val context: Context) : PdfTemplateRenderer {
         // 1. Professional Summary
         if (data.summary.isNotBlank()) {
             pageManager.ensureSpace(50f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "PROFESSIONAL SUMMARY", primaryColorInt, 36f, width - 36f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("SUMMARY", "PROFESSIONAL SUMMARY"), primaryColorInt, 36f, width - 36f)
             val summaryPaint = Paint().apply {
                 color = Color.parseColor("#334155")
                 textSize = 9.5f
@@ -111,7 +111,7 @@ class AtsCleanRenderer(private val context: Context) : PdfTemplateRenderer {
         // 2. Work Experience
         if (data.experiences.isNotEmpty()) {
             pageManager.ensureSpace(40f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "WORK EXPERIENCE", primaryColorInt, 36f, width - 36f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("EXPERIENCE", "WORK EXPERIENCE"), primaryColorInt, 36f, width - 36f)
 
             for (exp in data.experiences) {
                 pageManager.ensureSpace(45f)
@@ -164,7 +164,7 @@ class AtsCleanRenderer(private val context: Context) : PdfTemplateRenderer {
         // 3. Education (With GPA & Thesis/Coursework)
         if (data.educations.isNotEmpty()) {
             pageManager.ensureSpace(40f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "EDUCATION", primaryColorInt, 36f, width - 36f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("EDUCATION", "EDUCATION"), primaryColorInt, 36f, width - 36f)
 
             for (edu in data.educations) {
                 pageManager.ensureSpace(35f)
@@ -212,7 +212,7 @@ class AtsCleanRenderer(private val context: Context) : PdfTemplateRenderer {
         // 4. Key Projects (With Tech Stack & Project Links)
         if (data.projects.isNotEmpty()) {
             pageManager.ensureSpace(40f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "KEY PROJECTS", primaryColorInt, 36f, width - 36f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("PROJECTS", "KEY PROJECTS"), primaryColorInt, 36f, width - 36f)
 
             for (proj in data.projects) {
                 pageManager.ensureSpace(35f)
@@ -266,7 +266,7 @@ class AtsCleanRenderer(private val context: Context) : PdfTemplateRenderer {
         // 5. Skills & Competencies
         if (data.skills.isNotEmpty()) {
             pageManager.ensureSpace(40f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "SKILLS & COMPETENCIES", primaryColorInt, 36f, width - 36f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("SKILLS", "SKILLS & COMPETENCIES"), primaryColorInt, 36f, width - 36f)
 
             val skillPaint = Paint().apply {
                 color = Color.parseColor("#334155")
@@ -286,7 +286,7 @@ class AtsCleanRenderer(private val context: Context) : PdfTemplateRenderer {
         // 6. Certifications & Credentials
         if (data.certifications.isNotEmpty()) {
             pageManager.ensureSpace(40f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "CERTIFICATIONS & LICENSES", primaryColorInt, 36f, width - 36f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("CERTIFICATIONS", "CERTIFICATIONS & LICENSES"), primaryColorInt, 36f, width - 36f)
             val certPaint = Paint().apply {
                 color = Color.parseColor("#334155")
                 textSize = 9.5f
@@ -307,7 +307,7 @@ class AtsCleanRenderer(private val context: Context) : PdfTemplateRenderer {
         // 7. Languages
         if (data.languages.isNotEmpty()) {
             pageManager.ensureSpace(35f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "LANGUAGES", primaryColorInt, 36f, width - 36f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("LANGUAGES", "LANGUAGES"), primaryColorInt, 36f, width - 36f)
             val langPaint = Paint().apply {
                 color = Color.parseColor("#334155")
                 textSize = 9.5f
@@ -321,7 +321,7 @@ class AtsCleanRenderer(private val context: Context) : PdfTemplateRenderer {
         // 8. Volunteer Work
         if (data.volunteerWork.isNotEmpty()) {
             pageManager.ensureSpace(35f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "VOLUNTEER & COMMUNITY ENGAGEMENT", primaryColorInt, 36f, width - 36f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("VOLUNTEER", "VOLUNTEER & COMMUNITY ENGAGEMENT"), primaryColorInt, 36f, width - 36f)
             val volPaint = Paint().apply {
                 color = Color.parseColor("#334155")
                 textSize = 9.5f
@@ -341,7 +341,7 @@ class AtsCleanRenderer(private val context: Context) : PdfTemplateRenderer {
         // 9. Honors & Awards
         if (data.awards.isNotEmpty()) {
             pageManager.ensureSpace(35f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "HONORS & AWARDS", primaryColorInt, 36f, width - 36f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("AWARDS", "HONORS & AWARDS"), primaryColorInt, 36f, width - 36f)
             val awardPaint = Paint().apply {
                 color = Color.parseColor("#334155")
                 textSize = 9.5f
@@ -361,7 +361,7 @@ class AtsCleanRenderer(private val context: Context) : PdfTemplateRenderer {
         // 10. Hobbies & Interests
         if (data.hobbies.isNotEmpty()) {
             pageManager.ensureSpace(30f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "INTERESTS & HOBBIES", primaryColorInt, 36f, width - 36f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("HOBBIES", "INTERESTS & HOBBIES"), primaryColorInt, 36f, width - 36f)
             val hobbyPaint = Paint().apply {
                 color = Color.parseColor("#334155")
                 textSize = 9.5f
@@ -375,7 +375,7 @@ class AtsCleanRenderer(private val context: Context) : PdfTemplateRenderer {
         // 11. Professional References (With Email & Phone Details)
         if (data.references.isNotEmpty()) {
             pageManager.ensureSpace(35f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "REFERENCES", primaryColorInt, 36f, width - 36f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("REFERENCES", "REFERENCES"), primaryColorInt, 36f, width - 36f)
             val refPaint = Paint().apply {
                 color = Color.parseColor("#334155")
                 textSize = 9.5f

@@ -202,7 +202,7 @@ class ModernTechRenderer(private val context: Context) : PdfTemplateRenderer {
         // Professional Summary
         if (data.summary.isNotBlank()) {
             pageManager.ensureSpace(50f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "SUMMARY", primaryColorInt, mainLeftX, mainLeftX + mainWidth)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("SUMMARY", "SUMMARY"), primaryColorInt, mainLeftX, mainLeftX + mainWidth)
             val summaryPaint = Paint().apply {
                 color = Color.parseColor("#334155")
                 textSize = 9.5f
@@ -220,7 +220,7 @@ class ModernTechRenderer(private val context: Context) : PdfTemplateRenderer {
         // Work Experience
         if (data.experiences.isNotEmpty()) {
             pageManager.ensureSpace(40f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "WORK EXPERIENCE", primaryColorInt, mainLeftX, mainLeftX + mainWidth)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("EXPERIENCE", "WORK EXPERIENCE"), primaryColorInt, mainLeftX, mainLeftX + mainWidth)
 
             for (exp in data.experiences) {
                 pageManager.ensureSpace(45f)
@@ -273,7 +273,7 @@ class ModernTechRenderer(private val context: Context) : PdfTemplateRenderer {
         // Education
         if (data.educations.isNotEmpty()) {
             pageManager.ensureSpace(40f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "EDUCATION", primaryColorInt, mainLeftX, mainLeftX + mainWidth)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("EDUCATION", "EDUCATION"), primaryColorInt, mainLeftX, mainLeftX + mainWidth)
 
             for (edu in data.educations) {
                 pageManager.ensureSpace(30f)
@@ -299,7 +299,7 @@ class ModernTechRenderer(private val context: Context) : PdfTemplateRenderer {
         // Key Projects
         if (data.projects.isNotEmpty()) {
             pageManager.ensureSpace(40f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "KEY PROJECTS", primaryColorInt, mainLeftX, mainLeftX + mainWidth)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("PROJECTS", "KEY PROJECTS"), primaryColorInt, mainLeftX, mainLeftX + mainWidth)
 
             for (proj in data.projects) {
                 pageManager.ensureSpace(35f)
@@ -330,7 +330,7 @@ class ModernTechRenderer(private val context: Context) : PdfTemplateRenderer {
         // Certifications & Credentials
         if (data.certifications.isNotEmpty()) {
             pageManager.ensureSpace(35f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "CERTIFICATIONS & LICENSES", primaryColorInt, mainLeftX, mainLeftX + mainWidth)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("CERTIFICATIONS", "CERTIFICATIONS & LICENSES"), primaryColorInt, mainLeftX, mainLeftX + mainWidth)
             val certPaint = Paint().apply {
                 color = Color.parseColor("#334155")
                 textSize = 9f
@@ -347,7 +347,7 @@ class ModernTechRenderer(private val context: Context) : PdfTemplateRenderer {
         // References
         if (data.references.isNotEmpty()) {
             pageManager.ensureSpace(35f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "REFERENCES", primaryColorInt, mainLeftX, mainLeftX + mainWidth)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("REFERENCES", "REFERENCES"), primaryColorInt, mainLeftX, mainLeftX + mainWidth)
             val refPaint = Paint().apply {
                 color = Color.parseColor("#334155")
                 textSize = 9f

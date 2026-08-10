@@ -101,7 +101,7 @@ class AcademicSerifRenderer(private val context: Context) : PdfTemplateRenderer 
         // 2. Academic Summary / Research Vision
         if (data.summary.isNotBlank()) {
             pageManager.ensureSpace(50f)
-            drawSerifSectionHeader(pageManager, "RESEARCH PROFILE & ACADEMIC VISION", primaryColorInt, width)
+            drawSerifSectionHeader(pageManager, data.getSectionTitle("SUMMARY", "RESEARCH PROFILE & ACADEMIC VISION"), primaryColorInt, width)
             val summaryPaint = Paint().apply {
                 color = Color.parseColor("#1F2937")
                 textSize = 9.5f
@@ -120,7 +120,7 @@ class AcademicSerifRenderer(private val context: Context) : PdfTemplateRenderer 
         // 3. Education & Dissertation (Academic Priority #1)
         if (data.educations.isNotEmpty()) {
             pageManager.ensureSpace(40f)
-            drawSerifSectionHeader(pageManager, "EDUCATION & ACADEMIC DEGREES", primaryColorInt, width)
+            drawSerifSectionHeader(pageManager, data.getSectionTitle("EDUCATION", "EDUCATION & ACADEMIC DEGREES"), primaryColorInt, width)
 
             for (edu in data.educations) {
                 pageManager.ensureSpace(35f)
@@ -175,7 +175,7 @@ class AcademicSerifRenderer(private val context: Context) : PdfTemplateRenderer 
         // 4. Academic & Research Appointments
         if (data.experiences.isNotEmpty()) {
             pageManager.ensureSpace(40f)
-            drawSerifSectionHeader(pageManager, "ACADEMIC & RESEARCH APPOINTMENTS", primaryColorInt, width)
+            drawSerifSectionHeader(pageManager, data.getSectionTitle("EXPERIENCE", "ACADEMIC & RESEARCH APPOINTMENTS"), primaryColorInt, width)
 
             for (exp in data.experiences) {
                 pageManager.ensureSpace(45f)
@@ -228,7 +228,7 @@ class AcademicSerifRenderer(private val context: Context) : PdfTemplateRenderer 
         // 5. Research Projects & Peer-Reviewed Grants
         if (data.projects.isNotEmpty()) {
             pageManager.ensureSpace(40f)
-            drawSerifSectionHeader(pageManager, "RESEARCH PROJECTS & GRANTS", primaryColorInt, width)
+            drawSerifSectionHeader(pageManager, data.getSectionTitle("PROJECTS", "RESEARCH PROJECTS & GRANTS"), primaryColorInt, width)
 
             for (proj in data.projects) {
                 pageManager.ensureSpace(35f)
@@ -261,7 +261,7 @@ class AcademicSerifRenderer(private val context: Context) : PdfTemplateRenderer 
         // 6. Academic Skills & Methodology
         if (data.skills.isNotEmpty()) {
             pageManager.ensureSpace(40f)
-            drawSerifSectionHeader(pageManager, "RESEARCH METHODOLOGY & EXPERTISE", primaryColorInt, width)
+            drawSerifSectionHeader(pageManager, data.getSectionTitle("SKILLS", "RESEARCH METHODOLOGY & EXPERTISE"), primaryColorInt, width)
 
             val skillPaint = Paint().apply {
                 color = Color.parseColor("#1F2937")
@@ -282,7 +282,7 @@ class AcademicSerifRenderer(private val context: Context) : PdfTemplateRenderer 
         // 7. Academic Honors & Fellowships
         if (data.awards.isNotEmpty()) {
             pageManager.ensureSpace(35f)
-            drawSerifSectionHeader(pageManager, "ACADEMIC HONORS & FELLOWSHIPS", primaryColorInt, width)
+            drawSerifSectionHeader(pageManager, data.getSectionTitle("AWARDS", "ACADEMIC HONORS & FELLOWSHIPS"), primaryColorInt, width)
             val awardPaint = Paint().apply {
                 color = Color.parseColor("#1F2937")
                 textSize = 9.5f
@@ -303,7 +303,7 @@ class AcademicSerifRenderer(private val context: Context) : PdfTemplateRenderer 
         // 8. References
         if (data.references.isNotEmpty()) {
             pageManager.ensureSpace(35f)
-            drawSerifSectionHeader(pageManager, "ACADEMIC REFERENCES", primaryColorInt, width)
+            drawSerifSectionHeader(pageManager, data.getSectionTitle("REFERENCES", "ACADEMIC REFERENCES"), primaryColorInt, width)
             val refPaint = Paint().apply {
                 color = Color.parseColor("#1F2937")
                 textSize = 9.5f

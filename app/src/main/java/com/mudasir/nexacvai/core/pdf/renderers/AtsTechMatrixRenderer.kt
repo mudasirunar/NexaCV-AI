@@ -92,7 +92,7 @@ class AtsTechMatrixRenderer(private val context: Context) : PdfTemplateRenderer 
         // 1. Professional Summary (Appears first under Header)
         if (data.summary.isNotBlank()) {
             pageManager.ensureSpace(50f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "PROFESSIONAL SUMMARY", primaryColorInt, 36f, width - 36f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("SUMMARY", "PROFESSIONAL SUMMARY"), primaryColorInt, 36f, width - 36f)
             val summaryPaint = Paint().apply {
                 color = Color.parseColor("#334155")
                 textSize = 9.5f
@@ -116,7 +116,7 @@ class AtsTechMatrixRenderer(private val context: Context) : PdfTemplateRenderer 
 
         if (categoriesToRender.isNotEmpty()) {
             pageManager.ensureSpace(50f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "TECHNICAL SKILLS", primaryColorInt, 36f, width - 36f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("SKILLS", "TECHNICAL SKILLS"), primaryColorInt, 36f, width - 36f)
 
             val catNamePaint = Paint().apply {
                 color = Color.parseColor("#0F172A")
@@ -155,7 +155,7 @@ class AtsTechMatrixRenderer(private val context: Context) : PdfTemplateRenderer 
         // 3. Work Experience
         if (data.experiences.isNotEmpty()) {
             pageManager.ensureSpace(40f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "PROFESSIONAL EXPERIENCE", primaryColorInt, 36f, width - 36f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("EXPERIENCE", "PROFESSIONAL EXPERIENCE"), primaryColorInt, 36f, width - 36f)
 
             for (exp in data.experiences) {
                 pageManager.ensureSpace(45f)
@@ -207,7 +207,7 @@ class AtsTechMatrixRenderer(private val context: Context) : PdfTemplateRenderer 
         // 4. Education (GPA & Coursework)
         if (data.educations.isNotEmpty()) {
             pageManager.ensureSpace(40f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "EDUCATION & QUALIFICATIONS", primaryColorInt, 36f, width - 36f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("EDUCATION", "EDUCATION & QUALIFICATIONS"), primaryColorInt, 36f, width - 36f)
 
             for (edu in data.educations) {
                 pageManager.ensureSpace(35f)
@@ -255,7 +255,7 @@ class AtsTechMatrixRenderer(private val context: Context) : PdfTemplateRenderer 
         // 5. Key Projects (With Tech Stack & Project Links)
         if (data.projects.isNotEmpty()) {
             pageManager.ensureSpace(40f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "KEY PROJECTS", primaryColorInt, 36f, width - 36f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("PROJECTS", "KEY PROJECTS"), primaryColorInt, 36f, width - 36f)
 
             for (proj in data.projects) {
                 pageManager.ensureSpace(35f)
@@ -309,7 +309,7 @@ class AtsTechMatrixRenderer(private val context: Context) : PdfTemplateRenderer 
         // 6. Certifications & Credentials
         if (data.certifications.isNotEmpty()) {
             pageManager.ensureSpace(40f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "CERTIFICATIONS & LICENSES", primaryColorInt, 36f, width - 36f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("CERTIFICATIONS", "CERTIFICATIONS & LICENSES"), primaryColorInt, 36f, width - 36f)
             val certPaint = Paint().apply {
                 color = Color.parseColor("#334155")
                 textSize = 9.5f
@@ -330,7 +330,7 @@ class AtsTechMatrixRenderer(private val context: Context) : PdfTemplateRenderer 
         // 7. Languages & References
         if (data.languages.isNotEmpty()) {
             pageManager.ensureSpace(35f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "LANGUAGES", primaryColorInt, 36f, width - 36f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("LANGUAGES", "LANGUAGES"), primaryColorInt, 36f, width - 36f)
             val langPaint = Paint().apply {
                 color = Color.parseColor("#334155")
                 textSize = 9.5f
@@ -343,7 +343,7 @@ class AtsTechMatrixRenderer(private val context: Context) : PdfTemplateRenderer 
 
         if (data.references.isNotEmpty()) {
             pageManager.ensureSpace(35f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "REFERENCES", primaryColorInt, 36f, width - 36f)
+            PdfDrawUtils.drawSectionHeader(pageManager, data.getSectionTitle("REFERENCES", "REFERENCES"), primaryColorInt, 36f, width - 36f)
             val refPaint = Paint().apply {
                 color = Color.parseColor("#334155")
                 textSize = 9.5f
