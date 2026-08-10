@@ -4,7 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -97,7 +97,7 @@ class DynamicSchemaTemplate(
                     fontWeight = FontWeight.Bold,
                     color = style.primaryColor
                 )
-                Divider(color = style.primaryColor.copy(alpha = 0.3f), thickness = 1.dp)
+                HorizontalDivider(color = style.primaryColor.copy(alpha = 0.3f), thickness = 1.dp)
                 Text(
                     text = data.summary,
                     fontSize = 11.sp,
@@ -115,7 +115,7 @@ class DynamicSchemaTemplate(
                     fontWeight = FontWeight.Bold,
                     color = style.primaryColor
                 )
-                Divider(color = style.primaryColor.copy(alpha = 0.3f), thickness = 1.dp)
+                HorizontalDivider(color = style.primaryColor.copy(alpha = 0.3f), thickness = 1.dp)
                 data.experiences.forEach { exp ->
                     Column(modifier = Modifier.padding(vertical = 4.dp)) {
                         Row(
@@ -155,7 +155,7 @@ class DynamicSchemaTemplate(
                     fontWeight = FontWeight.Bold,
                     color = style.primaryColor
                 )
-                Divider(color = style.primaryColor.copy(alpha = 0.3f), thickness = 1.dp)
+                HorizontalDivider(color = style.primaryColor.copy(alpha = 0.3f), thickness = 1.dp)
                 data.educations.forEach { edu ->
                     Row(
                         modifier = Modifier
@@ -187,7 +187,7 @@ class DynamicSchemaTemplate(
                     fontWeight = FontWeight.Bold,
                     color = style.primaryColor
                 )
-                Divider(color = style.primaryColor.copy(alpha = 0.3f), thickness = 1.dp)
+                HorizontalDivider(color = style.primaryColor.copy(alpha = 0.3f), thickness = 1.dp)
                 Text(
                     text = data.skills.joinToString(" • "),
                     fontSize = 11.sp,

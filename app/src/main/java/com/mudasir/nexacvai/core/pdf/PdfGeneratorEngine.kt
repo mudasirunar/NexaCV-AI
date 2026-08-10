@@ -54,13 +54,17 @@ class PdfGeneratorEngine @Inject constructor(
     private fun getRendererForTemplate(template: ResumeTemplate): PdfTemplateRenderer {
         val id = template.metadata.id
         return when {
+            id == "template_ats_hybrid" -> AtsHybridTimelineRenderer(context)
+            id == "template_healthcare_specialist" -> HealthcareSpecialistRenderer(context)
             id.contains("tech_matrix") -> AtsTechMatrixRenderer(context)
-            id.contains("wavy") || id == "template_modern_tech" -> ModernWavyRenderer(context)
+            id.contains("wavy") -> ModernWavyRenderer(context)
+            id.contains("cyber") -> CyberSecurityMatrixRenderer(context)
             id.contains("developer") -> DeveloperSlateRenderer(context)
-            id.contains("clinical") || id.contains("doctor") || id.contains("healthcare") -> ClinicalDoctorRenderer(context)
-            id.contains("modern") || id.contains("cyber") || id.contains("tech_lead") -> ModernTechRenderer(context)
+            id == "template_minimal_serif" -> AcademicSerifRenderer(context)
+            id == "template_clinical_sidebar" || id == "template_ux_designer" || id == "template_exec_sidebar" || id == "template_modern_tech" || id == "template_tech_lead_grid" -> ModernTechRenderer(context)
+            id == "template_clinical_doctor" -> ClinicalDoctorRenderer(context)
             id.contains("exec") || id.contains("banking") || id.contains("director") -> ExecutiveCompetencyRenderer(context)
-            id.contains("creative") || id.contains("ux_designer") -> CreativePortfolioRenderer(context)
+            id.contains("creative") || id.contains("artisan") -> CreativePortfolioRenderer(context)
             else -> AtsCleanRenderer(context)
         }
     }

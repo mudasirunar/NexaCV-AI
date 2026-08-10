@@ -11,12 +11,12 @@ import com.mudasir.nexacvai.domain.model.template.TemplateData
 import com.mudasir.nexacvai.domain.model.template.TemplateStyle
 
 /**
- * 🎯 ATS Clean Standard Renderer
- * Single-column parser-safe ATS template rendering 100% of [TemplateData] fields
- * (Summary, Experience, Education, Projects, Skills, Certifications, Languages, References, Hobbies, Volunteer Work, Awards).
- * Smoothly renders Education GPA/thesis, Project links & tech tags, and full Reference contact info.
+ * 🎓 ATS Hybrid Timeline Renderer
+ * Clean single-column ATS structure with right-aligned dates, full-width descriptions,
+ * and unified primary accent color scheme (eliminating empty column gaps).
+ * Designed for fresh graduates, junior engineers, and career changers.
  */
-class AtsCleanRenderer(private val context: Context) : PdfTemplateRenderer {
+class AtsHybridTimelineRenderer(private val context: Context) : PdfTemplateRenderer {
 
     override fun render(
         pageManager: PdfPageManager,
@@ -29,7 +29,7 @@ class AtsCleanRenderer(private val context: Context) : PdfTemplateRenderer {
 
         val hasPhoto = templateStyle.showPhoto && !data.profilePictureUri.isNullOrBlank()
 
-        // Name & Title Header
+        // Name Header - Styled in primary accent color for visual unity
         val namePaint = Paint().apply {
             color = primaryColorInt
             textSize = 24f
@@ -42,7 +42,7 @@ class AtsCleanRenderer(private val context: Context) : PdfTemplateRenderer {
         if (data.professionalTitle.isNotBlank()) {
             val titlePaint = Paint().apply {
                 color = Color.parseColor("#475569")
-                textSize = 12f
+                textSize = 11.5f
                 typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
                 isAntiAlias = true
             }
@@ -64,7 +64,7 @@ class AtsCleanRenderer(private val context: Context) : PdfTemplateRenderer {
         pageManager.canvas.drawText(contactInfo, 36f, pageManager.currentY, contactPaint)
         pageManager.currentY += 16f
 
-        // Draw Avatar Photo ONLY IF photo is selected (no empty placeholder)
+        // Draw Avatar Photo if available
         if (hasPhoto) {
             try {
                 PdfDrawUtils.drawStyledProfilePhoto(
@@ -82,8 +82,8 @@ class AtsCleanRenderer(private val context: Context) : PdfTemplateRenderer {
 
         // Divider Rule
         val rulePaint = Paint().apply {
-            color = Color.parseColor("#CBD5E1")
-            strokeWidth = 1f
+            color = primaryColorInt
+            strokeWidth = 1.5f
             style = Paint.Style.STROKE
             isAntiAlias = true
         }
@@ -93,7 +93,7 @@ class AtsCleanRenderer(private val context: Context) : PdfTemplateRenderer {
         // 1. Professional Summary
         if (data.summary.isNotBlank()) {
             pageManager.ensureSpace(50f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "PROFESSIONAL SUMMARY", primaryColorInt, 36f, width - 36f)
+            PdfDrawUtils.drawSectionHeader(pageManager, "SUMMARY & OBJECTIVE", primaryColorInt, 36f, width - 36f)
             val summaryPaint = Paint().apply {
                 color = Color.parseColor("#334155")
                 textSize = 9.5f
@@ -108,66 +108,14 @@ class AtsCleanRenderer(private val context: Context) : PdfTemplateRenderer {
             pageManager.currentY += 14f
         }
 
-        // 2. Work Experience
-        if (data.experiences.isNotEmpty()) {
-            pageManager.ensureSpace(40f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "WORK EXPERIENCE", primaryColorInt, 36f, width - 36f)
-
-            for (exp in data.experiences) {
-                pageManager.ensureSpace(45f)
-                val jobTitlePaint = Paint().apply {
-                    color = Color.parseColor("#0F172A")
-                    textSize = 11f
-                    typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-                    isAntiAlias = true
-                }
-                pageManager.canvas.drawText(exp.jobTitle, 36f, pageManager.currentY, jobTitlePaint)
-
-                val datePaint = Paint().apply {
-                    color = Color.parseColor("#475569")
-                    textSize = 9.5f
-                    typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-                    isAntiAlias = true
-                }
-                val dateText = "${exp.startDate} - ${exp.endDate}"
-                val dateW = datePaint.measureText(dateText)
-                pageManager.canvas.drawText(dateText, width - 36f - dateW, pageManager.currentY, datePaint)
-                pageManager.currentY += 15f
-
-                val companyPaint = Paint().apply {
-                    color = primaryColorInt
-                    textSize = 10f
-                    typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-                    isAntiAlias = true
-                }
-                pageManager.canvas.drawText(exp.company, 36f, pageManager.currentY, companyPaint)
-                pageManager.currentY += 15f
-
-                val descPaint = Paint().apply {
-                    color = Color.parseColor("#334155")
-                    textSize = 9.5f
-                    isAntiAlias = true
-                }
-                for (resp in exp.responsibilities) {
-                    val respLines = PdfDrawUtils.wrapText("• $resp", descPaint, width - 72f)
-                    for (line in respLines) {
-                        pageManager.ensureSpace(14f)
-                        pageManager.canvas.drawText(line, 36f, pageManager.currentY, descPaint)
-                        pageManager.currentY += 14f
-                    }
-                }
-                pageManager.currentY += 10f
-            }
-            pageManager.currentY += 6f
-        }
-
-        // 3. Education (With GPA & Thesis/Coursework)
+        // 2. Education & Academic Honors (Priority #1 for Fresh Graduates)
         if (data.educations.isNotEmpty()) {
             pageManager.ensureSpace(40f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "EDUCATION", primaryColorInt, 36f, width - 36f)
+            PdfDrawUtils.drawSectionHeader(pageManager, "EDUCATION & ACADEMIC CREDENTIALS", primaryColorInt, 36f, width - 36f)
 
             for (edu in data.educations) {
                 pageManager.ensureSpace(35f)
+
                 val degreePaint = Paint().apply {
                     color = Color.parseColor("#0F172A")
                     textSize = 10.5f
@@ -178,18 +126,20 @@ class AtsCleanRenderer(private val context: Context) : PdfTemplateRenderer {
                 pageManager.canvas.drawText(degreeTitle, 36f, pageManager.currentY, degreePaint)
 
                 val datePaint = Paint().apply {
-                    color = Color.parseColor("#475569")
+                    color = primaryColorInt
                     textSize = 9.5f
+                    typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
                     isAntiAlias = true
                 }
                 val dateText = "${edu.startDate} - ${edu.endDate}"
                 val dateW = datePaint.measureText(dateText)
                 pageManager.canvas.drawText(dateText, width - 36f - dateW, pageManager.currentY, datePaint)
-                pageManager.currentY += 14f
+                pageManager.currentY += 15f
 
                 val instPaint = Paint().apply {
                     color = Color.parseColor("#475569")
                     textSize = 9.5f
+                    typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
                     isAntiAlias = true
                 }
                 pageManager.canvas.drawText(edu.institution, 36f, pageManager.currentY, instPaint)
@@ -209,10 +159,10 @@ class AtsCleanRenderer(private val context: Context) : PdfTemplateRenderer {
             pageManager.currentY += 6f
         }
 
-        // 4. Key Projects (With Tech Stack & Project Links)
+        // 3. Key Projects & Capstones
         if (data.projects.isNotEmpty()) {
             pageManager.ensureSpace(40f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "KEY PROJECTS", primaryColorInt, 36f, width - 36f)
+            PdfDrawUtils.drawSectionHeader(pageManager, "FEATURED PROJECTS & CAPSTONES", primaryColorInt, 36f, width - 36f)
 
             for (proj in data.projects) {
                 pageManager.ensureSpace(35f)
@@ -263,10 +213,64 @@ class AtsCleanRenderer(private val context: Context) : PdfTemplateRenderer {
             }
         }
 
-        // 5. Skills & Competencies
+        // 4. Work & Internship Experience
+        if (data.experiences.isNotEmpty()) {
+            pageManager.ensureSpace(40f)
+            PdfDrawUtils.drawSectionHeader(pageManager, "EXPERIENCE & INTERNSHIPS", primaryColorInt, 36f, width - 36f)
+
+            for (exp in data.experiences) {
+                pageManager.ensureSpace(45f)
+
+                val jobTitlePaint = Paint().apply {
+                    color = Color.parseColor("#0F172A")
+                    textSize = 11f
+                    typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+                    isAntiAlias = true
+                }
+                pageManager.canvas.drawText(exp.jobTitle, 36f, pageManager.currentY, jobTitlePaint)
+
+                val datePaint = Paint().apply {
+                    color = primaryColorInt
+                    textSize = 9.5f
+                    typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+                    isAntiAlias = true
+                }
+                val dateText = "${exp.startDate} - ${exp.endDate}"
+                val dateW = datePaint.measureText(dateText)
+                pageManager.canvas.drawText(dateText, width - 36f - dateW, pageManager.currentY, datePaint)
+                pageManager.currentY += 15f
+
+                val companyPaint = Paint().apply {
+                    color = Color.parseColor("#475569")
+                    textSize = 10f
+                    typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+                    isAntiAlias = true
+                }
+                pageManager.canvas.drawText(exp.company, 36f, pageManager.currentY, companyPaint)
+                pageManager.currentY += 15f
+
+                val descPaint = Paint().apply {
+                    color = Color.parseColor("#334155")
+                    textSize = 9.5f
+                    isAntiAlias = true
+                }
+                for (resp in exp.responsibilities) {
+                    val respLines = PdfDrawUtils.wrapText("• $resp", descPaint, width - 72f)
+                    for (line in respLines) {
+                        pageManager.ensureSpace(14f)
+                        pageManager.canvas.drawText(line, 36f, pageManager.currentY, descPaint)
+                        pageManager.currentY += 14f
+                    }
+                }
+                pageManager.currentY += 10f
+            }
+            pageManager.currentY += 6f
+        }
+
+        // 5. Technical Skills & Tools
         if (data.skills.isNotEmpty()) {
             pageManager.ensureSpace(40f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "SKILLS & COMPETENCIES", primaryColorInt, 36f, width - 36f)
+            PdfDrawUtils.drawSectionHeader(pageManager, "TECHNICAL SKILLS & TOOLS", primaryColorInt, 36f, width - 36f)
 
             val skillPaint = Paint().apply {
                 color = Color.parseColor("#334155")
@@ -283,10 +287,10 @@ class AtsCleanRenderer(private val context: Context) : PdfTemplateRenderer {
             pageManager.currentY += 10f
         }
 
-        // 6. Certifications & Credentials
+        // 6. Certifications
         if (data.certifications.isNotEmpty()) {
             pageManager.ensureSpace(40f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "CERTIFICATIONS & LICENSES", primaryColorInt, 36f, width - 36f)
+            PdfDrawUtils.drawSectionHeader(pageManager, "CERTIFICATIONS", primaryColorInt, 36f, width - 36f)
             val certPaint = Paint().apply {
                 color = Color.parseColor("#334155")
                 textSize = 9.5f
@@ -304,7 +308,7 @@ class AtsCleanRenderer(private val context: Context) : PdfTemplateRenderer {
             pageManager.currentY += 10f
         }
 
-        // 7. Languages
+        // 7. Languages & Hobbies
         if (data.languages.isNotEmpty()) {
             pageManager.ensureSpace(35f)
             PdfDrawUtils.drawSectionHeader(pageManager, "LANGUAGES", primaryColorInt, 36f, width - 36f)
@@ -318,50 +322,9 @@ class AtsCleanRenderer(private val context: Context) : PdfTemplateRenderer {
             pageManager.currentY += 18f
         }
 
-        // 8. Volunteer Work
-        if (data.volunteerWork.isNotEmpty()) {
-            pageManager.ensureSpace(35f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "VOLUNTEER & COMMUNITY ENGAGEMENT", primaryColorInt, 36f, width - 36f)
-            val volPaint = Paint().apply {
-                color = Color.parseColor("#334155")
-                textSize = 9.5f
-                isAntiAlias = true
-            }
-            for (vol in data.volunteerWork) {
-                pageManager.ensureSpace(14f)
-                val lines = PdfDrawUtils.wrapText("• $vol", volPaint, width - 72f)
-                for (l in lines) {
-                    pageManager.canvas.drawText(l, 36f, pageManager.currentY, volPaint)
-                    pageManager.currentY += 14f
-                }
-            }
-            pageManager.currentY += 10f
-        }
-
-        // 9. Honors & Awards
-        if (data.awards.isNotEmpty()) {
-            pageManager.ensureSpace(35f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "HONORS & AWARDS", primaryColorInt, 36f, width - 36f)
-            val awardPaint = Paint().apply {
-                color = Color.parseColor("#334155")
-                textSize = 9.5f
-                isAntiAlias = true
-            }
-            for (award in data.awards) {
-                pageManager.ensureSpace(14f)
-                val lines = PdfDrawUtils.wrapText("• $award", awardPaint, width - 72f)
-                for (l in lines) {
-                    pageManager.canvas.drawText(l, 36f, pageManager.currentY, awardPaint)
-                    pageManager.currentY += 14f
-                }
-            }
-            pageManager.currentY += 10f
-        }
-
-        // 10. Hobbies & Interests
         if (data.hobbies.isNotEmpty()) {
             pageManager.ensureSpace(30f)
-            PdfDrawUtils.drawSectionHeader(pageManager, "INTERESTS & HOBBIES", primaryColorInt, 36f, width - 36f)
+            PdfDrawUtils.drawSectionHeader(pageManager, "INTERESTS & ACTIVITIES", primaryColorInt, 36f, width - 36f)
             val hobbyPaint = Paint().apply {
                 color = Color.parseColor("#334155")
                 textSize = 9.5f
@@ -372,7 +335,7 @@ class AtsCleanRenderer(private val context: Context) : PdfTemplateRenderer {
             pageManager.currentY += 18f
         }
 
-        // 11. Professional References (With Email & Phone Details)
+        // 8. References
         if (data.references.isNotEmpty()) {
             pageManager.ensureSpace(35f)
             PdfDrawUtils.drawSectionHeader(pageManager, "REFERENCES", primaryColorInt, 36f, width - 36f)

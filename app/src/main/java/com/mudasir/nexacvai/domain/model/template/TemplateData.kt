@@ -13,7 +13,7 @@ data class TemplateSkillCategoryGroup(
 
 /**
  * Unified data container for rendering CV templates.
- * Fully aligned 1:1 with [UserProfile] fields (including Hobbies, Volunteer Work, Awards, References, etc.).
+ * Fully aligned 1:1 with [UserProfile] fields (including Education description/GPA, Project links/tech tags, Reference contact details, etc.).
  */
 data class TemplateData(
     val fullName: String,
@@ -59,19 +59,21 @@ data class TemplateExperienceData(
 
 data class TemplateEducationData(
     val degree: String,
+    val fieldOfStudy: String = "",
     val institution: String,
     val startDate: String,
     val endDate: String,
     val gradeOrGpa: String = "",
-    val relevantCoursework: String = ""
+    val relevantCoursework: String = "",
+    val description: String = ""
 )
 
 data class TemplateProjectData(
     val projectName: String,
-    val roleInProject: String,
-    val startDate: String,
-    val endDate: String,
-    val description: String,
+    val roleInProject: String = "",
+    val startDate: String = "",
+    val endDate: String = "",
+    val description: String = "",
     val technologiesUsed: List<String> = emptyList(),
     val projectLink: String = ""
 )
@@ -96,7 +98,10 @@ data class TemplateReferenceData(
     val name: String,
     val title: String,
     val company: String,
-    val contactInfo: String
+    val contactInfo: String = "",
+    val email: String = "",
+    val phone: String = "",
+    val linkedInUrl: String = ""
 )
 
 /**
@@ -143,11 +148,13 @@ fun UserProfile.toTemplateData(): TemplateData {
         educations = this.educations.map { edu ->
             TemplateEducationData(
                 degree = edu.degree,
+                fieldOfStudy = edu.fieldOfStudy,
                 institution = edu.instituteName,
                 startDate = edu.startDate,
                 endDate = if (edu.isCurrentlyStudying) "Present" else edu.endDate,
                 gradeOrGpa = edu.grade,
-                relevantCoursework = edu.description
+                relevantCoursework = edu.description,
+                description = edu.description
             )
         },
         projects = this.projects.map { proj ->
@@ -166,7 +173,18 @@ fun UserProfile.toTemplateData(): TemplateData {
         socialLinks = this.socialLinks.map { TemplateSocialLinkData(it.label, it.url) },
         certifications = this.certifications.map { TemplateCertData(it.certificationName, it.issuingOrganization, it.issueDate) },
         languages = this.languages.map { TemplateLanguageData(it.languageName, it.proficiency) },
-        references = this.references.map { TemplateReferenceData(it.fullName, it.jobTitle, it.company, it.email.orEmpty()) },
+        references = this.references.map { ref ->
+            val contactStr = listOfNotNull(ref.phone.takeIf { !it.isNullOrBlank() }, ref.email.takeIf { !it.isNullOrBlank() }).joinToString(" • ")
+            TemplateReferenceData(
+                name = ref.fullName,
+                title = ref.jobTitle,
+                company = ref.company,
+                contactInfo = contactStr,
+                email = ref.email.orEmpty(),
+                phone = ref.phone.orEmpty(),
+                linkedInUrl = ref.linkedInUrl.orEmpty()
+            )
+        },
         hobbies = parsedHobbies,
         volunteerWork = parsedVolunteer,
         awards = parsedAwards

@@ -9,12 +9,12 @@ import com.mudasir.nexacvai.domain.model.template.TemplateData
 import com.mudasir.nexacvai.domain.model.template.TemplateStyle
 
 /**
- * 💻 Developer Terminal Slate Renderer
- * Dark slate top header banner with Monospace Terminal prompts (class Developer {, @company),
- * Smart-positioned GitHub badge (no photo overlap), borderless technical skills matrix table,
- * git repo URLs, inline tech stack tags ([Kotlin, Compose, Room, Hilt]), and monospace code headers.
+ * 🛡️ Cyber Security Code Matrix Renderer
+ * High-contrast dark cyber terminal header (root@security-matrix:~# cat profile.sys),
+ * Compact Clearance Badge Box ([ TOP SECRET CLEARANCE ]), borderless threat intelligence skills matrix table,
+ * and monospace security logs.
  */
-class DeveloperSlateRenderer(private val context: Context) : PdfTemplateRenderer {
+class CyberSecurityMatrixRenderer(private val context: Context) : PdfTemplateRenderer {
 
     override fun render(
         pageManager: PdfPageManager,
@@ -26,49 +26,51 @@ class DeveloperSlateRenderer(private val context: Context) : PdfTemplateRenderer
 
         val hasPhoto = templateStyle.showPhoto && !data.profilePictureUri.isNullOrBlank()
 
-        // Dark Slate Top Banner
-        val bannerHeight = 110f
+        // Dark Cyber Slate Top Banner Header
+        val bannerHeight = 115f
         val bannerPaint = Paint().apply {
-            color = Color.parseColor("#0F172A")
+            color = Color.parseColor("#0D1117")
             style = Paint.Style.FILL
         }
         pageManager.canvas.drawRect(0f, 0f, width, bannerHeight, bannerPaint)
 
-        // Monospace Terminal Accent Line
+        // Monospace Terminal Command Prompt Line
         val termPaint = Paint().apply {
-            color = Color.parseColor("#38BDF8")
-            textSize = 10f
+            color = Color.parseColor("#10B981") // Emerald Cyber Green
+            textSize = 9.5f
             typeface = Typeface.MONOSPACE
             isAntiAlias = true
         }
-        pageManager.canvas.drawText("class Developer {", 32f, 26f, termPaint)
+        pageManager.canvas.drawText("root@security-matrix:~# cat profile.sys", 32f, 26f, termPaint)
 
+        // Name & Cyber Security Title
         val namePaint = Paint().apply {
             color = Color.WHITE
-            textSize = 22f
+            textSize = 21f
             typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
             isAntiAlias = true
         }
-        pageManager.canvas.drawText(data.fullName.ifBlank { "Developer Candidate" }, 32f, 48f, namePaint)
+        pageManager.canvas.drawText(data.fullName.ifBlank { "Cyber Security Lead" }, 32f, 50f, namePaint)
 
         if (data.professionalTitle.isNotBlank()) {
             val titlePaint = Paint().apply {
-                color = Color.parseColor("#94A3B8")
+                color = Color.parseColor("#06B6D4") // Cyber Cyan Accent
                 textSize = 11f
                 typeface = Typeface.MONOSPACE
                 isAntiAlias = true
             }
-            pageManager.canvas.drawText("// ${data.professionalTitle}", 32f, 66f, titlePaint)
+            pageManager.canvas.drawText("// ${data.professionalTitle}", 32f, 68f, titlePaint)
         }
 
+        // Contact Info Line
         val contactPaint = Paint().apply {
-            color = Color.parseColor("#CBD5E1")
+            color = Color.parseColor("#94A3B8")
             textSize = 8.5f
             typeface = Typeface.MONOSPACE
             isAntiAlias = true
         }
         val contactStr = listOfNotNull(data.email.ifBlank { null }, data.phone.ifBlank { null }, data.location.ifBlank { null }).joinToString(" | ")
-        pageManager.canvas.drawText(contactStr, 32f, 82f, contactPaint)
+        pageManager.canvas.drawText(contactStr, 32f, 86f, contactPaint)
 
         // Draw Avatar Photo if available
         if (hasPhoto) {
@@ -86,38 +88,38 @@ class DeveloperSlateRenderer(private val context: Context) : PdfTemplateRenderer
             }
         }
 
-        // GitHub / Developer Badge Box - Positioned safely to left of photo (or far right if no photo)
-        val photoSpaceOffset = if (hasPhoto) 75f else 0f
+        // Compact Security Clearance Badge Box (Positioned safely without prompt or photo collision)
+        val photoSpaceOffset = if (hasPhoto) 70f else 0f
         val badgePaint = Paint().apply {
-            color = Color.parseColor("#1E293B")
+            color = Color.parseColor("#064E3B") // Dark Emerald Fill
             style = Paint.Style.FILL
         }
         val badgeBorderPaint = Paint().apply {
-            color = Color.parseColor("#38BDF8")
+            color = Color.parseColor("#10B981") // Emerald Border
             strokeWidth = 1f
             style = Paint.Style.STROKE
             isAntiAlias = true
         }
         val badgeTextPaint = Paint().apply {
-            color = Color.parseColor("#7DD3FC")
+            color = Color.parseColor("#A7F3D0")
             textSize = 8f
             typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
             isAntiAlias = true
         }
-        val devBadgeText = "[ GITHUB: alexmercer ]"
-        val devBadgeW = badgeTextPaint.measureText(devBadgeText) + 14f
+        val badgeText = "[ TOP SECRET CLEARANCE ]"
+        val badgeW = badgeTextPaint.measureText(badgeText) + 12f
         val badgeRightX = width - 32f - photoSpaceOffset
-        val devBadgeRect = RectF(badgeRightX - devBadgeW, 16f, badgeRightX, 36f)
+        val devBadgeRect = RectF(badgeRightX - badgeW, 14f, badgeRightX, 32f)
         pageManager.canvas.drawRoundRect(devBadgeRect, 4f, 4f, badgePaint)
         pageManager.canvas.drawRoundRect(devBadgeRect, 4f, 4f, badgeBorderPaint)
-        pageManager.canvas.drawText(devBadgeText, badgeRightX - devBadgeW + 7f, 29f, badgeTextPaint)
+        pageManager.canvas.drawText(badgeText, badgeRightX - badgeW + 6f, 25f, badgeTextPaint)
 
         pageManager.currentY = bannerHeight + 24f
 
-        // 1. Monospace Overview
+        // 1. Executive Security Summary
         if (data.summary.isNotBlank()) {
             pageManager.ensureSpace(50f)
-            drawDevSectionHeader(pageManager, "// OVERVIEW", primaryColorInt, width)
+            drawCyberHeader(pageManager, "// 01. SECURITY_EXECUTIVE_SUMMARY", primaryColorInt, width)
             val summaryPaint = Paint().apply {
                 color = Color.parseColor("#1E293B")
                 textSize = 9.5f
@@ -132,16 +134,16 @@ class DeveloperSlateRenderer(private val context: Context) : PdfTemplateRenderer
             pageManager.currentY += 14f
         }
 
-        // 2. Categorized Technical Skills Matrix Table
+        // 2. Threat Intelligence & Categorized Skills Matrix
         val categoriesToRender = if (data.skillCategoryGroups.isNotEmpty()) {
             data.skillCategoryGroups
         } else if (data.skills.isNotEmpty()) {
-            listOf(com.mudasir.nexacvai.domain.model.template.TemplateSkillCategoryGroup("Core Competencies", data.skills))
+            listOf(com.mudasir.nexacvai.domain.model.template.TemplateSkillCategoryGroup("SECURITY COMPETENCIES", data.skills))
         } else emptyList()
 
         if (categoriesToRender.isNotEmpty()) {
             pageManager.ensureSpace(50f)
-            drawDevSectionHeader(pageManager, "// TECHNICAL_SKILLS_MATRIX", primaryColorInt, width)
+            drawCyberHeader(pageManager, "// 02. SECURITY_COMPETENCIES_MATRIX", primaryColorInt, width)
 
             val catNamePaint = Paint().apply {
                 color = Color.parseColor("#0F172A")
@@ -155,7 +157,7 @@ class DeveloperSlateRenderer(private val context: Context) : PdfTemplateRenderer
                 isAntiAlias = true
             }
 
-            val labelColumnW = 145f
+            val labelColumnW = 150f
             val valueX = 32f + labelColumnW
             val valueW = width - 32f - valueX
 
@@ -176,10 +178,10 @@ class DeveloperSlateRenderer(private val context: Context) : PdfTemplateRenderer
             pageManager.currentY += 10f
         }
 
-        // 3. Work Experience & Tech Stack Highlights
+        // 3. Work Experience & Incident Response History
         if (data.experiences.isNotEmpty()) {
             pageManager.ensureSpace(40f)
-            drawDevSectionHeader(pageManager, "// WORK_EXPERIENCE", primaryColorInt, width)
+            drawCyberHeader(pageManager, "// 03. INCIDENT_RESPONSE_&_WORK_HISTORY", primaryColorInt, width)
 
             for (exp in data.experiences) {
                 pageManager.ensureSpace(45f)
@@ -192,7 +194,7 @@ class DeveloperSlateRenderer(private val context: Context) : PdfTemplateRenderer
                 pageManager.canvas.drawText(exp.jobTitle, 32f, pageManager.currentY, jobTitlePaint)
 
                 val datePaint = Paint().apply {
-                    color = Color.parseColor("#0284C7")
+                    color = Color.parseColor("#0D9488") // Teal Date
                     textSize = 9.5f
                     typeface = Typeface.MONOSPACE
                     isAntiAlias = true
@@ -224,26 +226,14 @@ class DeveloperSlateRenderer(private val context: Context) : PdfTemplateRenderer
                         pageManager.currentY += 14f
                     }
                 }
-
-                if (exp.technologies.isNotEmpty()) {
-                    val techTagStr = "stack: " + exp.technologies.joinToString(", ")
-                    val techPaint = Paint().apply {
-                        color = Color.parseColor("#0284C7")
-                        textSize = 9f
-                        typeface = Typeface.MONOSPACE
-                        isAntiAlias = true
-                    }
-                    pageManager.canvas.drawText(techTagStr, 32f, pageManager.currentY, techPaint)
-                    pageManager.currentY += 14f
-                }
                 pageManager.currentY += 10f
             }
         }
 
-        // 4. Education
+        // 4. Education & Academic Credentials
         if (data.educations.isNotEmpty()) {
             pageManager.ensureSpace(40f)
-            drawDevSectionHeader(pageManager, "// EDUCATION", primaryColorInt, width)
+            drawCyberHeader(pageManager, "// 04. ACADEMIC_CREDENTIALS", primaryColorInt, width)
 
             for (edu in data.educations) {
                 pageManager.ensureSpace(30f)
@@ -253,11 +243,10 @@ class DeveloperSlateRenderer(private val context: Context) : PdfTemplateRenderer
                     typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
                     isAntiAlias = true
                 }
-                val degreeText = if (edu.gradeOrGpa.isNotBlank()) "${edu.degree}  (GPA: ${edu.gradeOrGpa})" else edu.degree
-                pageManager.canvas.drawText(degreeText, 32f, pageManager.currentY, degreePaint)
+                pageManager.canvas.drawText(edu.degree, 32f, pageManager.currentY, degreePaint)
 
                 val datePaint = Paint().apply {
-                    color = Color.parseColor("#0284C7")
+                    color = Color.parseColor("#0D9488")
                     textSize = 9.5f
                     typeface = Typeface.MONOSPACE
                     isAntiAlias = true
@@ -277,10 +266,10 @@ class DeveloperSlateRenderer(private val context: Context) : PdfTemplateRenderer
             }
         }
 
-        // 5. Featured Projects (With Git Repo Links & Tech Tags)
+        // 5. Security Projects & Infrastructure
         if (data.projects.isNotEmpty()) {
             pageManager.ensureSpace(40f)
-            drawDevSectionHeader(pageManager, "// FEATURED_PROJECTS", primaryColorInt, width)
+            drawCyberHeader(pageManager, "// 05. SECURITY_PROJECTS_&_INFRASTRUCTURE", primaryColorInt, width)
 
             for (proj in data.projects) {
                 pageManager.ensureSpace(35f)
@@ -290,19 +279,7 @@ class DeveloperSlateRenderer(private val context: Context) : PdfTemplateRenderer
                     typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
                     isAntiAlias = true
                 }
-                val repoTitle = "git repo: ${proj.projectName}"
-                pageManager.canvas.drawText(repoTitle, 32f, pageManager.currentY, projNamePaint)
-
-                if (proj.projectLink.isNotBlank()) {
-                    val linkPaint = Paint().apply {
-                        color = Color.parseColor("#0284C7")
-                        textSize = 9f
-                        typeface = Typeface.MONOSPACE
-                        isAntiAlias = true
-                    }
-                    val linkW = linkPaint.measureText(proj.projectLink)
-                    pageManager.canvas.drawText(proj.projectLink, width - 32f - linkW, pageManager.currentY, linkPaint)
-                }
+                pageManager.canvas.drawText("security audit: ${proj.projectName}", 32f, pageManager.currentY, projNamePaint)
                 pageManager.currentY += 14f
 
                 val descPaint = Paint().apply {
@@ -316,26 +293,14 @@ class DeveloperSlateRenderer(private val context: Context) : PdfTemplateRenderer
                     pageManager.canvas.drawText(l, 32f, pageManager.currentY, descPaint)
                     pageManager.currentY += 14f
                 }
-
-                if (proj.technologiesUsed.isNotEmpty()) {
-                    val techTagStr = "tags: [" + proj.technologiesUsed.joinToString(", ") + "]"
-                    val techPaint = Paint().apply {
-                        color = Color.parseColor("#0284C7")
-                        textSize = 9f
-                        typeface = Typeface.MONOSPACE
-                        isAntiAlias = true
-                    }
-                    pageManager.canvas.drawText(techTagStr, 32f, pageManager.currentY, techPaint)
-                    pageManager.currentY += 14f
-                }
                 pageManager.currentY += 8f
             }
         }
 
-        // 6. Certifications
+        // 6. Certifications & Clearances
         if (data.certifications.isNotEmpty()) {
             pageManager.ensureSpace(35f)
-            drawDevSectionHeader(pageManager, "// CERTIFICATIONS", primaryColorInt, width)
+            drawCyberHeader(pageManager, "// 06. CERTIFICATIONS_&_CLEARANCES", primaryColorInt, width)
             val certPaint = Paint().apply {
                 color = Color.parseColor("#334155")
                 textSize = 9.5f
@@ -352,7 +317,7 @@ class DeveloperSlateRenderer(private val context: Context) : PdfTemplateRenderer
         // 7. Languages & References
         if (data.languages.isNotEmpty()) {
             pageManager.ensureSpace(30f)
-            drawDevSectionHeader(pageManager, "// LANGUAGES", primaryColorInt, width)
+            drawCyberHeader(pageManager, "// 07. LANGUAGES", primaryColorInt, width)
             val langPaint = Paint().apply {
                 color = Color.parseColor("#334155")
                 textSize = 9.5f
@@ -365,7 +330,7 @@ class DeveloperSlateRenderer(private val context: Context) : PdfTemplateRenderer
 
         if (data.references.isNotEmpty()) {
             pageManager.ensureSpace(35f)
-            drawDevSectionHeader(pageManager, "// REFERENCES", primaryColorInt, width)
+            drawCyberHeader(pageManager, "// 08. PROFESSIONAL_REFERENCES", primaryColorInt, width)
             val refPaint = Paint().apply {
                 color = Color.parseColor("#334155")
                 textSize = 9.5f
@@ -386,10 +351,10 @@ class DeveloperSlateRenderer(private val context: Context) : PdfTemplateRenderer
         pageManager.finish()
     }
 
-    private fun drawDevSectionHeader(pageManager: PdfPageManager, title: String, colorInt: Int, width: Float) {
+    private fun drawCyberHeader(pageManager: PdfPageManager, title: String, colorInt: Int, width: Float) {
         val headPaint = Paint().apply {
-            color = Color.parseColor("#0284C7")
-            textSize = 11f
+            color = Color.parseColor("#0D9488")
+            textSize = 10.5f
             typeface = Typeface.MONOSPACE
             isAntiAlias = true
         }

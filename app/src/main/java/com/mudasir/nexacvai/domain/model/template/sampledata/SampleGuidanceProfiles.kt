@@ -66,7 +66,8 @@ object SampleGuidanceProfiles {
                 startDate = "2024",
                 endDate = "Present",
                 description = "Offline-first intelligent resume builder with pluggable AI engine, multi-profile management, and real-time A4 PDF rendering.",
-                technologiesUsed = listOf("Kotlin", "Canvas", "PdfDocument", "KSP", "Hilt")
+                technologiesUsed = listOf("Kotlin", "Canvas", "PdfDocument", "KSP", "Hilt"),
+                projectLink = "github.com/alexmercer/nexacv"
             ),
             TemplateProjectData(
                 projectName = "Enterprise Cloud Storage Vault",
@@ -74,7 +75,8 @@ object SampleGuidanceProfiles {
                 startDate = "2022",
                 endDate = "2023",
                 description = "End-to-end encrypted document storage pipeline handling over 5TB of encrypted asset backups.",
-                technologiesUsed = listOf("Kotlin", "Ktor", "AWS S3", "SQLCipher")
+                technologiesUsed = listOf("Kotlin", "Ktor", "AWS S3", "SQLCipher"),
+                projectLink = "github.com/alexmercer/cloud-vault"
             )
         ),
         skills = listOf("Kotlin", "Jetpack Compose", "Clean Architecture", "Dagger Hilt", "Room DB", "Coroutines", "System Design", "PDF Generation"),
@@ -92,8 +94,8 @@ object SampleGuidanceProfiles {
             TemplateLanguageData("Spanish", "Professional Working")
         ),
         references = listOf(
-            TemplateReferenceData("David Vance", "VP of Engineering", "Apex Financial", "david.vance@apexfin.com"),
-            TemplateReferenceData("Sarah Lin", "Director of Product", "Nexus Cloud", "slin@nexuscloud.io")
+            TemplateReferenceData("David Vance", "VP of Engineering", "Apex Financial", "david.vance@apexfin.com • +1 (555) 987-6543", "david.vance@apexfin.com", "+1 (555) 987-6543", "linkedin.com/in/davidvance"),
+            TemplateReferenceData("Sarah Lin", "Director of Product", "Nexus Cloud", "slin@nexuscloud.io • +1 (555) 432-1098", "slin@nexuscloud.io", "+1 (555) 432-1098", "linkedin.com/in/sarahlin")
         ),
         hobbies = listOf("Open Source Engineering", "Algorithmic Chess", "Marathon Running"),
         volunteerWork = listOf("Volunteer Coding Instructor at Code.org (2021 - Present)"),
@@ -187,23 +189,23 @@ object SampleGuidanceProfiles {
         email = "sophia.lin@example-hospital.org",
         phone = "+1 (555) 987-6543",
         location = "Chicago, IL • Board Certified",
-        summary = "Dedicated Physician and Clinical Director with over 9 years of medical experience in internal medicine, hospital administration, and clinical research. Board Certified with a passion for healthcare innovation.",
+        summary = "Board-Certified Attending Physician and Clinical Director with 10+ years leading inpatient hospital care, electronic health record (EHR) optimization, clinical research trials, and medical residency training.",
         profilePictureUri = "android.resource://com.mudasir.nexacvai/drawable/profile_female_whitebg_01",
-        dateOfBirth = "03/11/1988",
-        yearsOfExperience = "9+ Years",
+        dateOfBirth = "14/11/1986",
+        yearsOfExperience = "10+ Years",
         experiences = listOf(
             TemplateExperienceData(
-                jobTitle = "Chief Clinical Specialist",
-                company = "Chicago Memorial Hospital",
+                jobTitle = "Chief of Internal Medicine & Clinical Professor",
+                company = "Chicago Memorial Hospital & Health System",
                 startDate = "04/2019",
                 endDate = "Present",
                 location = "Chicago, IL",
                 responsibilities = listOf(
-                    "Oversaw daily medical operations of 120-bed acute care unit, managing 35 physicians and nursing staff.",
-                    "Implemented digitized electronic health record (EHR) workflow, reducing patient intake latency by 32%.",
-                    "Published 6 peer-reviewed clinical research papers on hospital-acquired infection reduction."
+                    "Oversaw daily medical operations of 140-bed acute care inpatient unit, supervising 38 attending physicians and medical residents.",
+                    "Implemented digitized electronic health record (EHR/Epic) clinical decision workflow, cutting diagnostic turn-around time by 34%.",
+                    "Chaired the Hospital Quality & Safety Committee, achieving 100% Joint Commission (JCAHO) accreditation compliance."
                 ),
-                technologies = listOf("Clinical Medicine", "Hospital Management", "EHR Systems", "Patient Care")
+                technologies = listOf("Clinical Medicine", "Inpatient Care", "Epic EHR", "Hospital Administration", "Bioethics", "JCAHO")
             ),
             TemplateExperienceData(
                 jobTitle = "Attending Physician & Clinical Fellow",
@@ -212,49 +214,73 @@ object SampleGuidanceProfiles {
                 endDate = "03/2019",
                 location = "Chicago, IL",
                 responsibilities = listOf(
-                    "Provided comprehensive diagnostic and therapeutic care for complex internal medicine cases.",
-                    "Supervised medical residents and clinical fellows in diagnostic rounds and patient evaluations."
-                )
+                    "Provided diagnostic, therapeutic, and preventative care for 1,800+ complex internal medicine and ICU patients.",
+                    "Directed daily resident teaching rounds and published 4 peer-reviewed clinical trials on sepsis protocol optimization."
+                ),
+                technologies = listOf("Internal Medicine", "Intensive Care (ICU)", "Diagnostic Protocols", "Medical Residency Supervision")
             )
         ),
         educations = listOf(
             TemplateEducationData(
                 degree = "Doctor of Medicine (M.D.)",
+                fieldOfStudy = "Internal Medicine",
                 institution = "Northwestern University Feinberg School of Medicine",
                 startDate = "2011",
                 endDate = "2015",
-                gradeOrGpa = "Magna Cum Laude",
-                relevantCoursework = "Internal Medicine, Clinical Diagnostics, Bioethics"
+                gradeOrGpa = "Magna Cum Laude (Alpha Omega Alpha)",
+                relevantCoursework = "Internal Medicine Residency at McGaw Medical Center (2015 - 2018)",
+                description = "Honors: Alpha Omega Alpha Medical Honor Society"
+            ),
+            TemplateEducationData(
+                degree = "B.S. in Human Biology & Biochemistry",
+                fieldOfStudy = "Pre-Medicine",
+                institution = "University of Chicago",
+                startDate = "2007",
+                endDate = "2011",
+                gradeOrGpa = "3.94 / 4.0 (Summa Cum Laude)"
             )
         ),
         projects = listOf(
             TemplateProjectData(
-                projectName = "Clinical Infection Prevention Protocol",
+                projectName = "Hospital Sepsis & Infection Prevention Protocol",
                 roleInProject = "Principal Medical Investigator",
                 startDate = "2020",
                 endDate = "2022",
-                description = "Standardized hospital-wide disinfection protocols, achieving a zero-infection record across 18 surgical suites."
+                description = "Standardized hospital-wide disinfection and sepsis protocols, achieving a zero-infection record across 18 surgical suites.",
+                technologiesUsed = listOf("Epic EHR", "Sepsis Analytics", "Clinical Protocols"),
+                projectLink = "cmh.org/sepsis-protocol"
+            ),
+            TemplateProjectData(
+                projectName = "Telemedicine Inpatient Triage Initiative",
+                roleInProject = "Director of Clinical Operations",
+                startDate = "2021",
+                endDate = "2023",
+                description = "Launched remote specialist consultation network across 4 regional community hospitals.",
+                technologiesUsed = listOf("EHR Telehealth", "Remote Patient Monitoring"),
+                projectLink = "cmh.org/telemedicine"
             )
         ),
         skills = listOf("Clinical Medicine", "Internal Medicine", "Patient Diagnosis", "EHR Systems", "Hospital Administration", "Medical Research"),
         skillCategoryGroups = listOf(
             TemplateSkillCategoryGroup("Medical Expertise", listOf("Internal Medicine", "Diagnostic Care", "Patient Triage", "Emergency Response")),
-            TemplateSkillCategoryGroup("Clinical Leadership", listOf("Hospital Administration", "EHR Systems", "Staff Supervision")),
-            TemplateSkillCategoryGroup("Research & Ethics", listOf("Peer-Reviewed Publishing", "Bioethics", "Clinical Trials"))
+            TemplateSkillCategoryGroup("Clinical Leadership", listOf("Hospital Administration", "Epic EHR", "JCAHO Accreditation", "Staff Supervision")),
+            TemplateSkillCategoryGroup("Research & Bioethics", listOf("Peer-Reviewed Clinical Trials", "Bioethics Committee", "Protocol Standardization"))
         ),
         certifications = listOf(
             TemplateCertData("Board Certified in Internal Medicine", "American Board of Internal Medicine", "2018"),
-            TemplateCertData("Advanced Cardiovascular Life Support (ACLS)", "American Heart Association", "2023")
+            TemplateCertData("Licensed Physician & Surgeon", "State of Illinois (License #036-142890)", "2015"),
+            TemplateCertData("Advanced Cardiovascular Life Support (ACLS)", "American Heart Association", "2023"),
+            TemplateCertData("DEA Medical Registration", "U.S. Drug Enforcement Administration", "2015")
         ),
         languages = listOf(
             TemplateLanguageData("English", "Native"),
             TemplateLanguageData("Mandarin Chinese", "Fluent")
         ),
         references = listOf(
-            TemplateReferenceData("Dr. Robert Sterling, MD", "Chief of Medicine", "Chicago Memorial", "r.sterling@cmh.org"),
-            TemplateReferenceData("Dr. Karen White, MD", "Director of Residency", "Northwestern Medicine", "k.white@nm.org")
+            TemplateReferenceData("Dr. Robert Sterling, MD", "Chief Executive Medical Officer", "Chicago Memorial Hospital", "r.sterling@cmh.org • +1 (555) 312-9900", "r.sterling@cmh.org", "+1 (555) 312-9900"),
+            TemplateReferenceData("Dr. Karen White, MD", "Director of Medical Residency", "Northwestern Medicine", "k.white@nm.org • +1 (555) 456-7788", "k.white@nm.org", "+1 (555) 456-7788")
         ),
-        hobbies = listOf("Classical Piano", "Medical History Research", "Yoga & Wellness"),
+        hobbies = listOf("Classical Piano Performance", "Medical History Research", "Yoga & Wellness"),
         volunteerWork = listOf("Volunteer Physician at Community Free Health Clinic (2017 - Present)"),
         awards = listOf("Physician Excellence Award (2021)", "Alpha Omega Alpha Medical Honor Society (2015)")
     )
@@ -355,51 +381,83 @@ object SampleGuidanceProfiles {
                 endDate = "Present",
                 location = "Seattle, WA",
                 responsibilities = listOf(
-                    "Designed zero-trust IAM architecture securing multi-cloud environment across AWS, Azure, and GCP.",
-                    "Led red team penetration tests and vulnerability remediations for enterprise infrastructure.",
+                    "Architected zero-trust IAM and network micro-segmentation securing multi-cloud environment across AWS, Azure, and GCP.",
+                    "Led red team penetration tests and automated vulnerability remediations across 2,500+ production Kubernetes nodes.",
                     "Automated SOC threat intelligence pipelines using Python, SIEM, and AWS GuardDuty."
                 ),
-                technologies = listOf("Zero-Trust", "Kubernetes Security", "SIEM", "Python", "Penetration Testing")
+                technologies = listOf("Zero-Trust", "Kubernetes Security", "SIEM", "Python", "AWS GuardDuty")
+            ),
+            TemplateExperienceData(
+                jobTitle = "Senior Threat Intelligence Analyst",
+                company = "Sentinel Defense Labs",
+                startDate = "06/2018",
+                endDate = "04/2021",
+                location = "Austin, TX",
+                responsibilities = listOf(
+                    "Engineered real-time SIEM detection rules and malware reverse-engineering protocols for enterprise SOC.",
+                    "Conducted threat hunting operations identifying advanced persistent threats (APT) across financial infrastructure."
+                ),
+                technologies = listOf("Splunk", "CrowdStrike", "Threat Hunting", "Metasploit")
             )
         ),
         educations = listOf(
             TemplateEducationData(
-                degree = "B.S. in Cybersecurity & Information Assurance",
-                institution = "University of Washington",
-                startDate = "2013",
+                degree = "M.S. in Cybersecurity & Information Assurance",
+                fieldOfStudy = "Cloud & Network Security",
+                institution = "Carnegie Mellon University",
+                startDate = "2015",
                 endDate = "2017",
-                gradeOrGpa = "3.85 / 4.0"
+                gradeOrGpa = "3.94 / 4.0",
+                relevantCoursework = "Automated Vulnerability Exploitation & Remediation in Kubernetes",
+                description = "Master's Thesis: Zero-Trust Micro-segmentation in Distributed Service Meshes"
             )
         ),
         projects = listOf(
             TemplateProjectData(
-                projectName = "Zero-Trust Mesh Shield",
+                projectName = "Zero-Trust Service Mesh Shield",
                 roleInProject = "Lead Security Architect",
                 startDate = "2022",
                 endDate = "2023",
-                description = "Deployed Service Mesh mTLS encryption and micro-segmentation across 2,000+ microservices containers."
+                description = "Deployed Service Mesh mTLS encryption and micro-segmentation across 2,000+ microservices containers with zero downtime.",
+                technologiesUsed = listOf("Kubernetes", "Istio", "Go", "Vault"),
+                projectLink = "github.com/davidchen/mesh-shield"
+            ),
+            TemplateProjectData(
+                projectName = "Automated SOC SIEM Detection Engine",
+                roleInProject = "Principal Security Engineer",
+                startDate = "2021",
+                endDate = "2022",
+                description = "Built automated security event ingestion pipeline processing over 50M log records daily with real-time Slack alerting.",
+                technologiesUsed = listOf("Python", "Splunk API", "AWS GuardDuty", "Terraform"),
+                projectLink = "github.com/davidchen/siem-engine"
             )
         ),
-        skills = listOf("Zero-Trust Architecture", "Penetration Testing", "SIEM & SOC", "AWS Security", "Kubernetes Security", "Python"),
+        skills = listOf("Zero-Trust Architecture", "Penetration Testing", "SIEM & SOC", "AWS Security", "Kubernetes Security", "Python", "ISO 27001"),
         skillCategoryGroups = listOf(
             TemplateSkillCategoryGroup("Security Architecture", listOf("Zero-Trust Architecture", "IAM", "Cloud Security", "Kubernetes Security")),
-            TemplateSkillCategoryGroup("Threat & Response", listOf("Penetration Testing", "SIEM", "SOC Analysis", "Incident Response")),
+            TemplateSkillCategoryGroup("Threat & Response", listOf("Penetration Testing", "Splunk SIEM", "CrowdStrike", "Incident Response")),
             TemplateSkillCategoryGroup("Security Engineering", listOf("Python", "Bash", "Terraform", "Docker Security"))
+        ),
+        socialLinks = listOf(
+            TemplateSocialLinkData("GitHub", "github.com/davidchen"),
+            TemplateSocialLinkData("LinkedIn", "linkedin.com/in/davidchensec")
         ),
         certifications = listOf(
             TemplateCertData("Certified Information Systems Security Professional (CISSP®)", "ISC2", "2020"),
-            TemplateCertData("Offensive Security Certified Professional (OSCP)", "OffSec", "2022")
+            TemplateCertData("Offensive Security Certified Professional (OSCP)", "OffSec", "2022"),
+            TemplateCertData("AWS Certified Security - Specialty", "Amazon Web Services", "2021")
         ),
         languages = listOf(
             TemplateLanguageData("English", "Native"),
             TemplateLanguageData("Mandarin", "Conversational")
         ),
         references = listOf(
-            TemplateReferenceData("Victor Vance", "CISO", "CloudFort Sec", "v.vance@cloudfort.io")
+            TemplateReferenceData("Victor Vance", "CISO", "CloudFort Cyber Defense", "v.vance@cloudfort.io • +1 (555) 987-1234", "v.vance@cloudfort.io", "+1 (555) 987-1234"),
+            TemplateReferenceData("Marcus Thorne", "VP of Infrastructure", "Sentinel Labs", "m.thorne@sentinel.io • +1 (555) 456-7890", "m.thorne@sentinel.io", "+1 (555) 456-7890")
         ),
-        hobbies = listOf("CTF (Capture The Flag) Security Competitions", "Lockpicking Mechanics", "Hardware Hacking"),
-        volunteerWork = listOf("EFF (Electronic Frontier Foundation) Supporter & Mentor"),
-        awards = listOf("DEF CON CTF Top 10 Team Member (2022)")
+        hobbies = listOf("Capture The Flag (CTF) Security Tournaments", "Hardware Lockpicking & Reverse Engineering"),
+        volunteerWork = listOf("EFF (Electronic Frontier Foundation) Cybersecurity Mentor"),
+        awards = listOf("DEF CON CTF Top 5 Finalist (2022)")
     )
 
     /** 6. Female Creative UX Lead */
@@ -409,40 +467,72 @@ object SampleGuidanceProfiles {
         email = "amara.okafor@example-design.com",
         phone = "+1 (555) 432-1098",
         location = "Los Angeles, CA • Creative Studio",
-        summary = "Award-winning Product Designer with 6+ years creating human-centered digital experiences, design systems, and mobile interfaces. Passionate about accessibility, typography, and interactive design prototypes.",
+        summary = "Award-winning Product Designer with 6+ years creating human-centered digital experiences, multi-brand design systems, and mobile interfaces. Passionate about WCAG accessibility, typography, and interactive design prototypes.",
         profilePictureUri = "android.resource://com.mudasir.nexacvai/drawable/profile_female_whitebg_02",
         dateOfBirth = "30/01/1993",
         yearsOfExperience = "6+ Years",
         experiences = listOf(
             TemplateExperienceData(
-                jobTitle = "Staff Product Designer",
+                jobTitle = "Staff Product Designer & UX Lead",
                 company = "Lumina Design Studio",
                 startDate = "09/2020",
                 endDate = "Present",
                 location = "Los Angeles, CA",
                 responsibilities = listOf(
-                    "Created comprehensive multi-brand Figma design system used by 60+ designers and developers.",
-                    "Led UX usability testing sessions across 400+ international users to refine mobile app navigation flows."
+                    "Architected multi-brand Figma design system used by 60+ engineers and product designers.",
+                    "Led remote usability testing labs across 400+ international users, boosting onboarding conversion by 38%.",
+                    "Spearheaded WCAG AAA accessibility audit and color system tokens across iOS and Android apps."
                 ),
-                technologies = listOf("Figma", "Design Systems", "Prototyping", "UX Research", "Usability Testing")
+                technologies = listOf("Figma", "Design Systems", "Prototyping", "UX Research", "Usability Testing", "Principle")
+            ),
+            TemplateExperienceData(
+                jobTitle = "Senior Interaction Designer",
+                company = "Frog Design Agency",
+                startDate = "06/2018",
+                endDate = "08/2020",
+                location = "San Francisco, CA",
+                responsibilities = listOf(
+                    "Designed end-to-end mobile banking experience for top-tier fintech application serving 1.2M users.",
+                    "Created high-fidelity micro-interactions and motion UI prototypes using Framer and After Effects."
+                ),
+                technologies = listOf("Figma", "Framer", "After Effects", "User Journeys", "Wireframing")
             )
         ),
         educations = listOf(
             TemplateEducationData(
                 degree = "B.F.A. in Interaction Design & Digital Media",
+                fieldOfStudy = "Interaction Design",
                 institution = "Rhode Island School of Design (RISD)",
                 startDate = "2014",
                 endDate = "2018",
-                gradeOrGpa = "Honors"
+                gradeOrGpa = "3.91 / 4.0 (Honors)",
+                description = "Thesis: Human-Centered Micro-Interactions in Mobile Interfaces"
+            ),
+            TemplateEducationData(
+                degree = "Diploma in Visual Communication & Typography",
+                institution = "ArtCenter College of Design",
+                startDate = "2012",
+                endDate = "2014"
             )
         ),
         projects = listOf(
             TemplateProjectData(
-                projectName = "Lumina UI Design System",
+                projectName = "Lumina Multi-Brand UI Design System",
                 roleInProject = "Lead Systems Architect",
                 startDate = "2021",
                 endDate = "2023",
-                description = "Constructed 250+ accessible UI components in Figma with dark mode tokens and WCAG AAA contrast compliance."
+                description = "Constructed 250+ accessible UI components in Figma with dark mode tokens and WCAG AAA contrast compliance.",
+                technologiesUsed = listOf("Figma", "Design Tokens", "WCAG AAA", "Principle"),
+                projectLink = "amara-ux.com/lumina"
+            ),
+            TemplateProjectData(
+                projectName = "Fintech Mobile Banking Experience",
+                roleInProject = "Senior UX Researcher & Designer",
+                startDate = "2019",
+                endDate = "2020",
+                description = "Redesigned onboarding user journey cutting drop-off rates by 24% across mobile web and native app.",
+                technologiesUsed = listOf("Framer", "User Testing", "Motion UI"),
+                projectLink = "amara-ux.com/fintech"
             )
         ),
         skills = listOf("Figma", "Design Systems", "UX Research", "Interactive Prototyping", "UI Motion", "WCAG Accessibility"),
@@ -451,17 +541,24 @@ object SampleGuidanceProfiles {
             TemplateSkillCategoryGroup("UI & Systems", listOf("Figma Design Systems", "Component Architecture", "Typography", "Motion UI")),
             TemplateSkillCategoryGroup("Design Standards", listOf("WCAG AAA Accessibility", "Design Tokens", "Design System Documentation"))
         ),
+        socialLinks = listOf(
+            TemplateSocialLinkData("Portfolio", "amara-ux.com"),
+            TemplateSocialLinkData("Behance", "behance.net/amaraokafor")
+        ),
         certifications = listOf(
-            TemplateCertData("Nielsen Norman Group UX Master Certification", "NN/g", "2021")
+            TemplateCertData("Nielsen Norman Group UX Master Certification", "NN/g", "2021"),
+            TemplateCertData("Certified Professional in Accessibility (CPACC)", "IAAP", "2022"),
+            TemplateCertData("Enterprise Design Thinking Practitioner", "IBM", "2020")
         ),
         languages = listOf(
             TemplateLanguageData("English", "Native"),
             TemplateLanguageData("Igbo", "Fluent")
         ),
         references = listOf(
-            TemplateReferenceData("Chloe Bennett", "Design Director", "Lumina Studio", "c.bennett@luminadesign.com")
+            TemplateReferenceData("Chloe Bennett", "VP of Product Design", "Lumina Studio", "c.bennett@luminadesign.com • +1 (555) 432-8877", "c.bennett@luminadesign.com", "+1 (555) 432-8877"),
+            TemplateReferenceData("Julian Vance", "Design Director", "Frog Design Agency", "j.vance@frogdesign.com • +1 (555) 987-6543", "j.vance@frogdesign.com", "+1 (555) 987-6543")
         ),
-        hobbies = listOf("Generative Canvas Art", "Photography", "Ceramics & Pottery"),
+        hobbies = listOf("Generative Canvas Art", "Street Photography", "Ceramics & Pottery"),
         volunteerWork = listOf("Design Mentor at ADPList (2021 - Present)"),
         awards = listOf("Awwwards Site of the Day (2022)", "Red Dot Design Award (2021)")
     )
@@ -480,34 +577,71 @@ object SampleGuidanceProfiles {
         experiences = listOf(
             TemplateExperienceData(
                 jobTitle = "Associate Professor of Computer Science",
-                company = "Stanford University Lab",
+                company = "Stanford University AI Lab",
                 startDate = "09/2017",
                 endDate = "Present",
                 location = "Stanford, CA",
                 responsibilities = listOf(
                     "Principal Investigator on $2.8M NSF grant researching ethical LLM alignment and bias mitigation.",
-                    "Taught graduate courses in Deep Learning and Natural Language Processing to 300+ students annually."
-                )
+                    "Taught graduate courses CS224N (Deep Learning & NLP) to 350+ doctoral and master's students annually.",
+                    "Advised 8 Ph.D. candidates and 14 Master's thesis projects in neural architecture safety."
+                ),
+                technologies = listOf("Deep Learning", "PyTorch", "NLP", "Grant Writing", "Ph.D. Advising")
+            ),
+            TemplateExperienceData(
+                jobTitle = "Postdoctoral Research Fellow",
+                company = "MIT CSAIL",
+                startDate = "09/2013",
+                endDate = "08/2017",
+                location = "Cambridge, MA",
+                responsibilities = listOf(
+                    "Engineered novel transformer attention mechanisms reducing inference latency by 40%.",
+                    "Co-authored 6 peer-reviewed papers published in NeurIPS, ICML, and ACL proceedings."
+                ),
+                technologies = listOf("PyTorch", "Python", "LaTeX", "CUDA", "TensorFlow")
             )
         ),
         educations = listOf(
             TemplateEducationData(
                 degree = "Ph.D. in Computer Science",
+                fieldOfStudy = "Artificial Intelligence & Safety",
                 institution = "Stanford University",
                 startDate = "2008",
-                endDate = "2013"
+                endDate = "2013",
+                gradeOrGpa = "3.96 / 4.0 (Distinction)",
+                relevantCoursework = "Provable Safety Guarantees & Bias Mitigation in Deep Generative Models",
+                description = "Dissertation: Ethical Alignment Benchmarks in Distributed Machine Learning"
+            ),
+            TemplateEducationData(
+                degree = "B.S. in Applied Mathematics & Computer Science",
+                fieldOfStudy = "Applied Mathematics",
+                institution = "UC Berkeley",
+                startDate = "2004",
+                endDate = "2008",
+                gradeOrGpa = "3.92 / 4.0 (Summa Cum Laude)"
             )
         ),
         projects = listOf(
             TemplateProjectData(
-                projectName = "Open-Align LLM Research",
+                projectName = "Open-Align LLM Safety Framework",
                 roleInProject = "Principal Investigator",
                 startDate = "2021",
                 endDate = "Present",
-                description = "Open-source research framework evaluating safety benchmarks across open-weight language models."
+                description = "Open-source research framework evaluating safety benchmarks across open-weight language models.",
+                technologiesUsed = listOf("PyTorch", "CUDA", "LaTeX", "Python"),
+                projectLink = "github.com/jsterling/open-align"
+            ),
+            TemplateProjectData(
+                projectName = "Neural Bias Auditing Benchmark",
+                roleInProject = "Lead Researcher",
+                startDate = "2019",
+                endDate = "2021",
+                description = "Benchmark dataset for auditing demographic bias in multimodal foundation models.",
+                technologiesUsed = listOf("Python", "HuggingFace", "TensorFlow"),
+                projectLink = "github.com/jsterling/bias-bench"
             )
         ),
-        skills = listOf("Machine Learning", "PyTorch", "NLP", "Peer Review", "Grant Writing", "Python", "Teaching"),
+        skills = listOf("Machine Learning", "PyTorch", "NLP", "Peer Review", "Grant Writing", "Python", "LaTeX"),
         skillCategoryGroups = listOf(
             TemplateSkillCategoryGroup("Academic Research", listOf("Deep Learning", "NLP", "Algorithmic Ethics", "Peer-Reviewed Publishing")),
             TemplateSkillCategoryGroup("Technical Stack", listOf("PyTorch", "Python", "LaTeX", "CUDA", "TensorFlow")),
@@ -521,9 +655,10 @@ object SampleGuidanceProfiles {
             TemplateLanguageData("German", "Fluent")
         ),
         references = listOf(
-            TemplateReferenceData("Dr. Alan Turing Jr.", "Department Chair", "Stanford CS", "a.turing@stanford.edu")
+            TemplateReferenceData("Dr. Alan Turing Jr.", "Department Chair", "Stanford CS", "a.turing@stanford.edu • +1 (555) 789-9900", "a.turing@stanford.edu", "+1 (555) 789-9900"),
+            TemplateReferenceData("Dr. Eleanor Vance", "Director of AI Safety", "MIT CSAIL", "e.vance@csail.mit.edu • +1 (555) 456-1122", "e.vance@csail.mit.edu", "+1 (555) 456-1122")
         ),
-        hobbies = listOf("Mountain Climbing", "Violin", "Classical Philosophy"),
+        hobbies = listOf("Mountain Climbing", "Violin Performance", "Classical Philosophy"),
         volunteerWork = listOf("Reviewer for NeurIPS and ICML Conferences (2016 - Present)"),
         awards = listOf("NSF CAREER Award (2019)", "Best Paper Award at NeurIPS (2020)")
     )
@@ -677,25 +812,48 @@ object SampleGuidanceProfiles {
         yearsOfExperience = "9+ Years",
         experiences = listOf(
             TemplateExperienceData(
-                jobTitle = "Principal Architect",
+                jobTitle = "Principal Architect & Studio Director",
                 company = "Rossi & Vanguard Architectural Studio",
                 startDate = "03/2019",
                 endDate = "Present",
                 location = "Chicago, IL",
                 responsibilities = listOf(
                     "Lead architect for $42M LEED Gold certified commercial high-rise in downtown Chicago.",
-                    "Directed 14 structural engineers and draftsmen using Revit, Rhino 3D, and AutoCAD."
+                    "Directed 14 structural engineers, interior designers, and BIM draftsmen using Revit, Rhino 3D, and AutoCAD.",
+                    "Pioneered net-zero solar facade integration reducing annual building energy consumption by 35%."
                 ),
-                technologies = listOf("Revit", "Rhino 3D", "BIM Management", "LEED Gold", "AutoCAD")
+                technologies = listOf("Revit", "Rhino 3D", "BIM Management", "LEED Gold", "AutoCAD", "V-Ray")
+            ),
+            TemplateExperienceData(
+                jobTitle = "Senior Project Architect",
+                company = "SOM (Skidmore, Owings & Merrill)",
+                startDate = "06/2014",
+                endDate = "02/2019",
+                location = "Chicago, IL",
+                responsibilities = listOf(
+                    "Managed structural design phases for 3 municipal civic centers and mixed-use urban complexes.",
+                    "Supervised building code compliance, zoning permits, and structural engineering reviews."
+                ),
+                technologies = listOf("AutoCAD", "Rhino 3D", "Grasshopper", "3ds Max", "Building Codes")
             )
         ),
         educations = listOf(
             TemplateEducationData(
                 degree = "Master of Architecture (M.Arch)",
+                fieldOfStudy = "Sustainable Urban Design",
                 institution = "Illinois Institute of Technology (IIT)",
                 startDate = "2010",
                 endDate = "2013",
-                gradeOrGpa = "Honors"
+                gradeOrGpa = "3.92 / 4.0 (Honors)",
+                description = "Thesis: Sustainable High-Density Urban Living & Biomimetic Facades"
+            ),
+            TemplateEducationData(
+                degree = "B.S. in Architectural Studies",
+                fieldOfStudy = "Architectural Engineering",
+                institution = "University of Illinois Urbana-Champaign",
+                startDate = "2006",
+                endDate = "2010",
+                gradeOrGpa = "3.86 / 4.0 (Magna Cum Laude)"
             )
         ),
         projects = listOf(
@@ -704,7 +862,18 @@ object SampleGuidanceProfiles {
                 roleInProject = "Lead Architect & Designer",
                 startDate = "2021",
                 endDate = "2023",
-                description = "Designed net-zero solar pavilion featuring recycled timber frameworks and rainwater harvesting systems."
+                description = "Designed net-zero solar pavilion featuring recycled timber frameworks and rainwater harvesting systems.",
+                technologiesUsed = listOf("Revit", "Grasshopper", "V-Ray", "Timber Construction"),
+                projectLink = "rossi-arch.com/riverfront"
+            ),
+            TemplateProjectData(
+                projectName = "High-Density Eco Living Complex",
+                roleInProject = "Principal Spatial Designer",
+                startDate = "2019",
+                endDate = "2021",
+                description = "120-unit residential eco-complex featuring passive solar heating and modular vertical gardens.",
+                technologiesUsed = listOf("Rhino 3D", "Solar Simulation", "AutoCAD"),
+                projectLink = "rossi-arch.com/eco-living"
             )
         ),
         skills = listOf("Architectural Design", "Revit BIM", "Rhino 3D", "Urban Planning", "LEED AP", "Construction Management"),
@@ -715,16 +884,18 @@ object SampleGuidanceProfiles {
         ),
         certifications = listOf(
             TemplateCertData("NCARB Certified Architect", "NCARB", "2016"),
-            TemplateCertData("LEED AP Building Design + Construction", "USGBC", "2018")
+            TemplateCertData("LEED AP Building Design + Construction", "USGBC", "2018"),
+            TemplateCertData("Licensed Structural Architect", "State of Illinois", "2017")
         ),
         languages = listOf(
             TemplateLanguageData("English", "Native"),
             TemplateLanguageData("Italian", "Fluent")
         ),
         references = listOf(
-            TemplateReferenceData("Helena Vance", "Senior Partner", "Vanguard Studio", "h.vance@vanguardarch.com")
+            TemplateReferenceData("Helena Vance", "Senior Partner", "Vanguard Studio", "h.vance@vanguardarch.com • +1 (555) 912-8800", "h.vance@vanguardarch.com", "+1 (555) 912-8800"),
+            TemplateReferenceData("Marcus Sterling", "VP of Urban Design", "SOM Chicago", "m.sterling@som.com • +1 (555) 345-6789", "m.sterling@som.com", "+1 (555) 345-6789")
         ),
-        hobbies = listOf("Architectural Photography", "Sketching & Drafting", "Woodworking"),
+        hobbies = listOf("Architectural Photography", "Sketching & Drafting", "Woodworking Mechanics"),
         volunteerWork = listOf("Volunteer for Habitat for Humanity Architectural Planning (2018 - Present)"),
         awards = listOf("Chicago AIA Architectural Excellence Award (2022)")
     )

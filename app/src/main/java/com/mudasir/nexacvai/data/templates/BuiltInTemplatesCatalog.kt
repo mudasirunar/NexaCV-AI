@@ -14,10 +14,10 @@ import com.mudasir.nexacvai.domain.model.template.sampledata.SampleGuidanceProfi
 
 /**
  * Enterprise Catalog of 22 Visually Distinct Built-in Resume Templates across 4 Categories:
- * - ATS-Friendly (4): ATS Clean Standard (Photo), ATS Corporate Minimal (Photo), ATS Categorized Skills (No Photo), ATS Hybrid Timeline (Fresh Grad / No Photo).
- * - Modern & Tech (6): Modern Horizon Accent, Modern Tech Sidebar, Developer Terminal Slate, Cyber Security Matrix, Tech Architecture Grid, Minimalist Serif.
- * - Executive & Corporate (6): Executive Leadership Grid, Executive Sidebar Accent, Executive Formal Slate, Corporate Banking, Global Enterprise Director, Managing Director Formal.
- * - Creative & Healthcare (6): Creative Studio Curve, UX Studio Sidebar, Clinical Specialist Sidebar, Clinical Doctor Credentials, Healthcare Specialist, Artisan Design Studio.
+ * - ATS-Friendly (4): ATS Clean Standard (Marcus Vance), ATS Corporate Minimal (Sarah Jenkins), ATS Categorized Skills (Alex Mercer), ATS Hybrid Timeline (Lucas Silva).
+ * - Modern & Tech (6): Modern Horizon Accent (Amara Okafor), Modern Tech Sidebar (Alex Mercer), Developer Terminal Slate (Alex Mercer), Cyber Security Matrix (David Chen), Tech Architecture Grid (Julian Thorne), Minimalist Serif (Prof. James Sterling).
+ * - Executive & Corporate (6): Executive Leadership Grid (Elena Rostova), Executive Sidebar Accent (Marcus Vance), Executive Formal Slate (Sarah Jenkins), Corporate Banking (Marcus Vance), Global Enterprise Director (Elena Rostova), Managing Director Formal (Julian Thorne).
+ * - Creative & Healthcare (6): Creative Studio Curve (Amara Okafor), UX Studio Sidebar (Amara Okafor), Clinical Specialist Sidebar (Dr. Sophia Lin), Clinical Doctor Credentials (Dr. Sophia Lin), Healthcare Specialist (Dr. Sophia Lin), Artisan Design Studio (Julian Thorne).
  */
 object BuiltInTemplatesCatalog {
 
@@ -48,7 +48,7 @@ object BuiltInTemplatesCatalog {
                     previewPrimaryColorHex = "#1E1B4B",
                     previewAccentColorHex = "#4338CA"
                 ),
-                defaultData = SampleGuidanceProfiles.FEMALE_EXECUTIVE_LEADER
+                defaultData = SampleGuidanceProfiles.FEMALE_FEDERAL_SPECIALIST
             ),
             GenericResumeTemplate(
                 metadata = TemplateMetadata(
@@ -86,7 +86,7 @@ object BuiltInTemplatesCatalog {
                     previewPrimaryColorHex = "#2563EB",
                     previewAccentColorHex = "#3B82F6"
                 ),
-                defaultData = SampleGuidanceProfiles.MALE_TECH_ARCHITECT
+                defaultData = SampleGuidanceProfiles.FEMALE_CREATIVE_UX_LEAD
             ),
             GenericResumeTemplate(
                 metadata = TemplateMetadata(
@@ -111,7 +111,7 @@ object BuiltInTemplatesCatalog {
                     previewPrimaryColorHex = "#0F172A",
                     previewAccentColorHex = "#38BDF8"
                 ),
-                defaultData = SampleGuidanceProfiles.MALE_CYBER_SECURITY_LEAD
+                defaultData = SampleGuidanceProfiles.MALE_TECH_ARCHITECT
             ),
             GenericResumeTemplate(
                 metadata = TemplateMetadata(
@@ -135,7 +135,7 @@ object BuiltInTemplatesCatalog {
                     previewPrimaryColorHex = "#4F46E5",
                     previewAccentColorHex = "#6366F1"
                 ),
-                defaultData = SampleGuidanceProfiles.MALE_TECH_ARCHITECT
+                defaultData = SampleGuidanceProfiles.ARCHITECTURAL_DESIGNER
             ),
             GenericResumeTemplate(
                 metadata = TemplateMetadata(
@@ -173,7 +173,7 @@ object BuiltInTemplatesCatalog {
                     previewPrimaryColorHex = "#1E293B",
                     previewAccentColorHex = "#334155"
                 ),
-                defaultData = SampleGuidanceProfiles.FEMALE_EXECUTIVE_LEADER
+                defaultData = SampleGuidanceProfiles.MALE_FINANCE_DIRECTOR
             ),
             GenericResumeTemplate(
                 metadata = TemplateMetadata(
@@ -185,7 +185,7 @@ object BuiltInTemplatesCatalog {
                     previewPrimaryColorHex = "#334155",
                     previewAccentColorHex = "#475569"
                 ),
-                defaultData = SampleGuidanceProfiles.FEMALE_EXECUTIVE_LEADER
+                defaultData = SampleGuidanceProfiles.FEMALE_FEDERAL_SPECIALIST
             ),
             GenericResumeTemplate(
                 metadata = TemplateMetadata(
@@ -221,7 +221,7 @@ object BuiltInTemplatesCatalog {
                     previewPrimaryColorHex = "#0F172A",
                     previewAccentColorHex = "#1E293B"
                 ),
-                defaultData = SampleGuidanceProfiles.FEMALE_EXECUTIVE_LEADER
+                defaultData = SampleGuidanceProfiles.ARCHITECTURAL_DESIGNER
             ),
 
             // --- CATEGORY 4: CREATIVE & HEALTHCARE (6 TEMPLATES) ---
