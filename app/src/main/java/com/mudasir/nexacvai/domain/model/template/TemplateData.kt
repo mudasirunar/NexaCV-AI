@@ -3,9 +3,17 @@ package com.mudasir.nexacvai.domain.model.template
 import com.mudasir.nexacvai.domain.model.UserProfile
 
 /**
+ * Categorized Skills Group model for industry-agnostic skills tables
+ * (e.g. Mobile Engineering: Kotlin, Swift, Flutter; Backend & Cloud: Java, Python, AWS).
+ */
+data class TemplateSkillCategoryGroup(
+    val categoryName: String,
+    val skills: List<String>
+)
+
+/**
  * Unified data container for rendering CV templates.
- * Contains sample placeholder guidance text when no profile is selected,
- * showing users where and how each section will be populated.
+ * Fully aligned 1:1 with [UserProfile] fields (including Hobbies, Volunteer Work, Awards, References, etc.).
  */
 data class TemplateData(
     val fullName: String,
@@ -15,14 +23,20 @@ data class TemplateData(
     val location: String,
     val summary: String,
     val profilePictureUri: String? = null,
+    val dateOfBirth: String = "",
+    val yearsOfExperience: String = "",
     val experiences: List<TemplateExperienceData> = emptyList(),
     val educations: List<TemplateEducationData> = emptyList(),
     val projects: List<TemplateProjectData> = emptyList(),
     val skills: List<String> = emptyList(),
+    val skillCategoryGroups: List<TemplateSkillCategoryGroup> = emptyList(),
     val socialLinks: List<TemplateSocialLinkData> = emptyList(),
     val certifications: List<TemplateCertData> = emptyList(),
     val languages: List<TemplateLanguageData> = emptyList(),
-    val references: List<TemplateReferenceData> = emptyList()
+    val references: List<TemplateReferenceData> = emptyList(),
+    val hobbies: List<String> = emptyList(),
+    val volunteerWork: List<String> = emptyList(),
+    val awards: List<String> = emptyList()
 ) {
     companion object {
         /**
@@ -89,6 +103,22 @@ data class TemplateReferenceData(
  * Mapper extension converting a pure [UserProfile] domain model to [TemplateData] for 1-tap profile auto-fill.
  */
 fun UserProfile.toTemplateData(): TemplateData {
+    val singleCategoryGroup = if (this.skills.isNotEmpty()) {
+        listOf(TemplateSkillCategoryGroup("Core Competencies", this.skills))
+    } else emptyList()
+
+    val parsedHobbies = if (this.hobbies.isNotBlank()) {
+        this.hobbies.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+    } else emptyList()
+
+    val parsedVolunteer = if (this.volunteerWork.isNotBlank()) {
+        listOf(this.volunteerWork.trim())
+    } else emptyList()
+
+    val parsedAwards = if (this.awards.isNotBlank()) {
+        listOf(this.awards.trim())
+    } else emptyList()
+
     return TemplateData(
         fullName = this.fullName.ifBlank { "Your Full Name" },
         professionalTitle = this.professionalTitle.ifBlank { "Professional Title" },
@@ -97,6 +127,8 @@ fun UserProfile.toTemplateData(): TemplateData {
         location = this.address.ifBlank { "" },
         summary = this.professionalSummary.ifBlank { this.professionalTitle },
         profilePictureUri = this.profilePictureUri,
+        dateOfBirth = this.dateOfBirth,
+        yearsOfExperience = this.yearsOfExperience,
         experiences = this.experiences.map { exp ->
             TemplateExperienceData(
                 jobTitle = exp.jobTitle,
@@ -130,9 +162,13 @@ fun UserProfile.toTemplateData(): TemplateData {
             )
         },
         skills = this.skills,
+        skillCategoryGroups = singleCategoryGroup,
         socialLinks = this.socialLinks.map { TemplateSocialLinkData(it.label, it.url) },
         certifications = this.certifications.map { TemplateCertData(it.certificationName, it.issuingOrganization, it.issueDate) },
         languages = this.languages.map { TemplateLanguageData(it.languageName, it.proficiency) },
-        references = this.references.map { TemplateReferenceData(it.fullName, it.jobTitle, it.company, it.email.orEmpty()) }
+        references = this.references.map { TemplateReferenceData(it.fullName, it.jobTitle, it.company, it.email.orEmpty()) },
+        hobbies = parsedHobbies,
+        volunteerWork = parsedVolunteer,
+        awards = parsedAwards
     )
 }

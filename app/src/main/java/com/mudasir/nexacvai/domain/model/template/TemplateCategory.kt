@@ -5,6 +5,7 @@ package com.mudasir.nexacvai.domain.model.template
  */
 enum class TemplateCategory(val displayName: String) {
     ALL("All Templates"),
+    ATS("ATS Friendly"),
     MODERN("Modern Tech"),
     EXECUTIVE("Executive Slate"),
     MINIMAL("Minimalist Clean"),

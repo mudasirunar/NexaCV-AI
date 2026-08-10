@@ -2,9 +2,7 @@ package com.mudasir.nexacvai.data.repository
 
 import com.mudasir.nexacvai.core.result.AppResult
 import com.mudasir.nexacvai.data.parser.ExternalTemplateParser
-import com.mudasir.nexacvai.data.templates.ExecutiveSlateTemplate
-import com.mudasir.nexacvai.data.templates.MinimalCleanTemplate
-import com.mudasir.nexacvai.data.templates.ModernTechTemplate
+import com.mudasir.nexacvai.data.templates.BuiltInTemplatesCatalog
 import com.mudasir.nexacvai.domain.model.template.ResumeTemplate
 import com.mudasir.nexacvai.domain.model.template.TemplateCategory
 import com.mudasir.nexacvai.domain.repository.TemplateRepository
@@ -23,11 +21,7 @@ class TemplateRepositoryImpl @Inject constructor(
     private val customTemplates = mutableListOf<ResumeTemplate>()
 
     private val builtInTemplates: List<ResumeTemplate> by lazy {
-        listOf(
-            ModernTechTemplate(),
-            ExecutiveSlateTemplate(),
-            MinimalCleanTemplate()
-        )
+        BuiltInTemplatesCatalog.ALL_TEMPLATES
     }
 
     override suspend fun getAllTemplates(): AppResult<List<ResumeTemplate>> {
