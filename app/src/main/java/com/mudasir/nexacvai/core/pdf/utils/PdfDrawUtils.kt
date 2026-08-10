@@ -114,7 +114,7 @@ object PdfDrawUtils {
                     isDither = true
                 }
 
-                val cornerPx = 12f * 4f
+                val cornerPx = 2f * 4f
                 maskCanvas.drawRoundRect(0f, 0f, hiResDim.toFloat(), hiResDim.toFloat(), cornerPx, cornerPx, paint)
                 paint.xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_IN)
                 maskCanvas.drawBitmap(cropped, 0f, 0f, paint)
@@ -129,7 +129,7 @@ object PdfDrawUtils {
                     strokeWidth = 2f
                     isAntiAlias = true
                 }
-                canvas.drawRoundRect(rectF, 12f, 12f, borderPaint)
+                canvas.drawRoundRect(rectF, 2f, 2f, borderPaint)
             }
 
             PhotoShape.PASSPORT_RECT -> {
@@ -147,7 +147,7 @@ object PdfDrawUtils {
                     isDither = true
                 }
 
-                val cornerPx = 6f * 4f
+                val cornerPx = 2f * 4f
                 maskCanvas.drawRoundRect(0f, 0f, hiResW.toFloat(), hiResH.toFloat(), cornerPx, cornerPx, paint)
                 paint.xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_IN)
                 maskCanvas.drawBitmap(cropped, 0f, 0f, paint)
@@ -162,7 +162,7 @@ object PdfDrawUtils {
                     strokeWidth = 2f
                     isAntiAlias = true
                 }
-                canvas.drawRoundRect(rectF, 6f, 6f, borderPaint)
+                canvas.drawRoundRect(rectF, 2f, 2f, borderPaint)
             }
         }
     }

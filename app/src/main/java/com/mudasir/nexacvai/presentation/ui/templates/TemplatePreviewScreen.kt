@@ -91,10 +91,11 @@ fun TemplatePreviewScreen(
         }
     }
 
-    val templateStyle = remember(previewPrimaryColor, meta?.supportsPhoto) {
+    val templateStyle = remember(previewPrimaryColor, meta?.supportsPhoto, meta?.defaultPhotoShape) {
         TemplateStyle(
             primaryColor = previewPrimaryColor,
-            showPhoto = meta?.supportsPhoto == true
+            showPhoto = meta?.supportsPhoto == true,
+            photoShape = meta?.defaultPhotoShape ?: com.mudasir.nexacvai.domain.model.template.PhotoShape.CIRCLE
         )
     }
 

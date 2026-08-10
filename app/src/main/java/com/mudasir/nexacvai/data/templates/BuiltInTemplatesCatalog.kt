@@ -44,7 +44,7 @@ object BuiltInTemplatesCatalog {
                     description = "Executive corporate single-column structure with dark slate section rules and optional photo frame.",
                     category = TemplateCategory.ATS,
                     supportsPhoto = true,
-                    defaultPhotoShape = PhotoShape.PASSPORT_RECT,
+                    defaultPhotoShape = PhotoShape.CIRCLE,
                     previewPrimaryColorHex = "#1E1B4B",
                     previewAccentColorHex = "#4338CA"
                 ),
@@ -57,6 +57,7 @@ object BuiltInTemplatesCatalog {
                     description = "Single-column parser-safe ATS layout featuring a clean borderless Categorized Skills Table.",
                     category = TemplateCategory.ATS,
                     supportsPhoto = false,
+                    defaultPhotoShape = PhotoShape.CIRCLE,
                     previewPrimaryColorHex = "#0F172A",
                     previewAccentColorHex = "#0284C7"
                 ),
@@ -69,6 +70,7 @@ object BuiltInTemplatesCatalog {
                     description = "Left-aligned date hierarchy with crisp section divider rules, optimized for fresh graduates and career changers.",
                     category = TemplateCategory.ATS,
                     supportsPhoto = false,
+                    defaultPhotoShape = PhotoShape.CIRCLE,
                     previewPrimaryColorHex = "#0284C7",
                     previewAccentColorHex = "#0369A1"
                 ),
@@ -83,6 +85,7 @@ object BuiltInTemplatesCatalog {
                     description = "Curved top header accent band with candidate avatar photo, professional summary, and soft pill badges.",
                     category = TemplateCategory.MODERN,
                     supportsPhoto = true,
+                    defaultPhotoShape = PhotoShape.CIRCLE,
                     previewPrimaryColorHex = "#2563EB",
                     previewAccentColorHex = "#3B82F6"
                 ),
@@ -95,6 +98,7 @@ object BuiltInTemplatesCatalog {
                     description = "Split 30/70 left column panel for contact details, social links, tools, skills, and languages.",
                     category = TemplateCategory.MODERN,
                     supportsPhoto = true,
+                    defaultPhotoShape = PhotoShape.ROUNDED_SQUARE,
                     previewPrimaryColorHex = "#0D9488",
                     previewAccentColorHex = "#14B8A6"
                 ),
@@ -120,6 +124,7 @@ object BuiltInTemplatesCatalog {
                     description = "Teal accent tech layout featuring zero-trust infrastructure skills matrix and security certifications.",
                     category = TemplateCategory.MODERN,
                     supportsPhoto = true,
+                    defaultPhotoShape = PhotoShape.CIRCLE,
                     previewPrimaryColorHex = "#0D9488",
                     previewAccentColorHex = "#2DD4BF"
                 ),
@@ -132,6 +137,7 @@ object BuiltInTemplatesCatalog {
                     description = "Modular section blocks highlighting cloud infrastructure, system design projects, and engineering tools.",
                     category = TemplateCategory.MODERN,
                     supportsPhoto = true,
+                    defaultPhotoShape = PhotoShape.ROUNDED_SQUARE,
                     previewPrimaryColorHex = "#4F46E5",
                     previewAccentColorHex = "#6366F1"
                 ),
@@ -144,6 +150,7 @@ object BuiltInTemplatesCatalog {
                     description = "High typography contrast serif pairing with delicate accent rules, ideal for research and academic fellows.",
                     category = TemplateCategory.MODERN,
                     supportsPhoto = true,
+                    defaultPhotoShape = PhotoShape.CIRCLE,
                     previewPrimaryColorHex = "#374151",
                     previewAccentColorHex = "#4B5563"
                 ),
@@ -158,6 +165,7 @@ object BuiltInTemplatesCatalog {
                     description = "Full-width dark navy header banner with 3-column leadership competency matrix and P&L achievements.",
                     category = TemplateCategory.EXECUTIVE,
                     supportsPhoto = true,
+                    defaultPhotoShape = PhotoShape.CIRCLE,
                     previewPrimaryColorHex = "#1E1B4B",
                     previewAccentColorHex = "#312E81"
                 ),
@@ -170,6 +178,7 @@ object BuiltInTemplatesCatalog {
                     description = "Split 35/65 dark accent sidebar for contact details, board directorships, competencies, and references.",
                     category = TemplateCategory.EXECUTIVE,
                     supportsPhoto = true,
+                    defaultPhotoShape = PhotoShape.PASSPORT_RECT,
                     previewPrimaryColorHex = "#1E293B",
                     previewAccentColorHex = "#334155"
                 ),
@@ -182,6 +191,7 @@ object BuiltInTemplatesCatalog {
                     description = "Centered classic executive header with traditional formal margins and revenue growth callouts.",
                     category = TemplateCategory.EXECUTIVE,
                     supportsPhoto = true,
+                    defaultPhotoShape = PhotoShape.CIRCLE,
                     previewPrimaryColorHex = "#334155",
                     previewAccentColorHex = "#475569"
                 ),
@@ -194,6 +204,7 @@ object BuiltInTemplatesCatalog {
                     description = "Gold & Navy formal accent rules tailored for investment directors and finance executives.",
                     category = TemplateCategory.EXECUTIVE,
                     supportsPhoto = true,
+                    defaultPhotoShape = PhotoShape.PASSPORT_RECT,
                     previewPrimaryColorHex = "#B45309",
                     previewAccentColorHex = "#D97706"
                 ),
@@ -206,6 +217,7 @@ object BuiltInTemplatesCatalog {
                     description = "Full-width header banner with revenue growth callouts and international governance experience.",
                     category = TemplateCategory.EXECUTIVE,
                     supportsPhoto = true,
+                    defaultPhotoShape = PhotoShape.CIRCLE,
                     previewPrimaryColorHex = "#0369A1",
                     previewAccentColorHex = "#0284C7"
                 ),
@@ -218,6 +230,7 @@ object BuiltInTemplatesCatalog {
                     description = "Double-rule formal executive layout with centered title block and corporate governance focus.",
                     category = TemplateCategory.EXECUTIVE,
                     supportsPhoto = true,
+                    defaultPhotoShape = PhotoShape.PASSPORT_RECT,
                     previewPrimaryColorHex = "#0F172A",
                     previewAccentColorHex = "#1E293B"
                 ),
@@ -232,6 +245,7 @@ object BuiltInTemplatesCatalog {
                     description = "Vibrant top header curve accent with structured portfolio project cards and creative skill pills.",
                     category = TemplateCategory.CREATIVE,
                     supportsPhoto = true,
+                    defaultPhotoShape = PhotoShape.CIRCLE,
                     previewPrimaryColorHex = "#E11D48",
                     previewAccentColorHex = "#F43F5E"
                 ),
@@ -244,6 +258,7 @@ object BuiltInTemplatesCatalog {
                     description = "Split-screen sidebar for avatar, GitHub/portfolio links, interaction design badges, and hobbies.",
                     category = TemplateCategory.CREATIVE,
                     supportsPhoto = true,
+                    defaultPhotoShape = PhotoShape.ROUNDED_SQUARE,
                     previewPrimaryColorHex = "#9333EA",
                     previewAccentColorHex = "#A855F7"
                 ),
@@ -268,7 +283,7 @@ object BuiltInTemplatesCatalog {
                     name = "Clinical Doctor Credentials",
                     description = "Medical blue header banner with top-right clinical credentials & board certification box.",
                     category = TemplateCategory.CREATIVE,
-                    supportsPhoto = true,
+                    supportsPhoto = false,
                     defaultPhotoShape = PhotoShape.ROUNDED_SQUARE,
                     previewPrimaryColorHex = "#0284C7",
                     previewAccentColorHex = "#0EA5E9"
@@ -282,6 +297,7 @@ object BuiltInTemplatesCatalog {
                     description = "Structured clinical appointment timeline highlighting hospital affiliations and medical research.",
                     category = TemplateCategory.CREATIVE,
                     supportsPhoto = true,
+                    defaultPhotoShape = PhotoShape.PASSPORT_RECT,
                     previewPrimaryColorHex = "#059669",
                     previewAccentColorHex = "#10B981"
                 ),
@@ -294,6 +310,7 @@ object BuiltInTemplatesCatalog {
                     description = "Warm studio tone with refined typography rules for creative directors, architects, and designers.",
                     category = TemplateCategory.CREATIVE,
                     supportsPhoto = true,
+                    defaultPhotoShape = PhotoShape.CIRCLE,
                     previewPrimaryColorHex = "#D97706",
                     previewAccentColorHex = "#F59E0B"
                 ),

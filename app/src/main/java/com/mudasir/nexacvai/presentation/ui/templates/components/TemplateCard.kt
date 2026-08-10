@@ -108,7 +108,8 @@ fun TemplateCard(
                             style = TemplateStyle(
                                 primaryColor = previewPrimaryColor,
                                 accentColor = previewAccentColor,
-                                showPhoto = meta.supportsPhoto
+                                showPhoto = meta.supportsPhoto,
+                                photoShape = meta.defaultPhotoShape
                             ),
                             modifier = Modifier.fillMaxSize()
                         )
