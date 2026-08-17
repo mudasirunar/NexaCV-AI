@@ -6,11 +6,15 @@ import androidx.room.PrimaryKey
 
 @Entity(
     tableName = "user_profiles",
-    indices = [Index(value = ["createdAt"])]
+    indices = [
+        Index(value = ["createdAt"]),
+        Index(value = ["uuid"], unique = true)
+    ]
 )
 data class UserProfileEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
+    val uuid: String = java.util.UUID.randomUUID().toString(),
     
     // Basic Info
     val fullName: String = "",

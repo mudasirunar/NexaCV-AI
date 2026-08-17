@@ -10,6 +10,7 @@ import com.mudasir.nexacvai.domain.model.*
 fun UserProfileWithDetails.toDomain(): UserProfile {
     return UserProfile(
         id = profile.id,
+        uuid = profile.uuid,
         fullName = profile.fullName,
         professionalTitle = profile.professionalTitle,
         emails = profile.emails,
@@ -41,6 +42,7 @@ fun UserProfileWithDetails.toDomain(): UserProfile {
 fun UserProfile.toEntity(): UserProfileEntity {
     return UserProfileEntity(
         id = id,
+        uuid = uuid,
         fullName = fullName,
         professionalTitle = professionalTitle,
         emails = emails,

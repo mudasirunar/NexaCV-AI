@@ -235,15 +235,15 @@ class ProfilesViewModel @Inject constructor(
                     }
 
                     val existingProfiles = _state.value.profiles ?: emptyList()
-                    val existingIds = existingProfiles.map { it.id }.toSet()
+                    val existingUuids = existingProfiles.map { it.uuid }.filter { it.isNotBlank() }.toSet()
 
-                    val duplicates = importedList.filter { it.profile.id in existingIds }
+                    val duplicates = importedList.filter { it.profile.uuid.isNotBlank() && it.profile.uuid in existingUuids }
 
                     withContext(Dispatchers.Main) {
                         if (duplicates.isNotEmpty()) {
                             _state.value = _state.value.copy(
                                 importState = ImportProgressState.DuplicateSelection,
-                                importedProfileData = importedList.firstOrNull(),
+                                importedProfileData = duplicates.firstOrNull() ?: importedList.firstOrNull(),
                                 importedProfileDataList = importedList
                             )
                         } else {
@@ -349,10 +349,16 @@ class ProfilesViewModel @Inject constructor(
         val newSocialLinks = profileToSave.socialLinks.map { it.copy(id = java.util.UUID.randomUUID().toString()) }
         val newLanguages = profileToSave.languages.map { it.copy(id = java.util.UUID.randomUUID().toString()) }
 
+        // Find existing local profile by UUID to handle true duplicates
+        val existingProfileByUuid = if (profileToSave.uuid.isNotBlank()) {
+            userProfileRepository.getProfileByUuid(profileToSave.uuid)
+        } else null
+
         when (duplicateResolution) {
             DuplicateResolution.KeepBoth -> {
                 profileToSave = profileToSave.copy(
                     id = 0L,
+                    uuid = java.util.UUID.randomUUID().toString(),
                     experiences = newExperiences,
                     projects = newProjects,
                     educations = newEducations,
@@ -365,22 +371,37 @@ class ProfilesViewModel @Inject constructor(
                 )
             }
             DuplicateResolution.Overwrite -> {
-                val existingProfile = userProfileRepository.getProfileById(profileToSave.id)
-                val preservedCreatedAt = existingProfile?.createdAt ?: now
-
-                profileToSave = profileToSave.copy(
-                    experiences = newExperiences,
-                    projects = newProjects,
-                    educations = newEducations,
-                    certifications = newCertifications,
-                    references = newReferences,
-                    socialLinks = newSocialLinks,
-                    languages = newLanguages,
-                    createdAt = preservedCreatedAt,
-                    updatedAt = now
-                )
+                if (existingProfileByUuid != null) {
+                    profileToSave = profileToSave.copy(
+                        id = existingProfileByUuid.id,
+                        uuid = existingProfileByUuid.uuid,
+                        experiences = newExperiences,
+                        projects = newProjects,
+                        educations = newEducations,
+                        certifications = newCertifications,
+                        references = newReferences,
+                        socialLinks = newSocialLinks,
+                        languages = newLanguages,
+                        createdAt = existingProfileByUuid.createdAt,
+                        updatedAt = now
+                    )
+                } else {
+                    profileToSave = profileToSave.copy(
+                        id = 0L,
+                        uuid = if (profileToSave.uuid.isBlank()) java.util.UUID.randomUUID().toString() else profileToSave.uuid,
+                        experiences = newExperiences,
+                        projects = newProjects,
+                        educations = newEducations,
+                        certifications = newCertifications,
+                        references = newReferences,
+                        socialLinks = newSocialLinks,
+                        languages = newLanguages,
+                        createdAt = now,
+                        updatedAt = now
+                    )
+                }
             }
-            DuplicateResolution.Skip -> return data.profile.id
+            DuplicateResolution.Skip -> return existingProfileByUuid?.id ?: data.profile.id
         }
 
         val savedId = withContext(Dispatchers.IO) {

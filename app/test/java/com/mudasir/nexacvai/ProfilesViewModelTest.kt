@@ -341,6 +341,10 @@ class ProfilesViewModelTest {
             return savedProfiles[id]
         }
 
+        override suspend fun getProfileByUuid(uuid: String): UserProfile? {
+            return savedProfiles.values.firstOrNull { it.uuid == uuid }
+        }
+
         override suspend fun insertProfile(profile: UserProfile): Long {
             val id = if (profile.id == 0L) nextId++ else profile.id
             val saved = profile.copy(id = id)

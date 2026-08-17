@@ -5,6 +5,7 @@ import androidx.annotation.Keep
 @Keep
 data class UserProfile(
     val id: Long = 0,
+    val uuid: String = java.util.UUID.randomUUID().toString(),
     val fullName: String = "",
     val professionalTitle: String = "",
     val emails: List<String> = emptyList(),

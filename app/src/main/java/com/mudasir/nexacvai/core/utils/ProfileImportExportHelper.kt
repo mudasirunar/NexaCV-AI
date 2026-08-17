@@ -203,9 +203,10 @@ object ProfileImportExportHelper {
                 val jsonStr = legacyProfileJsonBytes!!.toString(Charsets.UTF_8)
                 val profile = userProfileAdapter.fromJson(jsonStr)
                 if (profile != null) {
+                    val normalizedProfile = if (profile.uuid.isBlank()) profile.copy(uuid = java.util.UUID.randomUUID().toString()) else profile
                     resultList.add(
                         ImportedProfileData(
-                            profile = profile,
+                            profile = normalizedProfile,
                             hasPicture = legacyAvatarBytes != null,
                             pictureBytes = legacyAvatarBytes
                         )
@@ -219,9 +220,10 @@ object ProfileImportExportHelper {
                     val jsonStr = jsonBytes.toString(Charsets.UTF_8)
                     val profile = userProfileAdapter.fromJson(jsonStr)
                     if (profile != null) {
+                        val normalizedProfile = if (profile.uuid.isBlank()) profile.copy(uuid = java.util.UUID.randomUUID().toString()) else profile
                         resultList.add(
                             ImportedProfileData(
-                                profile = profile,
+                                profile = normalizedProfile,
                                 hasPicture = raw.avatarBytes != null,
                                 pictureBytes = raw.avatarBytes
                             )

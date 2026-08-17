@@ -26,6 +26,7 @@ class DuplicateProfileUseCase @Inject constructor(
 
         val initialCopy = originalProfile.copy(
             id = 0L,
+            uuid = UUID.randomUUID().toString(),
             profilePictureUri = null,
             experiences = newExperiences,
             projects = newProjects,

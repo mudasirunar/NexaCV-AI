@@ -683,7 +683,8 @@ fun ProfilesScreen(
                             )
                         } else {
                             val duplicateProfile = state.importedProfileData?.profile
-                            val existingProfile = state.profiles?.find { it.id == duplicateProfile?.id }
+                            val existingProfile = state.profiles?.find { it.uuid == duplicateProfile?.uuid }
+                                ?: state.profiles?.find { it.id == duplicateProfile?.id }
                             if (duplicateProfile != null) {
                                 ImportExportSheetContent.DuplicateFound(
                                     importedProfile = duplicateProfile,

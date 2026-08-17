@@ -28,6 +28,10 @@ class UserProfileRepositoryImpl @Inject constructor(
         dao.getProfileWithDetailsById(id)?.toDomain()
     }
 
+    override suspend fun getProfileByUuid(uuid: String): UserProfile? = withContext(Dispatchers.IO) {
+        dao.getProfileWithDetailsByUuid(uuid)?.toDomain()
+    }
+
     override suspend fun insertProfile(profile: UserProfile): Long = withContext(Dispatchers.IO) {
         val profileId = dao.insertProfile(profile.toEntity())
         saveSubEntities(profileId, profile)

@@ -15,6 +15,10 @@ interface UserProfileDao {
     @Query("SELECT * FROM user_profiles WHERE id = :id LIMIT 1")
     suspend fun getProfileWithDetailsById(id: Long): UserProfileWithDetails?
 
+    @Transaction
+    @Query("SELECT * FROM user_profiles WHERE uuid = :uuid LIMIT 1")
+    suspend fun getProfileWithDetailsByUuid(uuid: String): UserProfileWithDetails?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertProfile(profile: UserProfileEntity): Long
 

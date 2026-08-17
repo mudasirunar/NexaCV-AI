@@ -344,6 +344,7 @@ class CreateProfileViewModel @Inject constructor(
 
         return UserProfile(
             id = upToDateState.profileId ?: 0L,
+            uuid = initialProfile.uuid,
             fullName = upToDateState.fullName,
             professionalTitle = upToDateState.professionalTitle,
             emails = cleanedEmails,
