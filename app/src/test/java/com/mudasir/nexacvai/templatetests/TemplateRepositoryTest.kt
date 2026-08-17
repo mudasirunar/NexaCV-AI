@@ -29,8 +29,8 @@ class TemplateRepositoryTest {
         val templates = (result as AppResult.Success).data
         assertTrue(templates.size >= 3)
         assertTrue(templates.any { it.metadata.id == "template_modern_tech" })
-        assertTrue(templates.any { it.metadata.id == "template_executive_slate" })
-        assertTrue(templates.any { it.metadata.id == "template_minimal_clean" })
+        assertTrue(templates.any { it.metadata.id == "template_exec_slate" })
+        assertTrue(templates.any { it.metadata.id == "template_ats_clean" })
     }
 
     @Test
@@ -43,11 +43,11 @@ class TemplateRepositoryTest {
 
     @Test
     fun getTemplateById_returnsCorrectTemplate() = runTest {
-        val result = repository.getTemplateById("template_executive_slate")
+        val result = repository.getTemplateById("template_exec_slate")
         assertTrue(result is AppResult.Success)
         val template = (result as AppResult.Success).data
-        assertEquals("Executive Slate", template.metadata.name)
-        assertFalse(template.metadata.supportsPhoto)
+        assertEquals("Executive Formal Slate", template.metadata.name)
+        assertTrue(template.metadata.supportsPhoto)
     }
 
     @Test
