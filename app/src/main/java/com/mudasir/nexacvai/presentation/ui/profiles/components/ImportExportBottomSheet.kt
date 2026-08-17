@@ -49,11 +49,13 @@ sealed interface ImportExportSheetContent {
     data class ExportConfirm(val profiles: List<UserProfile>) : ImportExportSheetContent
     data class DuplicateFound(
         val importedProfile: UserProfile,
-        val existingName: String
+        val existingName: String,
+        val existingId: Long? = null
     ) : ImportExportSheetContent
     data class MultiDuplicateFound(
         val importedProfilesData: List<ProfileImportExportHelper.ImportedProfileData>,
-        val existingProfilesMap: Map<Long, String>
+        val existingProfilesMap: Map<Long, String>,
+        val existingProfilesByUuid: Map<String, UserProfile> = emptyMap()
     ) : ImportExportSheetContent
 
     data object Importing : ImportExportSheetContent
@@ -150,6 +152,7 @@ fun ImportExportBottomSheet(
                         DuplicateResolutionContent(
                             importedProfile = data.importedProfile,
                             existingName = data.existingName,
+                            existingId = data.existingId,
                             onKeepBoth = onKeepBoth,
                             onOverwrite = onOverwrite,
                             onCancel = onDismiss
@@ -161,6 +164,7 @@ fun ImportExportBottomSheet(
                         MultiDuplicateResolutionContent(
                             importedProfilesData = data.importedProfilesData,
                             existingProfilesMap = data.existingProfilesMap,
+                            existingProfilesByUuid = data.existingProfilesByUuid,
                             onConfirmMultiImport = onExecuteMultiImport,
                             onCancel = onDismiss
                         )
@@ -346,6 +350,7 @@ private fun ExportConfirmContent(
 private fun DuplicateResolutionContent(
     importedProfile: UserProfile,
     existingName: String,
+    existingId: Long? = null,
     onKeepBoth: () -> Unit,
     onOverwrite: () -> Unit,
     onCancel: () -> Unit
@@ -368,7 +373,7 @@ private fun DuplicateResolutionContent(
     Spacer(modifier = Modifier.height(16.dp))
 
     Text(
-        text = "Duplicate Found",
+        text = "Duplicate Profile Found",
         style = MaterialTheme.typography.titleLarge.copy(
             fontWeight = FontWeight.Bold,
             fontSize = 22.sp
@@ -378,8 +383,9 @@ private fun DuplicateResolutionContent(
 
     Spacer(modifier = Modifier.height(8.dp))
 
+    val profileIdSuffix = if (existingId != null && existingId > 0L) " (Profile #$existingId)" else ""
     Text(
-        text = "A profile with ID ${importedProfile.id} (\"$existingName\") already exists. How would you like to resolve this?",
+        text = "A profile for \"$existingName\"$profileIdSuffix already exists in your app. How would you like to resolve this?",
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         textAlign = TextAlign.Center,
@@ -434,13 +440,15 @@ private fun DuplicateResolutionContent(
 private fun MultiDuplicateResolutionContent(
     importedProfilesData: List<ProfileImportExportHelper.ImportedProfileData>,
     existingProfilesMap: Map<Long, String>,
+    existingProfilesByUuid: Map<String, UserProfile> = emptyMap(),
     onConfirmMultiImport: (Map<Long, DuplicateResolution>) -> Unit,
     onCancel: () -> Unit
 ) {
     var resolutions by remember(importedProfilesData) {
         mutableStateOf(
             importedProfilesData.associate { data ->
-                val isDuplicate = existingProfilesMap.containsKey(data.profile.id)
+                val isDuplicate = (data.profile.uuid.isNotBlank() && existingProfilesByUuid.containsKey(data.profile.uuid))
+                    || existingProfilesMap.containsKey(data.profile.id)
                 data.profile.id to if (isDuplicate) DuplicateResolution.KeepBoth else DuplicateResolution.Overwrite
             }
         )
@@ -463,7 +471,10 @@ private fun MultiDuplicateResolutionContent(
 
     Spacer(modifier = Modifier.height(16.dp))
 
-    val duplicateCount = importedProfilesData.count { existingProfilesMap.containsKey(it.profile.id) }
+    val duplicateCount = importedProfilesData.count { data ->
+        (data.profile.uuid.isNotBlank() && existingProfilesByUuid.containsKey(data.profile.uuid))
+            || existingProfilesMap.containsKey(data.profile.id)
+    }
 
     Text(
         text = "Batch Import Conflict",
@@ -522,7 +533,8 @@ private fun MultiDuplicateResolutionContent(
         NexaButton(
             onClick = {
                 resolutions = importedProfilesData.associate { data ->
-                    val isDuplicate = existingProfilesMap.containsKey(data.profile.id)
+                    val isDuplicate = (data.profile.uuid.isNotBlank() && existingProfilesByUuid.containsKey(data.profile.uuid))
+                        || existingProfilesMap.containsKey(data.profile.id)
                     data.profile.id to if (isDuplicate) DuplicateResolution.Skip else DuplicateResolution.Overwrite
                 }
             },
@@ -548,7 +560,8 @@ private fun MultiDuplicateResolutionContent(
     ) {
         importedProfilesData.forEach { data ->
             val profile = data.profile
-            val existingName = existingProfilesMap[profile.id]
+            val existingProfile = if (profile.uuid.isNotBlank()) existingProfilesByUuid[profile.uuid] else null
+            val existingName = existingProfile?.fullName ?: existingProfilesMap[profile.id]
             val currentRes = resolutions[profile.id] ?: DuplicateResolution.Overwrite
 
             val profileBitmap = remember(data.pictureBytes) {
@@ -608,7 +621,15 @@ private fun MultiDuplicateResolutionContent(
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
-                            if (existingName != null) {
+                            if (existingProfile != null) {
+                                Text(
+                                    text = "Conflict with: \"${existingProfile.fullName}\" (Profile #${existingProfile.id})",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.error,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            } else if (existingName != null) {
                                 Text(
                                     text = "Conflict with: \"$existingName\"",
                                     style = MaterialTheme.typography.bodySmall,

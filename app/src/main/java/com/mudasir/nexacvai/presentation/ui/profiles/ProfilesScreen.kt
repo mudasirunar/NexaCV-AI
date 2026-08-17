@@ -677,9 +677,11 @@ fun ProfilesScreen(
                         if (list.size > 1) {
                             val existingProfiles = state.profiles ?: emptyList()
                             val existingMap = existingProfiles.associate { it.id to it.fullName }
+                            val existingByUuid = existingProfiles.associateBy { it.uuid }
                             ImportExportSheetContent.MultiDuplicateFound(
                                 importedProfilesData = list,
-                                existingProfilesMap = existingMap
+                                existingProfilesMap = existingMap,
+                                existingProfilesByUuid = existingByUuid
                             )
                         } else {
                             val duplicateProfile = state.importedProfileData?.profile
@@ -688,7 +690,8 @@ fun ProfilesScreen(
                             if (duplicateProfile != null) {
                                 ImportExportSheetContent.DuplicateFound(
                                     importedProfile = duplicateProfile,
-                                    existingName = existingProfile?.fullName ?: "Existing Profile"
+                                    existingName = existingProfile?.fullName ?: duplicateProfile.fullName.ifBlank { "Existing Profile" },
+                                    existingId = existingProfile?.id
                                 )
                             } else null
                         }
