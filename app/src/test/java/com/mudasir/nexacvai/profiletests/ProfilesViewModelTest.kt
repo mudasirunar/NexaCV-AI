@@ -172,6 +172,7 @@ class ProfilesViewModelTest {
     private fun createDummyProfile(id: Long, name: String): UserProfile {
         return UserProfile(
             id = id,
+            uuid = "uuid-$id",
             fullName = name,
             profilePictureUri = null,
             professionalTitle = "Developer",
@@ -250,6 +251,10 @@ class ProfilesViewModelTest {
 
         override suspend fun getProfileById(id: Long): UserProfile? {
             return savedProfiles[id]
+        }
+
+        override suspend fun getProfileByUuid(uuid: String): UserProfile? {
+            return savedProfiles.values.firstOrNull { it.uuid == uuid }
         }
 
         override suspend fun insertProfile(profile: UserProfile): Long {

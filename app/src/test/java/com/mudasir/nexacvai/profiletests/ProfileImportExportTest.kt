@@ -138,6 +138,57 @@ class ProfileImportExportTest {
         assertEquals(customUpdated, importedList[0].profile.updatedAt)
     }
 
+    @Test
+    fun testUuidPreservation_duringExportAndImport() = runTest {
+        val originalUuid = "test-uuid-abc-123"
+        val p = createDummyProfile(10L, "Diana Lead").copy(uuid = originalUuid)
+
+        val outputStream = ByteArrayOutputStream()
+        val mockContext = ContextWrapper(null)
+
+        val exportResult = ProfileImportExportHelper.exportProfile(mockContext, p, outputStream)
+        assertTrue(exportResult)
+
+        val importedData = ProfileImportExportHelper.readProfileFromZip(ByteArrayInputStream(outputStream.toByteArray()))
+        assertNotNull(importedData)
+        assertEquals(originalUuid, importedData!!.profile.uuid)
+    }
+
+    @Test
+    fun testLegacyProfileJsonWithoutUuid_autoAssignsValidUuid() = runTest {
+        val legacyJson = """
+            {
+                "id": 5,
+                "fullName": "Legacy User",
+                "professionalTitle": "Architect",
+                "emails": [],
+                "phones": [],
+                "skills": [],
+                "experiences": [],
+                "projects": [],
+                "educations": [],
+                "certifications": [],
+                "references": [],
+                "socialLinks": [],
+                "languages": [],
+                "createdAt": 1000,
+                "updatedAt": 2000
+            }
+        """.trimIndent()
+
+        val outputStream = ByteArrayOutputStream()
+        ZipOutputStream(outputStream).use { zos ->
+            zos.putNextEntry(ZipEntry("profile.json"))
+            zos.write(legacyJson.toByteArray(Charsets.UTF_8))
+            zos.closeEntry()
+        }
+
+        val importedData = ProfileImportExportHelper.readProfileFromZip(ByteArrayInputStream(outputStream.toByteArray()))
+        assertNotNull(importedData)
+        assertEquals("Legacy User", importedData!!.profile.fullName)
+        assertTrue(importedData.profile.uuid.isNotBlank())
+    }
+
     private fun createDummyProfile(id: Long, name: String): UserProfile {
         return UserProfile(
             id = id,

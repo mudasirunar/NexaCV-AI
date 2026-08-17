@@ -507,6 +507,10 @@ class CreateProfileViewModelTest {
         override suspend fun getProfileById(id: Long): UserProfile? {
             return profiles[id]
         }
+
+        override suspend fun getProfileByUuid(uuid: String): UserProfile? {
+            return profiles.values.firstOrNull { it.uuid == uuid }
+        }
         
         override suspend fun insertProfile(profile: UserProfile): Long {
             if (shouldThrowError) throw Exception("Database insert failed")
