@@ -109,10 +109,12 @@ fun CreateProfileScreen(
     val state by viewModel.state.collectAsState()
     val isEditing = state.profileId != null
 
-    val basicInfoState = remember(state.fullName, state.professionalTitle, state.emails, state.phones, state.dateOfBirth, state.address, state.yearsOfExperience, state.profilePictureUri, state.profileId, state.tempSessionId) {
+    val basicInfoState = remember(state.fullName, state.professionalTitle, state.fullNameError, state.professionalTitleError, state.emails, state.phones, state.dateOfBirth, state.address, state.yearsOfExperience, state.profilePictureUri, state.profileId, state.tempSessionId) {
         BasicInfoStepState(
             fullName = state.fullName,
             professionalTitle = state.professionalTitle,
+            fullNameError = state.fullNameError,
+            professionalTitleError = state.professionalTitleError,
             emails = state.emails,
             phones = state.phones,
             dateOfBirth = state.dateOfBirth,
@@ -124,34 +126,42 @@ fun CreateProfileScreen(
         )
     }
 
-    val summaryState = remember(state.professionalSummary, state.skills, state.currentSkillInput, state.duplicateSkillError) {
+    val summaryState = remember(state.professionalSummary, state.skills, state.skillsError, state.currentSkillInput, state.duplicateSkillError) {
         SummaryStepState(
             professionalSummary = state.professionalSummary,
             skills = state.skills,
+            skillsError = state.skillsError,
             currentSkillInput = state.currentSkillInput,
             duplicateSkillError = state.duplicateSkillError
         )
     }
 
-    val expProjState = remember(state.experiences, state.projects) {
+    val expProjState = remember(state.experiences, state.projects, state.experienceError, state.projectError) {
         ExperienceProjectsStepState(
             experiences = state.experiences,
-            projects = state.projects
+            projects = state.projects,
+            experienceError = state.experienceError,
+            projectError = state.projectError
         )
     }
 
-    val eduCertState = remember(state.educations, state.certifications) {
+    val eduCertState = remember(state.educations, state.certifications, state.educationError, state.certificationError) {
         EducationCertsStepState(
             educations = state.educations,
-            certifications = state.certifications
+            certifications = state.certifications,
+            educationError = state.educationError,
+            certificationError = state.certificationError
         )
     }
 
-    val socialsState = remember(state.socialLinks, state.languages, state.references, state.hobbies, state.volunteerWork, state.awards) {
+    val socialsState = remember(state.socialLinks, state.languages, state.references, state.socialLinksError, state.languagesError, state.referencesError, state.hobbies, state.volunteerWork, state.awards) {
         SocialsExtrasStepState(
             socialLinks = state.socialLinks,
             languages = state.languages,
             references = state.references,
+            socialLinksError = state.socialLinksError,
+            languagesError = state.languagesError,
+            referencesError = state.referencesError,
             hobbies = state.hobbies,
             volunteerWork = state.volunteerWork,
             awards = state.awards
@@ -350,23 +360,10 @@ fun CreateProfileScreen(
                             contentAlignment = Alignment.CenterEnd
                         ) {
                             if (state.currentStep < state.totalSteps - 1) {
-                                val isNextEnabled by remember(state.currentStep, state.fullName, state.professionalTitle, state.skills, state.experiences, state.projects, state.educations, state.certifications, state.references, state.socialLinks, state.languages) {
-                                    derivedStateOf {
-                                        when (state.currentStep) {
-                                            0 -> state.fullName.isNotBlank() && state.professionalTitle.isNotBlank()
-                                            1 -> state.skills.size >= 1
-                                            2 -> state.experiences.all { it.jobTitle.isNotBlank() && it.companyName.isNotBlank() } &&
-                                                 state.projects.all { it.projectName.isNotBlank() }
-                                            3 -> state.educations.isNotEmpty() && state.educations.all { it.degree.isNotBlank() && it.instituteName.isNotBlank() } &&
-                                                 state.certifications.all { it.certificationName.isNotBlank() && it.issuingOrganization.isNotBlank() }
-                                            else -> true
-                                        }
-                                    }
-                                }
                                 NexaButton(
                                     onClick = { viewModel.nextStep() },
                                     text = "Next",
-                                    enabled = isNextEnabled,
+                                    enabled = !state.isSaving,
                                     modifier = Modifier.height(38.dp),
                                     hasBorder = false,
                                     fillColor = MaterialTheme.colorScheme.primary,
@@ -375,21 +372,13 @@ fun CreateProfileScreen(
                                     contentPadding = PaddingValues(horizontal = 16.dp)
                                 )
                             } else {
-                                val isSaveEnabled by remember(state.fullName, state.socialLinks, state.references, state.languages) {
-                                    derivedStateOf {
-                                        state.fullName.isNotBlank() &&
-                                        state.socialLinks.all { it.label.isNotBlank() && it.label != "Other" && it.url.isNotBlank() } &&
-                                        state.references.all { it.fullName.isNotBlank() && it.jobTitle.isNotBlank() && it.company.isNotBlank() } &&
-                                        state.languages.all { it.languageName.isNotBlank() && it.proficiency.isNotBlank() }
-                                    }
-                                }
                                 NexaButton(
                                     onClick = {
-                                        if (isSaveEnabled && !state.isSaving) {
+                                        if (!state.isSaving) {
                                             viewModel.saveProfile()
                                         }
                                     },
-                                    enabled = isSaveEnabled,
+                                    enabled = !state.isSaving,
                                     modifier = Modifier.height(38.dp),
                                     hasBorder = false,
                                     fillColor = MaterialTheme.colorScheme.primary,

@@ -139,19 +139,28 @@ fun SummaryStep(state: SummaryStepState, viewModel: CreateProfileViewModel) {
                 )
 
                 AnimatedVisibility(
-                    visible = state.skills.isEmpty(),
+                    visible = state.skills.isEmpty() || state.skillsError != null,
                     enter = fadeIn(animationSpec = tween(durationMillis = 300)) + expandVertically(animationSpec = tween(durationMillis = 300)),
                     exit = fadeOut(animationSpec = tween(durationMillis = 300)) + shrinkVertically(animationSpec = tween(durationMillis = 300))
                 ) {
+                    val isError = state.skillsError != null
                     Column(modifier = Modifier.fillMaxWidth()) {
                         Spacer(modifier = Modifier.height(16.dp))
                         Surface(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(10.dp),
-                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f),
+                            color = if (isError) {
+                                MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.2f)
+                            } else {
+                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f)
+                            },
                             border = BorderStroke(
                                 width = 1.dp,
-                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                                color = if (isError) {
+                                    MaterialTheme.colorScheme.error.copy(alpha = 0.4f)
+                                } else {
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                                }
                             )
                         ) {
                             Row(
@@ -160,15 +169,15 @@ fun SummaryStep(state: SummaryStepState, viewModel: CreateProfileViewModel) {
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.Info,
-                                    contentDescription = "Requirement Guide",
-                                    tint = MaterialTheme.colorScheme.primary,
+                                    imageVector = if (isError) Icons.Default.Error else Icons.Default.Info,
+                                    contentDescription = if (isError) "Skills Error" else "Requirement Guide",
+                                    tint = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.size(18.dp)
                                 )
                                 Text(
-                                    text = "Please add at least 1 core skill to proceed.",
+                                    text = state.skillsError ?: "Please add at least 1 core skill to proceed.",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.primary,
+                                    color = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
                                     fontWeight = FontWeight.Medium
                                 )
                             }

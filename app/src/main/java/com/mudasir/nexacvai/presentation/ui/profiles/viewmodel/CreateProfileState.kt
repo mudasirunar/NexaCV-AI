@@ -21,6 +21,8 @@ data class CreateProfileState(
     // Step 1: Basic Information
     val fullName: String = "",
     val professionalTitle: String = "",
+    val fullNameError: String? = null,
+    val professionalTitleError: String? = null,
     val emails: List<String> = listOf(""), 
     val phones: List<String> = listOf(""),
     val dateOfBirth: String = "",
@@ -31,21 +33,29 @@ data class CreateProfileState(
     // Step 2: Professional Snapshot & Skills
     val professionalSummary: String = "",
     val skills: List<String> = emptyList(),
+    val skillsError: String? = null,
     val currentSkillInput: String = "",
     val duplicateSkillError: String? = null,
     
     // Step 3: Experience & Projects
     val experiences: List<Experience> = emptyList(),
     val projects: List<Project> = emptyList(),
+    val experienceError: String? = null,
+    val projectError: String? = null,
     
     // Step 4: Education & Certifications
-    val educations: List<Education> = emptyList(),
+    val educations: List<Education> = listOf(Education()),
     val certifications: List<Certification> = emptyList(),
+    val educationError: String? = null,
+    val certificationError: String? = null,
     
     // Step 5: Social Links & Extras
     val socialLinks: List<SocialLink> = emptyList(),
     val languages: List<Language> = emptyList(),
     val references: List<Reference> = emptyList(),
+    val socialLinksError: String? = null,
+    val languagesError: String? = null,
+    val referencesError: String? = null,
     val hobbies: String = "",
     val volunteerWork: String = "",
     val awards: String = ""

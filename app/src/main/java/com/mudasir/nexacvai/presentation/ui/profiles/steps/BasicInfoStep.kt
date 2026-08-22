@@ -256,6 +256,8 @@ fun BasicInfoStep(state: BasicInfoStepState, viewModel: CreateProfileViewModel) 
             label = "Full Name*",
             placeholder = "Enter your full name",
             leadingIcon = Icons.Default.Person,
+            isError = state.fullNameError != null,
+            errorMessage = state.fullNameError,
             keyboardOptions = KeyboardOptions(
                 capitalization = KeyboardCapitalization.Words,
                 keyboardType = KeyboardType.Text,
@@ -273,6 +275,8 @@ fun BasicInfoStep(state: BasicInfoStepState, viewModel: CreateProfileViewModel) 
             label = "Professional Title*",
             placeholder = "e.g. Android Developer",
             leadingIcon = Icons.Default.Work,
+            isError = state.professionalTitleError != null,
+            errorMessage = state.professionalTitleError,
             keyboardOptions = KeyboardOptions(
                 capitalization = KeyboardCapitalization.Words,
                 keyboardType = KeyboardType.Text,

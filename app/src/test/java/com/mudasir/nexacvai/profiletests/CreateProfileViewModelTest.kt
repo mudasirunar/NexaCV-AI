@@ -58,6 +58,7 @@ class CreateProfileViewModelTest {
         assertEquals("", state.professionalTitle)
         assertEquals(listOf(""), state.emails)
         assertEquals(listOf(""), state.phones)
+        assertEquals(1, state.educations.size)
         assertFalse(state.isLoading)
         assertFalse(state.isSaving)
         assertFalse(state.isSaved)
@@ -113,25 +114,118 @@ class CreateProfileViewModelTest {
         viewModel.previousStep()
         assertEquals(0, viewModel.state.value.currentStep)
 
-        // Next step increments step
-        viewModel.nextStep()
+        // Next step with empty fields fails validation and stays at 0
+        val step0Result = viewModel.nextStep()
+        assertFalse(step0Result)
+        assertEquals(0, viewModel.state.value.currentStep)
+        assertEquals("Full name is required", viewModel.state.value.fullNameError)
+        assertEquals("Professional title is required", viewModel.state.value.professionalTitleError)
+
+        // Fill basic info and verify advance to step 1
+        viewModel.updateBasicInfo(fullName = "Alice Smith", title = "QA Engineer")
+        assertNull(viewModel.state.value.fullNameError)
+        assertNull(viewModel.state.value.professionalTitleError)
+        assertTrue(viewModel.nextStep())
         assertEquals(1, viewModel.state.value.currentStep)
 
-        // Test setStep within bounds
-        viewModel.setStep(3)
+        // Step 1: with 0 skills, nextStep fails
+        assertFalse(viewModel.nextStep())
+        assertEquals(1, viewModel.state.value.currentStep)
+        assertEquals("Please add at least 1 core skill to proceed.", viewModel.state.value.skillsError)
+
+        // Add skill and advance to step 2
+        viewModel.addSkill("Kotlin")
+        assertNull(viewModel.state.value.skillsError)
+        assertTrue(viewModel.nextStep())
+        assertEquals(2, viewModel.state.value.currentStep)
+
+        // Step 2: empty experiences/projects is valid, advance to step 3
+        assertTrue(viewModel.nextStep())
         assertEquals(3, viewModel.state.value.currentStep)
+
+        // Step 3: with unfilled default education, nextStep fails
+        assertFalse(viewModel.nextStep())
+        assertEquals(3, viewModel.state.value.currentStep)
+        assertEquals("Please enter Degree and Institute for at least 1 education record.", viewModel.state.value.educationError)
+
+        // Fill education and advance to step 4
+        val initialEduId = viewModel.state.value.educations.first().id
+        viewModel.updateEducation(initialEduId, Education(id = initialEduId, degree = "BS Computer Science", instituteName = "Stanford"))
+        assertNull(viewModel.state.value.educationError)
+        assertTrue(viewModel.nextStep())
+        assertEquals(4, viewModel.state.value.currentStep)
+
+        // Step 4 is max step (totalSteps = 5, max index = 4), nextStep stays at 4
+        assertFalse(viewModel.nextStep())
+        assertEquals(4, viewModel.state.value.currentStep)
+
+        // Test setStep within bounds
+        viewModel.setStep(2)
+        assertEquals(2, viewModel.state.value.currentStep)
 
         // Test setStep out of bounds (should ignore)
         viewModel.setStep(10)
-        assertEquals(3, viewModel.state.value.currentStep)
+        assertEquals(2, viewModel.state.value.currentStep)
         viewModel.setStep(-1)
-        assertEquals(3, viewModel.state.value.currentStep)
+        assertEquals(2, viewModel.state.value.currentStep)
+    }
 
-        // Next step up to max steps (totalSteps = 5, max index = 4)
-        viewModel.nextStep() // to 4
-        assertEquals(4, viewModel.state.value.currentStep)
-        viewModel.nextStep() // should stay at 4
-        assertEquals(4, viewModel.state.value.currentStep)
+    @Test
+    fun testRealTimeErrorClearing_asUserTypes() {
+        val viewModel = createViewModel()
+
+        // Trigger validation errors on step 0
+        viewModel.nextStep()
+        assertNotNull(viewModel.state.value.fullNameError)
+        assertNotNull(viewModel.state.value.professionalTitleError)
+
+        // Typing into fullName clears fullNameError immediately
+        viewModel.updateBasicInfo(fullName = "A")
+        assertNull(viewModel.state.value.fullNameError)
+        assertNotNull(viewModel.state.value.professionalTitleError)
+
+        // Typing into title clears professionalTitleError immediately
+        viewModel.updateBasicInfo(title = "Dev")
+        assertNull(viewModel.state.value.professionalTitleError)
+
+        // Advance to step 1 and trigger skills error
+        viewModel.nextStep()
+        viewModel.nextStep()
+        assertNotNull(viewModel.state.value.skillsError)
+
+        // Adding skill clears skillsError immediately
+        viewModel.addSkill("Compose")
+        assertNull(viewModel.state.value.skillsError)
+    }
+
+    @Test
+    fun testErrorClearing_whenInvalidCardIsRemoved() {
+        val viewModel = createViewModel()
+
+        // Setup step 0 and step 1 so we can reach step 2
+        viewModel.updateBasicInfo(fullName = "Alice", title = "Developer")
+        viewModel.addSkill("Kotlin")
+        viewModel.setStep(2)
+
+        // Add empty experience and trigger validation error
+        val emptyExp = Experience(id = "exp-1", jobTitle = "", companyName = "")
+        viewModel.addExperience(emptyExp)
+        assertFalse(viewModel.nextStep())
+        assertNotNull(viewModel.state.value.experienceError)
+
+        // Removing the empty experience immediately clears the error
+        viewModel.removeExperience(emptyExp)
+        assertNull(viewModel.state.value.experienceError)
+
+        // Add empty project and trigger validation error
+        val emptyProj = Project(id = "proj-1", projectName = "")
+        viewModel.addProject(emptyProj)
+        assertFalse(viewModel.nextStep())
+        assertNotNull(viewModel.state.value.projectError)
+
+        // Removing the empty project immediately clears the error
+        viewModel.removeProject(emptyProj)
+        assertNull(viewModel.state.value.projectError)
     }
 
     @Test
@@ -308,23 +402,23 @@ class CreateProfileViewModelTest {
     fun testStep4_EducationsAndCertifications() {
         val viewModel = createViewModel()
 
-        val education = Education(
-            degree = "B.S. Computer Science",
-            instituteName = "State University"
-        )
-        
-        // Add Education
-        viewModel.addEducation(education)
-        assertEquals(listOf(education), viewModel.state.value.educations)
+        // Initial state has 1 pre-created education card
+        assertEquals(1, viewModel.state.value.educations.size)
+        val defaultEdu = viewModel.state.value.educations.first()
 
-        // Update Education
-        val updatedEducation = education.copy(degree = "M.S. Computer Science")
-        viewModel.updateEducation(education.id, updatedEducation)
-        assertEquals("M.S. Computer Science", viewModel.state.value.educations.first().degree)
+        // Update default education
+        val updatedEducation = defaultEdu.copy(degree = "B.S. Computer Science", instituteName = "State University")
+        viewModel.updateEducation(defaultEdu.id, updatedEducation)
+        assertEquals("B.S. Computer Science", viewModel.state.value.educations.first().degree)
 
-        // Remove Education
-        viewModel.removeEducation(education)
-        assertTrue(viewModel.state.value.educations.isEmpty())
+        // Add a second Education
+        val secondEdu = Education(degree = "M.S. Computer Science", instituteName = "MIT")
+        viewModel.addEducation(secondEdu)
+        assertEquals(2, viewModel.state.value.educations.size)
+
+        // Remove second education
+        viewModel.removeEducation(secondEdu)
+        assertEquals(1, viewModel.state.value.educations.size)
 
         // Add Certification
         val certification = Certification(
@@ -417,7 +511,8 @@ class CreateProfileViewModelTest {
         viewModel.saveProfile()
 
         val state = viewModel.state.value
-        assertEquals("Name is required", state.error)
+        assertEquals(0, state.currentStep)
+        assertEquals("Full name is required", state.fullNameError)
         assertFalse(state.isSaving)
         assertFalse(state.isSaved)
     }
@@ -426,6 +521,7 @@ class CreateProfileViewModelTest {
     fun testSaveProfile_success_insertsProfile() = runTest {
         val viewModel = createViewModel()
 
+        // Draft saving works even with just basic info
         viewModel.updateBasicInfo(fullName = "John Doe", title = "Developer")
         viewModel.saveProfile()
 
@@ -449,9 +545,26 @@ class CreateProfileViewModelTest {
     }
 
     @Test
+    fun testSaveProfile_draftWithOnlyName() = runTest {
+        val viewModel = createViewModel()
+
+        // User only types name and clicks Save Draft
+        viewModel.updateBasicInfo(fullName = "John Draft")
+        viewModel.saveProfile()
+        testScheduler.advanceUntilIdle()
+
+        val state = viewModel.state.value
+        assertTrue(state.isSaved)
+        assertNotNull(state.profileId)
+        assertEquals("John Draft", fakeRepository.profiles[state.profileId]?.fullName)
+    }
+
+    @Test
     fun testSaveProfile_fails_setsError() = runTest {
         val viewModel = createViewModel()
-        viewModel.updateBasicInfo(fullName = "John Doe")
+        viewModel.updateBasicInfo(fullName = "John Doe", title = "Developer")
+        viewModel.addSkill("Kotlin")
+        viewModel.addEducation(Education(degree = "BS CS", instituteName = "Stanford"))
 
         // Make repository fail on insert
         fakeRepository.shouldThrowError = true
@@ -471,6 +584,8 @@ class CreateProfileViewModelTest {
             id = 42L,
             fullName = "John Doe",
             professionalTitle = "Android Developer",
+            skills = listOf("Kotlin"),
+            educations = listOf(Education(degree = "BS CS", instituteName = "MIT")),
             updatedAt = 1000L
         )
         fakeRepository.profiles[42L] = existingProfile

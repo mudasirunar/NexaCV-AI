@@ -63,7 +63,7 @@ class CreateProfileViewModel @Inject constructor(
                     skills = profile.skills,
                     experiences = profile.experiences,
                     projects = profile.projects,
-                    educations = profile.educations,
+                    educations = profile.educations.ifEmpty { listOf(Education()) },
                     certifications = profile.certifications,
                     references = profile.references,
                     socialLinks = profile.socialLinks,
@@ -78,12 +78,104 @@ class CreateProfileViewModel @Inject constructor(
         }
     }
 
-    // Basic Navigation
-    fun nextStep() {
+    // Basic Navigation & Validation
+    fun validateStep(step: Int): Boolean {
+        when (step) {
+            0 -> {
+                val name = _state.value.fullName.trim()
+                val title = _state.value.professionalTitle.trim()
+                val nameErr = if (name.isBlank()) "Full name is required" else null
+                val titleErr = if (title.isBlank()) "Professional title is required" else null
+                
+                if (nameErr != null || titleErr != null) {
+                    _state.value = _state.value.copy(
+                        fullNameError = nameErr,
+                        professionalTitleError = titleErr
+                    )
+                    return false
+                }
+                _state.value = _state.value.copy(
+                    fullNameError = null,
+                    professionalTitleError = null
+                )
+                return true
+            }
+            1 -> {
+                if (_state.value.skills.isEmpty()) {
+                    _state.value = _state.value.copy(
+                        skillsError = "Please add at least 1 core skill to proceed."
+                    )
+                    return false
+                }
+                _state.value = _state.value.copy(skillsError = null)
+                return true
+            }
+            2 -> {
+                val invalidExp = _state.value.experiences.any { it.jobTitle.isBlank() || it.companyName.isBlank() }
+                val invalidProj = _state.value.projects.any { it.projectName.isBlank() }
+                if (invalidExp || invalidProj) {
+                    _state.value = _state.value.copy(
+                        experienceError = if (invalidExp) "Please enter Job Title and Company for all work experience entries." else null,
+                        projectError = if (invalidProj) "Please enter a Project Name for all project entries." else null
+                    )
+                    return false
+                }
+                _state.value = _state.value.copy(experienceError = null, projectError = null)
+                return true
+            }
+            3 -> {
+                val validEducations = _state.value.educations.filter { it.degree.isNotBlank() && it.instituteName.isNotBlank() }
+                if (validEducations.isEmpty()) {
+                    _state.value = _state.value.copy(
+                        educationError = "Please enter Degree and Institute for at least 1 education record."
+                    )
+                    return false
+                }
+                val invalidEdu = _state.value.educations.any { it.degree.isBlank() || it.instituteName.isBlank() }
+                val invalidCert = _state.value.certifications.any { it.certificationName.isBlank() || it.issuingOrganization.isBlank() }
+                if (invalidEdu || invalidCert) {
+                    _state.value = _state.value.copy(
+                        educationError = if (invalidEdu) "Please enter Degree and Institute for all education entries." else null,
+                        certificationError = if (invalidCert) "Please enter Certificate Name and Organization for all certifications." else null
+                    )
+                    return false
+                }
+                _state.value = _state.value.copy(educationError = null, certificationError = null)
+                return true
+            }
+            4 -> {
+                val invalidSocial = _state.value.socialLinks.any { it.label.isBlank() || it.label == "Other" || it.url.isBlank() }
+                val invalidRef = _state.value.references.any { it.fullName.isBlank() || it.jobTitle.isBlank() || it.company.isBlank() }
+                val invalidLang = _state.value.languages.any { it.languageName.isBlank() || it.proficiency.isBlank() }
+                if (invalidSocial || invalidRef || invalidLang) {
+                    _state.value = _state.value.copy(
+                        socialLinksError = if (invalidSocial) "Please enter a platform label and URL for all social links." else null,
+                        referencesError = if (invalidRef) "Please enter Full Name, Job Title, and Company for all references." else null,
+                        languagesError = if (invalidLang) "Please enter Language Name and Proficiency for all languages." else null
+                    )
+                    return false
+                }
+                _state.value = _state.value.copy(
+                    socialLinksError = null,
+                    referencesError = null,
+                    languagesError = null
+                )
+                return true
+            }
+            else -> return true
+        }
+    }
+
+    fun nextStep(): Boolean {
         val current = _state.value.currentStep
+        if (!validateStep(current)) {
+            return false
+        }
         if (current < _state.value.totalSteps - 1) {
             _state.value = _state.value.copy(currentStep = current + 1)
+            return true
         }
+        return false
     }
 
     fun previousStep() {
@@ -112,6 +204,8 @@ class CreateProfileViewModel @Inject constructor(
         _state.value = _state.value.copy(
             fullName = fullName ?: _state.value.fullName,
             professionalTitle = title ?: _state.value.professionalTitle,
+            fullNameError = if (fullName != null) null else _state.value.fullNameError,
+            professionalTitleError = if (title != null) null else _state.value.professionalTitleError,
             emails = emails ?: _state.value.emails,
             phones = phones ?: _state.value.phones,
             dateOfBirth = dateOfBirth ?: _state.value.dateOfBirth,
@@ -197,6 +291,7 @@ class CreateProfileViewModel @Inject constructor(
             val newSkills = _state.value.skills + trimmedSkill
             _state.value = _state.value.copy(
                 skills = newSkills,
+                skillsError = null,
                 currentSkillInput = "",
                 duplicateSkillError = null
             )
@@ -225,108 +320,192 @@ class CreateProfileViewModel @Inject constructor(
     }
 
     fun addExperience(exp: Experience) {
-        _state.value = _state.value.copy(experiences = _state.value.experiences + exp)
+        _state.value = _state.value.copy(
+            experiences = _state.value.experiences + exp,
+            experienceError = null
+        )
     }
     
     fun removeExperience(exp: Experience) {
-        _state.value = _state.value.copy(experiences = _state.value.experiences.filter { it.id != exp.id })
+        val remaining = _state.value.experiences.filter { it.id != exp.id }
+        val remainingInvalid = remaining.any { it.jobTitle.isBlank() || it.companyName.isBlank() }
+        _state.value = _state.value.copy(
+            experiences = remaining,
+            experienceError = if (remainingInvalid) _state.value.experienceError else null
+        )
     }
 
     fun updateExperience(id: String, updated: Experience) {
         val list = _state.value.experiences.map {
             if (it.id == id) updated else it
         }
-        _state.value = _state.value.copy(experiences = list)
+        val remainingInvalid = list.any { it.jobTitle.isBlank() || it.companyName.isBlank() }
+        _state.value = _state.value.copy(
+            experiences = list,
+            experienceError = if (remainingInvalid) _state.value.experienceError else null
+        )
     }
 
     fun addProject(project: Project) {
-        _state.value = _state.value.copy(projects = _state.value.projects + project)
+        _state.value = _state.value.copy(
+            projects = _state.value.projects + project,
+            projectError = null
+        )
     }
     
     fun removeProject(project: Project) {
-        _state.value = _state.value.copy(projects = _state.value.projects.filter { it.id != project.id })
+        val remaining = _state.value.projects.filter { it.id != project.id }
+        val remainingInvalid = remaining.any { it.projectName.isBlank() }
+        _state.value = _state.value.copy(
+            projects = remaining,
+            projectError = if (remainingInvalid) _state.value.projectError else null
+        )
     }
 
     fun updateProject(id: String, updated: Project) {
         val list = _state.value.projects.map {
             if (it.id == id) updated else it
         }
-        _state.value = _state.value.copy(projects = list)
+        val remainingInvalid = list.any { it.projectName.isBlank() }
+        _state.value = _state.value.copy(
+            projects = list,
+            projectError = if (remainingInvalid) _state.value.projectError else null
+        )
     }
 
     fun addEducation(edu: Education) {
-        _state.value = _state.value.copy(educations = _state.value.educations + edu)
+        _state.value = _state.value.copy(
+            educations = _state.value.educations + edu,
+            educationError = null
+        )
     }
     
     fun removeEducation(edu: Education) {
-        _state.value = _state.value.copy(educations = _state.value.educations.filter { it.id != edu.id })
+        val remaining = _state.value.educations.filter { it.id != edu.id }
+        val remainingInvalid = remaining.any { it.degree.isBlank() || it.instituteName.isBlank() }
+        _state.value = _state.value.copy(
+            educations = remaining,
+            educationError = if (remaining.isEmpty() && _state.value.educationError != null) "Please add at least 1 education record to proceed." else if (remainingInvalid) _state.value.educationError else null
+        )
     }
 
     fun updateEducation(id: String, updated: Education) {
         val list = _state.value.educations.map {
             if (it.id == id) updated else it
         }
-        _state.value = _state.value.copy(educations = list)
+        val remainingInvalid = list.any { it.degree.isBlank() || it.instituteName.isBlank() }
+        _state.value = _state.value.copy(
+            educations = list,
+            educationError = if (remainingInvalid) _state.value.educationError else null
+        )
     }
 
     fun addCertification(cert: Certification) {
-        _state.value = _state.value.copy(certifications = _state.value.certifications + cert)
+        _state.value = _state.value.copy(
+            certifications = _state.value.certifications + cert,
+            certificationError = null
+        )
     }
     
     fun removeCertification(cert: Certification) {
-        _state.value = _state.value.copy(certifications = _state.value.certifications.filter { it.id != cert.id })
+        val remaining = _state.value.certifications.filter { it.id != cert.id }
+        val remainingInvalid = remaining.any { it.certificationName.isBlank() || it.issuingOrganization.isBlank() }
+        _state.value = _state.value.copy(
+            certifications = remaining,
+            certificationError = if (remainingInvalid) _state.value.certificationError else null
+        )
     }
 
     fun updateCertification(id: String, updated: Certification) {
         val list = _state.value.certifications.map {
             if (it.id == id) updated else it
         }
-        _state.value = _state.value.copy(certifications = list)
+        val remainingInvalid = list.any { it.certificationName.isBlank() || it.issuingOrganization.isBlank() }
+        _state.value = _state.value.copy(
+            certifications = list,
+            certificationError = if (remainingInvalid) _state.value.certificationError else null
+        )
     }
 
     fun updateReference(id: String, updated: Reference) {
         val list = _state.value.references.map {
             if (it.id == id) updated else it
         }
-        _state.value = _state.value.copy(references = list)
+        val remainingInvalid = list.any { it.fullName.isBlank() || it.jobTitle.isBlank() || it.company.isBlank() }
+        _state.value = _state.value.copy(
+            references = list,
+            referencesError = if (remainingInvalid) _state.value.referencesError else null
+        )
     }
 
     fun addReference(ref: Reference) {
-        _state.value = _state.value.copy(references = _state.value.references + ref)
+        _state.value = _state.value.copy(
+            references = _state.value.references + ref,
+            referencesError = null
+        )
     }
 
     fun removeReference(ref: Reference) {
-        _state.value = _state.value.copy(references = _state.value.references.filter { it.id != ref.id })
+        val remaining = _state.value.references.filter { it.id != ref.id }
+        val remainingInvalid = remaining.any { it.fullName.isBlank() || it.jobTitle.isBlank() || it.company.isBlank() }
+        _state.value = _state.value.copy(
+            references = remaining,
+            referencesError = if (remainingInvalid) _state.value.referencesError else null
+        )
     }
 
     fun addSocialLink(link: SocialLink) {
-        _state.value = _state.value.copy(socialLinks = _state.value.socialLinks + link)
+        _state.value = _state.value.copy(
+            socialLinks = _state.value.socialLinks + link,
+            socialLinksError = null
+        )
     }
     
     fun removeSocialLink(link: SocialLink) {
-        _state.value = _state.value.copy(socialLinks = _state.value.socialLinks.filter { it.id != link.id })
+        val remaining = _state.value.socialLinks.filter { it.id != link.id }
+        val remainingInvalid = remaining.any { it.label.isBlank() || it.label == "Other" || it.url.isBlank() }
+        _state.value = _state.value.copy(
+            socialLinks = remaining,
+            socialLinksError = if (remainingInvalid) _state.value.socialLinksError else null
+        )
     }
 
     fun addLanguage(lang: Language) {
-        _state.value = _state.value.copy(languages = _state.value.languages + lang)
+        _state.value = _state.value.copy(
+            languages = _state.value.languages + lang,
+            languagesError = null
+        )
     }
     
     fun removeLanguage(lang: Language) {
-        _state.value = _state.value.copy(languages = _state.value.languages.filter { it.id != lang.id })
+        val remaining = _state.value.languages.filter { it.id != lang.id }
+        val remainingInvalid = remaining.any { it.languageName.isBlank() || it.proficiency.isBlank() }
+        _state.value = _state.value.copy(
+            languages = remaining,
+            languagesError = if (remainingInvalid) _state.value.languagesError else null
+        )
     }
 
     fun updateSocialLink(id: String, updated: SocialLink) {
         val list = _state.value.socialLinks.map {
             if (it.id == id) updated else it
         }
-        _state.value = _state.value.copy(socialLinks = list)
+        val remainingInvalid = list.any { it.label.isBlank() || it.label == "Other" || it.url.isBlank() }
+        _state.value = _state.value.copy(
+            socialLinks = list,
+            socialLinksError = if (remainingInvalid) _state.value.socialLinksError else null
+        )
     }
 
     fun updateLanguage(id: String, updated: Language) {
         val list = _state.value.languages.map {
             if (it.id == id) updated else it
         }
-        _state.value = _state.value.copy(languages = list)
+        val remainingInvalid = list.any { it.languageName.isBlank() || it.proficiency.isBlank() }
+        _state.value = _state.value.copy(
+            languages = list,
+            languagesError = if (remainingInvalid) _state.value.languagesError else null
+        )
     }
 
     fun updateAdditionalInfo(hobbies: String? = null, volunteerWork: String? = null, awards: String? = null) {
@@ -341,6 +520,7 @@ class CreateProfileViewModel @Inject constructor(
         val upToDateState = _state.value
         val cleanedEmails = upToDateState.emails.filter { it.isNotBlank() }
         val cleanedPhones = upToDateState.phones.filter { it.isNotBlank() }
+        val cleanedEducations = upToDateState.educations.filter { it.degree.isNotBlank() || it.instituteName.isNotBlank() }
 
         return UserProfile(
             id = upToDateState.profileId ?: 0L,
@@ -357,7 +537,7 @@ class CreateProfileViewModel @Inject constructor(
             skills = upToDateState.skills,
             experiences = upToDateState.experiences,
             projects = upToDateState.projects,
-            educations = upToDateState.educations,
+            educations = cleanedEducations,
             certifications = upToDateState.certifications,
             references = upToDateState.references,
             socialLinks = upToDateState.socialLinks,
@@ -392,10 +572,13 @@ class CreateProfileViewModel @Inject constructor(
     fun saveProfile() {
         if (isCurrentlySaving) return // synchronous double-save block
         isCurrentlySaving = true
-        
+
         val currentState = _state.value
-        if (currentState.fullName.isBlank()) {
-            _state.value = currentState.copy(error = "Name is required")
+        if (currentState.fullName.trim().isBlank()) {
+            _state.value = currentState.copy(
+                currentStep = 0,
+                fullNameError = "Full name is required"
+            )
             isCurrentlySaving = false
             return
         }

@@ -1,7 +1,8 @@
 package com.mudasir.nexacvai.presentation.ui.profiles.steps
 
-import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.*
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -91,6 +92,38 @@ fun SocialsExtrasStep(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+
+                AnimatedVisibility(
+                    visible = state.referencesError != null,
+                    enter = fadeIn(animationSpec = tween(300)) + expandVertically(animationSpec = tween(300)),
+                    exit = fadeOut(animationSpec = tween(300)) + shrinkVertically(animationSpec = tween(300))
+                ) {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.2f),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.4f))
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Error,
+                                contentDescription = "Reference Error",
+                                tint = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Text(
+                                text = state.referencesError.orEmpty(),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.error,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
+                }
             }
         }
 
@@ -193,6 +226,38 @@ fun SocialsExtrasStep(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+
+                AnimatedVisibility(
+                    visible = state.languagesError != null,
+                    enter = fadeIn(animationSpec = tween(300)) + expandVertically(animationSpec = tween(300)),
+                    exit = fadeOut(animationSpec = tween(300)) + shrinkVertically(animationSpec = tween(300))
+                ) {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.2f),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.4f))
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Error,
+                                contentDescription = "Languages Error",
+                                tint = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Text(
+                                text = state.languagesError.orEmpty(),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.error,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
+                }
             }
         }
 
@@ -295,6 +360,38 @@ fun SocialsExtrasStep(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+
+                AnimatedVisibility(
+                    visible = state.socialLinksError != null,
+                    enter = fadeIn(animationSpec = tween(300)) + expandVertically(animationSpec = tween(300)),
+                    exit = fadeOut(animationSpec = tween(300)) + shrinkVertically(animationSpec = tween(300))
+                ) {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.2f),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.4f))
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Error,
+                                contentDescription = "Social Links Error",
+                                tint = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Text(
+                                text = state.socialLinksError.orEmpty(),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.error,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
+                }
             }
         }
 

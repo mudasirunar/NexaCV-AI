@@ -1,7 +1,9 @@
 package com.mudasir.nexacvai.presentation.ui.profiles.steps
 
-import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.*
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -10,8 +12,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.School
-import androidx.compose.material.icons.filled.WorkspacePremium
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -82,6 +83,38 @@ fun EducationCertsStep(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+
+                AnimatedVisibility(
+                    visible = state.educationError != null,
+                    enter = fadeIn(animationSpec = tween(300)) + expandVertically(animationSpec = tween(300)),
+                    exit = fadeOut(animationSpec = tween(300)) + shrinkVertically(animationSpec = tween(300))
+                ) {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.2f),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.4f))
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Error,
+                                contentDescription = "Education Error",
+                                tint = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Text(
+                                text = state.educationError.orEmpty(),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.error,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
+                }
             }
         }
 
@@ -110,10 +143,11 @@ fun EducationCertsStep(
                         NexaButton(
                             onClick = { viewModel.addEducation(Education()) },
                             text = "+ Add Education",
+                            modifier = Modifier.fillMaxWidth(),
                             hasBorder = true,
-                            borderColor = MaterialTheme.colorScheme.primary,
+                            borderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
                             fillColor = MaterialTheme.colorScheme.primary,
-                            fillOpacity = 0.12f,
+                            fillOpacity = 0.08f,
                             contentColor = MaterialTheme.colorScheme.primary
                         )
                     }
@@ -184,6 +218,38 @@ fun EducationCertsStep(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+
+                AnimatedVisibility(
+                    visible = state.certificationError != null,
+                    enter = fadeIn(animationSpec = tween(300)) + expandVertically(animationSpec = tween(300)),
+                    exit = fadeOut(animationSpec = tween(300)) + shrinkVertically(animationSpec = tween(300))
+                ) {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.2f),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.4f))
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Error,
+                                contentDescription = "Certification Error",
+                                tint = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Text(
+                                text = state.certificationError.orEmpty(),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.error,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
+                }
             }
         }
 
