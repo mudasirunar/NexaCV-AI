@@ -518,11 +518,39 @@ class CreateProfileViewModelTest {
     }
 
     @Test
+    fun testSaveProfile_jumpsToFirstInvalidStep() {
+        val viewModel = createViewModel()
+        viewModel.updateBasicInfo(fullName = "Jane Doe", title = "Designer")
+        
+        // Navigate or jump to last step (Step 4)
+        viewModel.setStep(4)
+        assertEquals(4, viewModel.state.value.currentStep)
+
+        // Calling saveProfile with 0 skills must jump back to Step 1 (Summary & Skills)
+        viewModel.saveProfile()
+        assertEquals(1, viewModel.state.value.currentStep)
+        assertEquals("Please add at least 1 core skill to proceed.", viewModel.state.value.skillsError)
+        assertFalse(viewModel.state.value.isSaved)
+
+        // Add skill and jump back to Step 4
+        viewModel.addSkill("Figma")
+        viewModel.setStep(4)
+
+        // Calling saveProfile with uncompleted default education must jump back to Step 3 (Education)
+        viewModel.saveProfile()
+        assertEquals(3, viewModel.state.value.currentStep)
+        assertEquals("Please enter Degree and Institute for at least 1 education record.", viewModel.state.value.educationError)
+        assertFalse(viewModel.state.value.isSaved)
+    }
+
+    @Test
     fun testSaveProfile_success_insertsProfile() = runTest {
         val viewModel = createViewModel()
 
-        // Draft saving works even with just basic info
         viewModel.updateBasicInfo(fullName = "John Doe", title = "Developer")
+        viewModel.addSkill("Kotlin")
+        val eduId = viewModel.state.value.educations.first().id
+        viewModel.updateEducation(eduId, Education(id = eduId, degree = "BS CS", instituteName = "Stanford"))
         viewModel.saveProfile()
 
         // Wait for coroutine saving operation to finish
@@ -545,12 +573,12 @@ class CreateProfileViewModelTest {
     }
 
     @Test
-    fun testSaveProfile_draftWithOnlyName() = runTest {
+    fun testSaveDraft_draftWithOnlyName() = runTest {
         val viewModel = createViewModel()
 
         // User only types name and clicks Save Draft
         viewModel.updateBasicInfo(fullName = "John Draft")
-        viewModel.saveProfile()
+        viewModel.saveDraft()
         testScheduler.advanceUntilIdle()
 
         val state = viewModel.state.value
@@ -564,7 +592,8 @@ class CreateProfileViewModelTest {
         val viewModel = createViewModel()
         viewModel.updateBasicInfo(fullName = "John Doe", title = "Developer")
         viewModel.addSkill("Kotlin")
-        viewModel.addEducation(Education(degree = "BS CS", instituteName = "Stanford"))
+        val eduId = viewModel.state.value.educations.first().id
+        viewModel.updateEducation(eduId, Education(id = eduId, degree = "BS CS", instituteName = "Stanford"))
 
         // Make repository fail on insert
         fakeRepository.shouldThrowError = true

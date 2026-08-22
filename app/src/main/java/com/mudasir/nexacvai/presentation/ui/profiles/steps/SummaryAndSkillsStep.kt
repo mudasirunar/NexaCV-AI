@@ -4,6 +4,8 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -29,13 +31,28 @@ import com.mudasir.nexacvai.presentation.ui.components.NexaTextField
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.CreateProfileViewModel
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.SummaryStepState
 
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun SummaryStep(state: SummaryStepState, viewModel: CreateProfileViewModel) {
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val scrollState = rememberScrollState()
+    val skillsRequester = remember { BringIntoViewRequester() }
+
+    LaunchedEffect(state.validationTrigger) {
+        if (state.validationTrigger > 0L && state.skillsError != null) {
+            focusManager.clearFocus()
+            keyboardController?.hide()
+            skillsRequester.bringIntoView()
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .verticalScroll(rememberScrollState()),
+            .verticalScroll(scrollState),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         Text(
@@ -100,7 +117,9 @@ fun SummaryStep(state: SummaryStepState, viewModel: CreateProfileViewModel) {
         }
 
         Card(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .bringIntoViewRequester(skillsRequester),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surface
             ),

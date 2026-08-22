@@ -11,6 +11,7 @@ data class CreateProfileState(
     val currentStep: Int = 0,
     val totalSteps: Int = 5,
     val error: String? = null,
+    val validationTrigger: Long = 0L,
     
     // Original Profile ID (if editing)
     val profileId: Long? = null,

@@ -73,6 +73,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.lifecycle.Lifecycle
@@ -108,8 +110,10 @@ fun CreateProfileScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val isEditing = state.profileId != null
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
 
-    val basicInfoState = remember(state.fullName, state.professionalTitle, state.fullNameError, state.professionalTitleError, state.emails, state.phones, state.dateOfBirth, state.address, state.yearsOfExperience, state.profilePictureUri, state.profileId, state.tempSessionId) {
+    val basicInfoState = remember(state.fullName, state.professionalTitle, state.fullNameError, state.professionalTitleError, state.emails, state.phones, state.dateOfBirth, state.address, state.yearsOfExperience, state.profilePictureUri, state.profileId, state.tempSessionId, state.validationTrigger) {
         BasicInfoStepState(
             fullName = state.fullName,
             professionalTitle = state.professionalTitle,
@@ -122,39 +126,43 @@ fun CreateProfileScreen(
             yearsOfExperience = state.yearsOfExperience,
             profilePictureUri = state.profilePictureUri,
             profileId = state.profileId,
-            tempSessionId = state.tempSessionId
+            tempSessionId = state.tempSessionId,
+            validationTrigger = state.validationTrigger
         )
     }
 
-    val summaryState = remember(state.professionalSummary, state.skills, state.skillsError, state.currentSkillInput, state.duplicateSkillError) {
+    val summaryState = remember(state.professionalSummary, state.skills, state.skillsError, state.currentSkillInput, state.duplicateSkillError, state.validationTrigger) {
         SummaryStepState(
             professionalSummary = state.professionalSummary,
             skills = state.skills,
             skillsError = state.skillsError,
             currentSkillInput = state.currentSkillInput,
-            duplicateSkillError = state.duplicateSkillError
+            duplicateSkillError = state.duplicateSkillError,
+            validationTrigger = state.validationTrigger
         )
     }
 
-    val expProjState = remember(state.experiences, state.projects, state.experienceError, state.projectError) {
+    val expProjState = remember(state.experiences, state.projects, state.experienceError, state.projectError, state.validationTrigger) {
         ExperienceProjectsStepState(
             experiences = state.experiences,
             projects = state.projects,
             experienceError = state.experienceError,
-            projectError = state.projectError
+            projectError = state.projectError,
+            validationTrigger = state.validationTrigger
         )
     }
 
-    val eduCertState = remember(state.educations, state.certifications, state.educationError, state.certificationError) {
+    val eduCertState = remember(state.educations, state.certifications, state.educationError, state.certificationError, state.validationTrigger) {
         EducationCertsStepState(
             educations = state.educations,
             certifications = state.certifications,
             educationError = state.educationError,
-            certificationError = state.certificationError
+            certificationError = state.certificationError,
+            validationTrigger = state.validationTrigger
         )
     }
 
-    val socialsState = remember(state.socialLinks, state.languages, state.references, state.socialLinksError, state.languagesError, state.referencesError, state.hobbies, state.volunteerWork, state.awards) {
+    val socialsState = remember(state.socialLinks, state.languages, state.references, state.socialLinksError, state.languagesError, state.referencesError, state.hobbies, state.volunteerWork, state.awards, state.validationTrigger) {
         SocialsExtrasStepState(
             socialLinks = state.socialLinks,
             languages = state.languages,
@@ -164,7 +172,8 @@ fun CreateProfileScreen(
             referencesError = state.referencesError,
             hobbies = state.hobbies,
             volunteerWork = state.volunteerWork,
-            awards = state.awards
+            awards = state.awards,
+            validationTrigger = state.validationTrigger
         )
     }
 
@@ -319,8 +328,10 @@ fun CreateProfileScreen(
                             ) {
                                 NexaButton(
                                     onClick = {
+                                        focusManager.clearFocus()
+                                        keyboardController?.hide()
                                         if (!state.isSaving) {
-                                            viewModel.saveProfile()
+                                            viewModel.saveDraft()
                                         }
                                     },
                                     modifier = Modifier.height(38.dp),
@@ -361,7 +372,11 @@ fun CreateProfileScreen(
                         ) {
                             if (state.currentStep < state.totalSteps - 1) {
                                 NexaButton(
-                                    onClick = { viewModel.nextStep() },
+                                    onClick = {
+                                        focusManager.clearFocus()
+                                        keyboardController?.hide()
+                                        viewModel.nextStep()
+                                    },
                                     text = "Next",
                                     enabled = !state.isSaving,
                                     modifier = Modifier.height(38.dp),
@@ -374,6 +389,8 @@ fun CreateProfileScreen(
                             } else {
                                 NexaButton(
                                     onClick = {
+                                        focusManager.clearFocus()
+                                        keyboardController?.hide()
                                         if (!state.isSaving) {
                                             viewModel.saveProfile()
                                         }

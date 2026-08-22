@@ -28,13 +28,40 @@ import com.mudasir.nexacvai.presentation.ui.profiles.components.create_profile.C
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.EducationCertsStepState
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.CreateProfileViewModel
 
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+
 @Composable
 fun EducationCertsStep(
     state: EducationCertsStepState,
     viewModel: CreateProfileViewModel,
     modifier: Modifier = Modifier
 ) {
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(state.validationTrigger) {
+        if (state.validationTrigger > 0L) {
+            if (state.educationError != null || state.certificationError != null) {
+                focusManager.clearFocus()
+                keyboardController?.hide()
+                if (state.educationError != null) {
+                    // Scroll to Education section header where the error banner is displayed
+                    listState.animateScrollToItem(1)
+                } else if (state.certificationError != null) {
+                    // Scroll to Certification section header where the error banner is displayed
+                    val eduCount = if (state.educations.isEmpty()) 1 else state.educations.size + 1
+                    val certHeaderIndex = 3 + eduCount
+                    listState.animateScrollToItem(certHeaderIndex)
+                }
+            }
+        }
+    }
+
     LazyColumn(
+        state = listState,
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp)

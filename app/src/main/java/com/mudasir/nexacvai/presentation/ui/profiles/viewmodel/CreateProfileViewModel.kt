@@ -90,7 +90,8 @@ class CreateProfileViewModel @Inject constructor(
                 if (nameErr != null || titleErr != null) {
                     _state.value = _state.value.copy(
                         fullNameError = nameErr,
-                        professionalTitleError = titleErr
+                        professionalTitleError = titleErr,
+                        validationTrigger = System.currentTimeMillis()
                     )
                     return false
                 }
@@ -103,7 +104,8 @@ class CreateProfileViewModel @Inject constructor(
             1 -> {
                 if (_state.value.skills.isEmpty()) {
                     _state.value = _state.value.copy(
-                        skillsError = "Please add at least 1 core skill to proceed."
+                        skillsError = "Please add at least 1 core skill to proceed.",
+                        validationTrigger = System.currentTimeMillis()
                     )
                     return false
                 }
@@ -116,7 +118,8 @@ class CreateProfileViewModel @Inject constructor(
                 if (invalidExp || invalidProj) {
                     _state.value = _state.value.copy(
                         experienceError = if (invalidExp) "Please enter Job Title and Company for all work experience entries." else null,
-                        projectError = if (invalidProj) "Please enter a Project Name for all project entries." else null
+                        projectError = if (invalidProj) "Please enter a Project Name for all project entries." else null,
+                        validationTrigger = System.currentTimeMillis()
                     )
                     return false
                 }
@@ -127,7 +130,8 @@ class CreateProfileViewModel @Inject constructor(
                 val validEducations = _state.value.educations.filter { it.degree.isNotBlank() && it.instituteName.isNotBlank() }
                 if (validEducations.isEmpty()) {
                     _state.value = _state.value.copy(
-                        educationError = "Please enter Degree and Institute for at least 1 education record."
+                        educationError = "Please enter Degree and Institute for at least 1 education record.",
+                        validationTrigger = System.currentTimeMillis()
                     )
                     return false
                 }
@@ -136,7 +140,8 @@ class CreateProfileViewModel @Inject constructor(
                 if (invalidEdu || invalidCert) {
                     _state.value = _state.value.copy(
                         educationError = if (invalidEdu) "Please enter Degree and Institute for all education entries." else null,
-                        certificationError = if (invalidCert) "Please enter Certificate Name and Organization for all certifications." else null
+                        certificationError = if (invalidCert) "Please enter Certificate Name and Organization for all certifications." else null,
+                        validationTrigger = System.currentTimeMillis()
                     )
                     return false
                 }
@@ -151,7 +156,8 @@ class CreateProfileViewModel @Inject constructor(
                     _state.value = _state.value.copy(
                         socialLinksError = if (invalidSocial) "Please enter a platform label and URL for all social links." else null,
                         referencesError = if (invalidRef) "Please enter Full Name, Job Title, and Company for all references." else null,
-                        languagesError = if (invalidLang) "Please enter Language Name and Proficiency for all languages." else null
+                        languagesError = if (invalidLang) "Please enter Language Name and Proficiency for all languages." else null,
+                        validationTrigger = System.currentTimeMillis()
                     )
                     return false
                 }
@@ -569,7 +575,15 @@ class CreateProfileViewModel @Inject constructor(
         )
     }
 
+    fun saveDraft() {
+        saveInternal(isDraft = true)
+    }
+
     fun saveProfile() {
+        saveInternal(isDraft = false)
+    }
+
+    private fun saveInternal(isDraft: Boolean) {
         if (isCurrentlySaving) return // synchronous double-save block
         isCurrentlySaving = true
 
@@ -577,10 +591,25 @@ class CreateProfileViewModel @Inject constructor(
         if (currentState.fullName.trim().isBlank()) {
             _state.value = currentState.copy(
                 currentStep = 0,
-                fullNameError = "Full name is required"
+                fullNameError = "Full name is required",
+                validationTrigger = System.currentTimeMillis()
             )
             isCurrentlySaving = false
             return
+        }
+
+        // For full profile completion (non-draft), perform strict validation across all steps
+        if (!isDraft) {
+            for (step in 0 until currentState.totalSteps) {
+                if (!validateStep(step)) {
+                    _state.value = _state.value.copy(
+                        currentStep = step,
+                        validationTrigger = System.currentTimeMillis()
+                    )
+                    isCurrentlySaving = false
+                    return
+                }
+            }
         }
 
         // If there are no unsaved changes, complete the action without writing to database or modifying timestamps

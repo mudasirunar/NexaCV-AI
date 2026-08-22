@@ -16,7 +16,8 @@ data class BasicInfoStepState(
     val yearsOfExperience: String,
     val profilePictureUri: String?,
     val profileId: Long?,
-    val tempSessionId: Long
+    val tempSessionId: Long,
+    val validationTrigger: Long = 0L
 )
 
 @Immutable
@@ -25,7 +26,8 @@ data class SummaryStepState(
     val skills: List<String>,
     val skillsError: String? = null,
     val currentSkillInput: String,
-    val duplicateSkillError: String? = null
+    val duplicateSkillError: String? = null,
+    val validationTrigger: Long = 0L
 )
 
 @Immutable
@@ -33,7 +35,8 @@ data class ExperienceProjectsStepState(
     val experiences: List<Experience>,
     val projects: List<Project>,
     val experienceError: String? = null,
-    val projectError: String? = null
+    val projectError: String? = null,
+    val validationTrigger: Long = 0L
 )
 
 @Immutable
@@ -41,7 +44,8 @@ data class EducationCertsStepState(
     val educations: List<Education>,
     val certifications: List<Certification>,
     val educationError: String? = null,
-    val certificationError: String? = null
+    val certificationError: String? = null,
+    val validationTrigger: Long = 0L
 )
 
 @Immutable
@@ -54,5 +58,6 @@ data class SocialsExtrasStepState(
     val referencesError: String? = null,
     val hobbies: String,
     val volunteerWork: String,
-    val awards: String
+    val awards: String,
+    val validationTrigger: Long = 0L
 )

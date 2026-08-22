@@ -35,6 +35,9 @@ import com.mudasir.nexacvai.presentation.ui.profiles.components.create_profile.S
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.SocialsExtrasStepState
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.CreateProfileViewModel
 
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+
 @Composable
 fun SocialsExtrasStep(
     state: SocialsExtrasStepState,
@@ -42,8 +45,35 @@ fun SocialsExtrasStep(
     modifier: Modifier = Modifier
 ) {
     val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(state.validationTrigger) {
+        if (state.validationTrigger > 0L) {
+            if (state.referencesError != null || state.languagesError != null || state.socialLinksError != null) {
+                focusManager.clearFocus()
+                keyboardController?.hide()
+                if (state.referencesError != null) {
+                    // Scroll to References section header where the error banner is displayed
+                    listState.animateScrollToItem(1)
+                } else if (state.languagesError != null) {
+                    // Scroll to Languages section header where the error banner is displayed
+                    val refCount = if (state.references.isEmpty()) 1 else state.references.size + 1
+                    val langHeaderIndex = 3 + refCount
+                    listState.animateScrollToItem(langHeaderIndex)
+                } else if (state.socialLinksError != null) {
+                    // Scroll to Social Links section header where the error banner is displayed
+                    val refCount = if (state.references.isEmpty()) 1 else state.references.size + 1
+                    val langCount = if (state.languages.isEmpty()) 1 else state.languages.size + 1
+                    val socialHeaderIndex = 5 + refCount + langCount
+                    listState.animateScrollToItem(socialHeaderIndex)
+                }
+            }
+        }
+    }
 
     LazyColumn(
+        state = listState,
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp)

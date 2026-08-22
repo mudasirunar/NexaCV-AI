@@ -28,13 +28,40 @@ import com.mudasir.nexacvai.presentation.ui.profiles.components.create_profile.P
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.ExperienceProjectsStepState
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.CreateProfileViewModel
 
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+
 @Composable
 fun ExperienceProjectsStep(
     state: ExperienceProjectsStepState,
     viewModel: CreateProfileViewModel,
     modifier: Modifier = Modifier
 ) {
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(state.validationTrigger) {
+        if (state.validationTrigger > 0L) {
+            if (state.experienceError != null || state.projectError != null) {
+                focusManager.clearFocus()
+                keyboardController?.hide()
+                if (state.experienceError != null) {
+                    // Scroll to Experience section header where the error banner is displayed
+                    listState.animateScrollToItem(1)
+                } else if (state.projectError != null) {
+                    // Scroll to Project section header where the error banner is displayed
+                    val expCount = if (state.experiences.isEmpty()) 1 else state.experiences.size + 1
+                    val projectHeaderIndex = 3 + expCount
+                    listState.animateScrollToItem(projectHeaderIndex)
+                }
+            }
+        }
+    }
+
     LazyColumn(
+        state = listState,
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp)

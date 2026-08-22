@@ -19,6 +19,8 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -48,6 +50,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
@@ -61,6 +64,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
@@ -156,7 +160,27 @@ fun BasicInfoStep(state: BasicInfoStepState, viewModel: CreateProfileViewModel) 
         )
     }
 
-    Column(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
+    val scrollState = rememberScrollState()
+    val nameRequester = remember { BringIntoViewRequester() }
+    val titleRequester = remember { BringIntoViewRequester() }
+
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    LaunchedEffect(state.validationTrigger) {
+        if (state.validationTrigger > 0L) {
+            if (state.fullNameError != null || state.professionalTitleError != null) {
+                focusManager.clearFocus()
+                keyboardController?.hide()
+                if (state.fullNameError != null) {
+                    scrollState.animateScrollTo(0)
+                } else if (state.professionalTitleError != null) {
+                    titleRequester.bringIntoView()
+                }
+            }
+        }
+    }
+
+    Column(modifier = Modifier.fillMaxWidth().verticalScroll(scrollState)) {
         Text(
             text = "Step 1: Basic Information",
             style = MaterialTheme.typography.titleSmall,
@@ -263,7 +287,9 @@ fun BasicInfoStep(state: BasicInfoStepState, viewModel: CreateProfileViewModel) 
                 keyboardType = KeyboardType.Text,
                 imeAction = ImeAction.Next
             ),
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .bringIntoViewRequester(nameRequester),
             singleLine = true
         )
 
@@ -282,7 +308,9 @@ fun BasicInfoStep(state: BasicInfoStepState, viewModel: CreateProfileViewModel) 
                 keyboardType = KeyboardType.Text,
                 imeAction = ImeAction.Next
             ),
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .bringIntoViewRequester(titleRequester),
             singleLine = false,
             maxLines = 5
         )
