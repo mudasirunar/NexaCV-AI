@@ -170,11 +170,10 @@ fun ExperienceProjectsStep(
                         NexaButton(
                             onClick = { viewModel.addExperience(Experience()) },
                             text = "+ Add Experience",
-                            modifier = Modifier.fillMaxWidth(),
                             hasBorder = true,
-                            borderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
+                            borderColor = MaterialTheme.colorScheme.primary,
                             fillColor = MaterialTheme.colorScheme.primary,
-                            fillOpacity = 0.08f,
+                            fillOpacity = 0.12f,
                             contentColor = MaterialTheme.colorScheme.primary
                         )
                     }
