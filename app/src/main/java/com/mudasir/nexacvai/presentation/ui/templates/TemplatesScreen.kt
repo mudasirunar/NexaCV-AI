@@ -95,7 +95,7 @@ fun TemplatesScreen(
 
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-    val isTabletOrFoldableUnfolded = configuration.smallestScreenWidthDp >= 580 || configuration.screenWidthDp >= 580
+    val isTabletOrFoldableUnfolded = configuration.smallestScreenWidthDp >= 580
 
     // Responsive grid column span matrix:
     // - Phone / Folded Closed (Portrait): 2 cards
