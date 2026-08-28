@@ -59,10 +59,10 @@ fun TemplatesScreen(
             override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
                 val delta = available.y
                 if (delta < -10f && isHeaderVisible) {
-                    // Scrolling down -> smoothly slide up and collapse header
+                    // Scrolling down -> smoothly slide up floating header
                     isHeaderVisible = false
                 } else if (delta > 10f && !isHeaderVisible) {
-                    // Scrolling up -> smoothly slide down and reveal header
+                    // Scrolling up -> smoothly slide down floating header
                     isHeaderVisible = true
                 }
                 return Offset.Zero
@@ -82,6 +82,21 @@ fun TemplatesScreen(
         if (state.filteredTemplates.isNotEmpty()) {
             gridState.scrollToItem(0)
         }
+    }
+
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val isTabletOrFoldableUnfolded = configuration.smallestScreenWidthDp >= 580 || configuration.screenWidthDp >= 580
+
+    // Responsive grid column span matrix:
+    // - Phone / Folded Closed (Portrait): 2 cards
+    // - Phone / Folded Closed (Landscape): 3 cards
+    // - Tablet / Foldable Unfolded (Portrait): 3 cards
+    // - Tablet / Foldable Unfolded (Landscape): 4 cards
+    val gridColumnCount = when {
+        isTabletOrFoldableUnfolded -> if (isLandscape) 4 else 3
+        isLandscape -> 3
+        else -> 2
     }
 
     Scaffold(
@@ -119,33 +134,74 @@ fun TemplatesScreen(
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
-        Column(
+        // Floating Header Overlay Architecture:
+        // Grid fills the screen with static top contentPadding so cards NEVER jump or shift when header slides
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // Coupled Search Bar & Category Filter Chips with Synchronized Slide Animation
+            // 1. Base Layer: Templates Grid View
+            if (state.isLoading) {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(gridColumnCount),
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(start = 14.dp, end = 14.dp, bottom = 14.dp, top = 116.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(6) {
+                        TemplateCardSkeleton()
+                    }
+                }
+            } else if (state.filteredTemplates.isEmpty()) {
+                TemplateEmptySearchScreen(
+                    query = state.searchQuery,
+                    onClearSearchClick = { viewModel.updateSearchQuery("") },
+                    modifier = Modifier.padding(top = 110.dp)
+                )
+            } else {
+                LazyVerticalGrid(
+                    state = gridState,
+                    columns = GridCells.Fixed(gridColumnCount),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .nestedScroll(nestedScrollConnection),
+                    contentPadding = PaddingValues(start = 14.dp, end = 14.dp, bottom = 14.dp, top = 116.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(state.filteredTemplates, key = { it.metadata.id }) { template ->
+                        TemplateCard(
+                            template = template,
+                            isFlipped = state.flippedTemplateIds.contains(template.metadata.id),
+                            onToggleFlip = { viewModel.toggleTemplateFlip(template.metadata.id) },
+                            onSelectTemplate = { onOpenTemplatePreview(template.metadata.id) }
+                        )
+                    }
+                }
+            }
+
+            // 2. Floating Top Layer: Search Bar & Category Filter Chips
             AnimatedVisibility(
                 visible = isHeaderVisible,
+                modifier = Modifier.align(Alignment.TopCenter),
                 enter = slideInVertically(
                     initialOffsetY = { -it },
-                    animationSpec = spring(stiffness = Spring.StiffnessMediumLow, dampingRatio = Spring.DampingRatioNoBouncy)
-                ) + expandVertically(
                     animationSpec = spring(stiffness = Spring.StiffnessMediumLow, dampingRatio = Spring.DampingRatioNoBouncy)
                 ) + fadeIn(animationSpec = tween(durationMillis = 180)),
                 exit = slideOutVertically(
                     targetOffsetY = { -it },
-                    animationSpec = spring(stiffness = Spring.StiffnessMediumLow, dampingRatio = Spring.DampingRatioNoBouncy)
-                ) + shrinkVertically(
                     animationSpec = spring(stiffness = Spring.StiffnessMediumLow, dampingRatio = Spring.DampingRatioNoBouncy)
                 ) + fadeOut(animationSpec = tween(durationMillis = 140))
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 10.dp)
+                        .background(MaterialTheme.colorScheme.background.copy(alpha = 0.96f))
+                        .padding(top = 10.dp, bottom = 8.dp)
                 ) {
-                    // Modern Redesigned Search Bar
+                    // Modern Search Bar
                     Box(modifier = Modifier.padding(horizontal = 16.dp)) {
                         TemplateSearchBar(
                             query = state.searchQuery,
@@ -186,63 +242,6 @@ fun TemplatesScreen(
                                 shape = RoundedCornerShape(10.dp)
                             )
                         }
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
-            }
-
-            val configuration = LocalConfiguration.current
-            val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-            val isTabletOrFoldableUnfolded = configuration.smallestScreenWidthDp >= 580 || configuration.screenWidthDp >= 580
-
-            // Responsive grid column span matrix:
-            // - Phone / Folded Closed (Portrait): 2 cards
-            // - Phone / Folded Closed (Landscape): 3 cards
-            // - Tablet / Foldable Unfolded (Portrait): 3 cards
-            // - Tablet / Foldable Unfolded (Landscape): 4 cards
-            val gridColumnCount = when {
-                isTabletOrFoldableUnfolded -> if (isLandscape) 4 else 3
-                isLandscape -> 3
-                else -> 2
-            }
-
-            // Templates Grid View
-            if (state.isLoading) {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(gridColumnCount),
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(start = 14.dp, end = 14.dp, bottom = 14.dp, top = 6.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(6) {
-                        TemplateCardSkeleton()
-                    }
-                }
-            } else if (state.filteredTemplates.isEmpty()) {
-                TemplateEmptySearchScreen(
-                    query = state.searchQuery,
-                    onClearSearchClick = { viewModel.updateSearchQuery("") }
-                )
-            } else {
-                LazyVerticalGrid(
-                    state = gridState,
-                    columns = GridCells.Fixed(gridColumnCount),
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .nestedScroll(nestedScrollConnection),
-                    contentPadding = PaddingValues(start = 14.dp, end = 14.dp, bottom = 14.dp, top = 6.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(state.filteredTemplates, key = { it.metadata.id }) { template ->
-                        TemplateCard(
-                            template = template,
-                            isFlipped = state.flippedTemplateIds.contains(template.metadata.id),
-                            onToggleFlip = { viewModel.toggleTemplateFlip(template.metadata.id) },
-                            onSelectTemplate = { onOpenTemplatePreview(template.metadata.id) }
-                        )
                     }
                 }
             }
