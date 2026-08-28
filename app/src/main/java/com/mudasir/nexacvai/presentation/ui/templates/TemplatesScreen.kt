@@ -18,7 +18,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.FileDownload
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -32,7 +31,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.mudasir.nexacvai.domain.model.template.TemplateCategory
-import com.mudasir.nexacvai.presentation.ui.components.NexaTextField
 import com.mudasir.nexacvai.presentation.ui.templates.components.*
 import com.mudasir.nexacvai.presentation.ui.templates.viewmodel.TemplatesViewModel
 
@@ -76,6 +74,13 @@ fun TemplatesScreen(
     LaunchedEffect(gridState.firstVisibleItemIndex, gridState.firstVisibleItemScrollOffset, state.searchQuery, state.selectedCategory) {
         if (gridState.firstVisibleItemIndex == 0 && gridState.firstVisibleItemScrollOffset <= 12) {
             isHeaderVisible = true
+        }
+    }
+
+    // Smoothly scroll back to top when search query or filter category changes
+    LaunchedEffect(state.searchQuery, state.selectedCategory) {
+        if (state.filteredTemplates.isNotEmpty()) {
+            gridState.scrollToItem(0)
         }
     }
 
@@ -135,22 +140,28 @@ fun TemplatesScreen(
                     animationSpec = spring(stiffness = Spring.StiffnessMediumLow, dampingRatio = Spring.DampingRatioNoBouncy)
                 ) + fadeOut(animationSpec = tween(durationMillis = 140))
             ) {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    // Search Input Bar
-                    Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)) {
-                        NexaTextField(
-                            value = state.searchQuery,
-                            onValueChange = { viewModel.updateSearchQuery(it) },
-                            placeholder = "Search templates by name or style...",
-                            leadingIcon = Icons.Default.Search,
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 10.dp)
+                ) {
+                    // Modern Redesigned Search Bar
+                    Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                        TemplateSearchBar(
+                            query = state.searchQuery,
+                            onQueryChange = { viewModel.updateSearchQuery(it) },
+                            onClearQuery = { viewModel.updateSearchQuery("") },
+                            placeholderText = "Search...",
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
 
+                    Spacer(modifier = Modifier.height(8.dp))
+
                     // Category Filter Pills Row
                     LazyRow(
                         modifier = Modifier.fillMaxWidth(),
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
+                        contentPadding = PaddingValues(horizontal = 16.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         items(TemplateCategory.entries.toTypedArray()) { category ->
@@ -177,7 +188,7 @@ fun TemplatesScreen(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                 }
             }
 
@@ -201,7 +212,7 @@ fun TemplatesScreen(
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(gridColumnCount),
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(14.dp),
+                    contentPadding = PaddingValues(start = 14.dp, end = 14.dp, bottom = 14.dp, top = 6.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
@@ -210,17 +221,10 @@ fun TemplatesScreen(
                     }
                 }
             } else if (state.filteredTemplates.isEmpty()) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "No templates found for current search/filter.",
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    )
-                }
+                TemplateEmptySearchScreen(
+                    query = state.searchQuery,
+                    onClearSearchClick = { viewModel.updateSearchQuery("") }
+                )
             } else {
                 LazyVerticalGrid(
                     state = gridState,
@@ -228,7 +232,7 @@ fun TemplatesScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .nestedScroll(nestedScrollConnection),
-                    contentPadding = PaddingValues(14.dp),
+                    contentPadding = PaddingValues(start = 14.dp, end = 14.dp, bottom = 14.dp, top = 6.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {

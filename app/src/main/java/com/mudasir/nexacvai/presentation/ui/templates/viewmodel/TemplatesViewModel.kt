@@ -141,12 +141,125 @@ class TemplatesViewModel @Inject constructor(
         category: TemplateCategory,
         query: String
     ): List<ResumeTemplate> {
-        return templates.filter { template ->
-            val matchesCategory = (category == TemplateCategory.ALL) || (template.metadata.category == category)
-            val matchesQuery = query.isBlank() ||
-                    template.metadata.name.contains(query, ignoreCase = true) ||
-                    template.metadata.description.contains(query, ignoreCase = true)
-            matchesCategory && matchesQuery
+        val trimmed = query.trim()
+        val tokens = if (trimmed.isNotEmpty()) trimmed.lowercase().split("\\s+".toRegex()).filter { it.isNotBlank() } else emptyList()
+
+        val categoryFiltered = if (category == TemplateCategory.ALL) {
+            templates
+        } else {
+            templates.filter { it.metadata.category == category }
         }
+
+        if (tokens.isEmpty()) {
+            return categoryFiltered
+        }
+
+        return categoryFiltered
+            .mapNotNull { template ->
+                val score = calculateMatchScore(template, trimmed.lowercase(), tokens)
+                if (score > 0) template to score else null
+            }
+            .sortedWith(
+                compareByDescending<Pair<ResumeTemplate, Int>> { it.second }
+                    .thenBy { it.first.metadata.name }
+            )
+            .map { it.first }
+    }
+
+    private fun calculateMatchScore(
+        template: ResumeTemplate,
+        fullQuery: String,
+        tokens: List<String>
+    ): Int {
+        val meta = template.metadata
+        val nameLower = meta.name.lowercase()
+        val descLower = meta.description.lowercase()
+        val catNameLower = meta.category.displayName.lowercase()
+        val colorKeywords = resolveColorKeywords(meta.previewPrimaryColorHex, meta.previewAccentColorHex)
+        val photoKeywords = if (meta.supportsPhoto) listOf("photo", "picture", "avatar", "headshot", "image") else listOf("no photo", "text only", "ats only", "without photo")
+
+        var score = 0
+
+        // Exact name match
+        if (nameLower == fullQuery) {
+            return 1000
+        }
+        if (nameLower.startsWith(fullQuery)) {
+            score += 300
+        } else if (nameLower.contains(fullQuery)) {
+            score += 150
+        }
+
+        if (catNameLower.contains(fullQuery)) {
+            score += 80
+        }
+
+        if (descLower.contains(fullQuery)) {
+            score += 60
+        }
+
+        // Token-level multi-match
+        var matchedTokens = 0
+        for (token in tokens) {
+            var tokenScore = 0
+            if (nameLower.contains(token)) {
+                tokenScore += 40
+            }
+            if (descLower.contains(token)) {
+                tokenScore += 25
+            }
+            if (catNameLower.contains(token)) {
+                tokenScore += 30
+            }
+            if (colorKeywords.any { it.contains(token) || token.contains(it) }) {
+                tokenScore += 20
+            }
+            if (photoKeywords.any { it.contains(token) || token.contains(it) }) {
+                tokenScore += 20
+            }
+
+            if (tokenScore > 0) {
+                matchedTokens++
+                score += tokenScore
+            }
+        }
+
+        // All search tokens must match at least one attribute to qualify
+        return if (matchedTokens == tokens.size) score else 0
+    }
+
+    private fun resolveColorKeywords(primaryHex: String, accentHex: String): List<String> {
+        val hexes = listOf(primaryHex.uppercase(), accentHex.uppercase())
+        val keywords = mutableListOf<String>()
+
+        for (hex in hexes) {
+            when {
+                hex.contains("1E293B") || hex.contains("0F172A") || hex.contains("334155") || hex.contains("374151") -> {
+                    keywords.addAll(listOf("slate", "dark", "charcoal", "gray", "black", "minimal"))
+                }
+                hex.contains("1E1B4B") || hex.contains("312E81") || hex.contains("4338CA") -> {
+                    keywords.addAll(listOf("navy", "indigo", "dark blue", "midnight", "executive"))
+                }
+                hex.contains("0284C7") || hex.contains("0369A1") || hex.contains("2563EB") || hex.contains("38BDF8") || hex.contains("0EA5E9") || hex.contains("3B82F6") -> {
+                    keywords.addAll(listOf("blue", "sky blue", "cyan", "azure", "ocean", "tech"))
+                }
+                hex.contains("0D9488") || hex.contains("14B8A6") || hex.contains("2DD4BF") -> {
+                    keywords.addAll(listOf("teal", "cyan", "turquoise", "aqua", "cyber"))
+                }
+                hex.contains("059669") || hex.contains("10B981") -> {
+                    keywords.addAll(listOf("green", "emerald", "mint", "healthcare"))
+                }
+                hex.contains("4F46E5") || hex.contains("6366F1") || hex.contains("9333EA") || hex.contains("A855F7") -> {
+                    keywords.addAll(listOf("purple", "violet", "indigo", "lavender", "creative"))
+                }
+                hex.contains("E11D48") || hex.contains("F43F5E") -> {
+                    keywords.addAll(listOf("rose", "red", "crimson", "coral", "pink", "creative"))
+                }
+                hex.contains("B45309") || hex.contains("D97706") || hex.contains("F59E0B") -> {
+                    keywords.addAll(listOf("gold", "amber", "yellow", "orange", "bronze", "warm", "banking"))
+                }
+            }
+        }
+        return keywords.distinct()
     }
 }
