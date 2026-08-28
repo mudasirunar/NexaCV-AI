@@ -107,6 +107,8 @@ fun TemplatePreviewScreen(
         }
     }
 
+    val topPadding = 104.dp
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -119,12 +121,12 @@ fun TemplatePreviewScreen(
                     .shimmerEffect()
             )
         } else {
-            // Reserved top padding (104.dp = 88.dp TopBar height + 16.dp top spacing) ensures TopBar never obstructs page 1
+            // Reserved top padding (104dp portrait / 72dp landscape) ensures TopBar never obstructs page 1
             PdfDocumentViewer(
                 pdfFile = generatedPdfFile,
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(top = 104.dp),
+                    .padding(top = topPadding),
                 isTopBarVisible = isTopBarVisible,
                 onToggleTopBar = { visible ->
                     isTopBarVisible = visible

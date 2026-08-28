@@ -7,7 +7,6 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -24,14 +23,14 @@ import com.github.barteksc.pdfviewer.PDFView
 import com.github.barteksc.pdfviewer.listener.OnDrawListener
 import com.github.barteksc.pdfviewer.listener.OnPageChangeListener
 import com.github.barteksc.pdfviewer.listener.OnTapListener
-import com.github.barteksc.pdfviewer.util.FitPolicy
 import com.github.barteksc.pdfviewer.util.Constants
+import com.github.barteksc.pdfviewer.util.FitPolicy
 import com.mudasir.nexacvai.ui.theme.*
 import kotlinx.coroutines.delay
 import java.io.File
 import kotlin.math.roundToInt
 
-private const val MIN_ZOOM_LEVEL = 1.0f
+private const val MIN_ZOOM_LEVEL = 0.5f
 private const val MID_ZOOM_LEVEL = 2.5f
 private const val MAX_ZOOM_LEVEL = 5.0f
 
@@ -69,12 +68,40 @@ fun PdfDocumentViewer(
     val currentTopBarVisible by rememberUpdatedState(isTopBarVisible)
     val currentToggleTopBar by rememberUpdatedState(onToggleTopBar)
 
-    LaunchedEffect(pdfFile, pdfViewRef) {
+    val configuration = androidx.compose.ui.platform.LocalConfiguration.current
+    val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+    val widthDp = configuration.screenWidthDp
+    val heightDp = configuration.screenHeightDp
+    val smallestWidthDp = configuration.smallestScreenWidthDp
+
+    val maxDim = maxOf(widthDp, heightDp).toFloat()
+    val minDim = minOf(widthDp, heightDp).toFloat()
+    val aspectRatio = if (minDim > 0) maxDim / minDim else 1f
+
+    // Device classification:
+    // - Foldables (Unfolded): Large screen (>= 580dp) with almost square aspect ratio (< 1.35)
+    // - Tablets: Large screen (>= 580dp) with widescreen ratio (>= 1.35)
+    // - Phones: Narrow screen (< 580dp)
+    val isFoldable = smallestWidthDp >= 580 && aspectRatio < 1.35
+    val isTablet = smallestWidthDp >= 580 && aspectRatio >= 1.35
+    val isPhone = smallestWidthDp < 580
+
+    // Initial Zoom Level:
+    // - Landscape (Phone & Tablet): 150% (1.5f) for enhanced readability
+    // - Phone Portrait & Tablet Portrait: 100% (1.0f)
+    // - Foldable Unfolded (Portrait & Landscape): 100% (1.0f)
+    val targetInitialZoom = when {
+        isLandscape && (isPhone || isTablet) -> 1.5f
+        else -> 1.0f
+    }
+
+    LaunchedEffect(pdfFile, pdfViewRef, isLandscape, isFoldable, isTablet) {
         val view = pdfViewRef ?: return@LaunchedEffect
         val file = pdfFile ?: return@LaunchedEffect
         if (!file.exists()) return@LaunchedEffect
 
         var lastYOffset = 0f
+        var hasAppliedInitialZoom = false
 
         Constants.THUMBNAIL_RATIO = 1f
         Constants.PRELOAD_OFFSET = 100
@@ -84,12 +111,17 @@ fun PdfDocumentViewer(
             .enableAnnotationRendering(true)
             .swipeHorizontal(false)
             .spacing(16)
-            .pageFitPolicy(FitPolicy.WIDTH)
+            .pageFitPolicy(FitPolicy.BOTH)
             .enableDoubletap(true)
             .enableAntialiasing(true)
             .onPageChange(OnPageChangeListener { page, pageCount ->
                 currentPage = page + 1
                 totalPages = pageCount
+                if (!hasAppliedInitialZoom && targetInitialZoom != 1.0f) {
+                    hasAppliedInitialZoom = true
+                    val centerX = if (view.width > 0) view.width / 2f else 0f
+                    view.zoomWithAnimation(centerX, 0f, targetInitialZoom)
+                }
                 currentZoom = view.zoom
                 wakeUpControls()
             })
@@ -102,7 +134,7 @@ fun PdfDocumentViewer(
 
                 // TopBar scroll rules: Scrolling DOWN hides TopBar, reaching TOP shows TopBar
                 val yOffset = view.currentYOffset
-                if (view.currentPage == 0 && yOffset >= -60f) {
+                if (view.currentPage == 0 && yOffset >= -80f) {
                     if (!currentTopBarVisible) {
                         currentToggleTopBar(true)
                     }
@@ -179,10 +211,11 @@ fun PdfDocumentViewer(
 
             val isCanZoomOut = currentZoom > (MIN_ZOOM_LEVEL + 0.05f)
             val isCanZoomIn = currentZoom < (MAX_ZOOM_LEVEL - 0.05f)
-            val isCanReset = currentZoom > (MIN_ZOOM_LEVEL + 0.05f)
+            val isCanReset = kotlin.math.abs(currentZoom - 1.0f) > 0.05f
 
             val rawPercent = (currentZoom * 100).roundToInt()
             val displayZoomPercent = when {
+                rawPercent in 48..52 -> 50
                 rawPercent in 98..102 -> 100
                 rawPercent in 148..152 -> 150
                 rawPercent in 198..202 -> 200
@@ -195,7 +228,7 @@ fun PdfDocumentViewer(
                 else -> rawPercent
             }
 
-            // Floating Zoom Controls (Independent 3.5s inactivity auto-hide)
+            // Floating Zoom Controls (Independent 3s inactivity auto-hide)
             AnimatedVisibility(
                 visible = isControlsVisible,
                 enter = fadeIn() + slideInVertically(initialOffsetY = { it / 2 }),
@@ -268,7 +301,7 @@ fun PdfDocumentViewer(
                             onClick = {
                                 wakeUpControls()
                                 pdfViewRef?.let { view ->
-                                    view.resetZoomWithAnimation()
+                                    view.zoomWithAnimation(1.0f)
                                     view.invalidate()
                                 }
                             },
