@@ -28,7 +28,7 @@ object BuiltInTemplatesCatalog {
                 metadata = TemplateMetadata(
                     id = "template_ats_clean",
                     name = "ATS Clean Standard",
-                    description = "Full single-column professional ATS layout rendering all user profile sections with candidate photo frame.",
+                    description = "Clean single-column ATS parser-safe structure with prominent section rules and optional candidate photo. Best for finance, business analysts, and corporate roles.",
                     category = TemplateCategory.ATS,
                     supportsPhoto = true,
                     defaultPhotoShape = PhotoShape.CIRCLE,
@@ -41,7 +41,7 @@ object BuiltInTemplatesCatalog {
                 metadata = TemplateMetadata(
                     id = "template_ats_executive",
                     name = "ATS Corporate Minimal",
-                    description = "Executive corporate single-column structure with dark slate section rules and optional photo frame.",
+                    description = "High-contrast minimalist layout with dark slate headers and executive divider rules. Optimized for senior managers, legal counsel, and compliance specialists.",
                     category = TemplateCategory.ATS,
                     supportsPhoto = true,
                     defaultPhotoShape = PhotoShape.CIRCLE,
@@ -54,7 +54,7 @@ object BuiltInTemplatesCatalog {
                 metadata = TemplateMetadata(
                     id = "template_ats_tech_matrix",
                     name = "ATS Categorized Skills",
-                    description = "Single-column parser-safe ATS layout featuring a clean borderless Categorized Skills Table.",
+                    description = "Single-column technical layout featuring categorized skills tables and bulleted achievements. Ideal for software engineers, QA, and systems architects.",
                     category = TemplateCategory.ATS,
                     supportsPhoto = false,
                     defaultPhotoShape = PhotoShape.CIRCLE,
@@ -67,7 +67,7 @@ object BuiltInTemplatesCatalog {
                 metadata = TemplateMetadata(
                     id = "template_ats_hybrid",
                     name = "ATS Hybrid Timeline",
-                    description = "Left-aligned date hierarchy with crisp section divider rules, optimized for fresh graduates and career changers.",
+                    description = "Date-aligned chronological timeline emphasizing education, core skills, and internships. Perfect for fresh graduates, entry-level roles, and career changers.",
                     category = TemplateCategory.ATS,
                     supportsPhoto = false,
                     defaultPhotoShape = PhotoShape.CIRCLE,
@@ -82,7 +82,7 @@ object BuiltInTemplatesCatalog {
                 metadata = TemplateMetadata(
                     id = "template_modern_wavy",
                     name = "Modern Horizon Accent",
-                    description = "Curved top header accent band with candidate avatar photo, professional summary, and soft pill badges.",
+                    description = "Dynamic top header accent band with candidate avatar and structured milestone blocks. Best for product managers, UX designers, and digital marketers.",
                     category = TemplateCategory.MODERN,
                     supportsPhoto = true,
                     defaultPhotoShape = PhotoShape.CIRCLE,
@@ -95,7 +95,7 @@ object BuiltInTemplatesCatalog {
                 metadata = TemplateMetadata(
                     id = "template_modern_tech",
                     name = "Modern Tech Sidebar",
-                    description = "Split 30/70 left column panel for contact details, social links, tools, skills, and languages.",
+                    description = "Split 30/70 left sidebar layout separating tools, contact links, and languages from career timeline. Ideal for mobile and full-stack developers.",
                     category = TemplateCategory.MODERN,
                     supportsPhoto = true,
                     defaultPhotoShape = PhotoShape.ROUNDED_SQUARE,
@@ -108,7 +108,7 @@ object BuiltInTemplatesCatalog {
                 metadata = TemplateMetadata(
                     id = "template_developer_slate",
                     name = "Developer Terminal Slate",
-                    description = "Dark slate header banner with monospace code accent headers (// OVERVIEW, @company) and tech stack callouts.",
+                    description = "Dark terminal-styled header with monospace code accents (// OVERVIEW, @company) and tech stack tags. Tailored for backend and DevOps engineers.",
                     category = TemplateCategory.MODERN,
                     supportsPhoto = true,
                     defaultPhotoShape = PhotoShape.PASSPORT_RECT,
@@ -121,7 +121,7 @@ object BuiltInTemplatesCatalog {
                 metadata = TemplateMetadata(
                     id = "template_cyber_code",
                     name = "Cyber Security Matrix",
-                    description = "Teal accent tech layout featuring zero-trust infrastructure skills matrix and security certifications.",
+                    description = "Teal-accented layout with zero-trust technical matrix and security credential callouts. Designed for InfoSec, security analysts, and infrastructure leads.",
                     category = TemplateCategory.MODERN,
                     supportsPhoto = true,
                     defaultPhotoShape = PhotoShape.CIRCLE,
@@ -134,7 +134,7 @@ object BuiltInTemplatesCatalog {
                 metadata = TemplateMetadata(
                     id = "template_tech_lead_grid",
                     name = "Tech Architecture Grid",
-                    description = "Modular section blocks highlighting cloud infrastructure, system design projects, and engineering tools.",
+                    description = "Modular grid layout highlighting system design, cloud architecture, and engineering tools. Built for engineering managers and solutions architects.",
                     category = TemplateCategory.MODERN,
                     supportsPhoto = true,
                     defaultPhotoShape = PhotoShape.ROUNDED_SQUARE,
@@ -147,7 +147,7 @@ object BuiltInTemplatesCatalog {
                 metadata = TemplateMetadata(
                     id = "template_minimal_serif",
                     name = "Minimalist Serif",
-                    description = "High typography contrast serif pairing with delicate accent rules, ideal for research and academic fellows.",
+                    description = "Refined editorial serif typography with delicate divider rules. Recommended for researchers, university professors, and academic fellows.",
                     category = TemplateCategory.MODERN,
                     supportsPhoto = true,
                     defaultPhotoShape = PhotoShape.CIRCLE,
@@ -162,7 +162,7 @@ object BuiltInTemplatesCatalog {
                 metadata = TemplateMetadata(
                     id = "template_exec_competency",
                     name = "Executive Leadership Grid",
-                    description = "Full-width dark navy header banner with 3-column leadership competency matrix and P&L achievements.",
+                    description = "Commanding navy header with a 3-column executive competency matrix and P&L achievements. Built for VP, C-suite, and enterprise leaders.",
                     category = TemplateCategory.EXECUTIVE,
                     supportsPhoto = true,
                     defaultPhotoShape = PhotoShape.CIRCLE,
@@ -175,7 +175,7 @@ object BuiltInTemplatesCatalog {
                 metadata = TemplateMetadata(
                     id = "template_exec_sidebar",
                     name = "Executive Sidebar Accent",
-                    description = "Split 35/65 dark accent sidebar for contact details, board directorships, competencies, and references.",
+                    description = "Split-sidebar layout highlighting board directorships, core competencies, and references. Best for finance directors and management consultants.",
                     category = TemplateCategory.EXECUTIVE,
                     supportsPhoto = true,
                     defaultPhotoShape = PhotoShape.PASSPORT_RECT,
@@ -188,7 +188,7 @@ object BuiltInTemplatesCatalog {
                 metadata = TemplateMetadata(
                     id = "template_exec_slate",
                     name = "Executive Formal Slate",
-                    description = "Centered classic executive header with traditional formal margins and revenue growth callouts.",
+                    description = "Centered classic executive title block with formal margins and revenue growth callouts. Ideal for operations directors and senior consultants.",
                     category = TemplateCategory.EXECUTIVE,
                     supportsPhoto = true,
                     defaultPhotoShape = PhotoShape.CIRCLE,
@@ -201,7 +201,7 @@ object BuiltInTemplatesCatalog {
                 metadata = TemplateMetadata(
                     id = "template_corporate_banking",
                     name = "Corporate Banking",
-                    description = "Gold & Navy formal accent rules tailored for investment directors and finance executives.",
+                    description = "Navy and gold formal accent rules tailored for investment banking, private equity, and wealth management executives.",
                     category = TemplateCategory.EXECUTIVE,
                     supportsPhoto = true,
                     defaultPhotoShape = PhotoShape.PASSPORT_RECT,
@@ -214,7 +214,7 @@ object BuiltInTemplatesCatalog {
                 metadata = TemplateMetadata(
                     id = "template_global_director",
                     name = "Global Enterprise Director",
-                    description = "Full-width header banner with revenue growth callouts and international governance experience.",
+                    description = "Broad header banner with revenue milestones and multi-region governance experience. Optimized for international business leaders.",
                     category = TemplateCategory.EXECUTIVE,
                     supportsPhoto = true,
                     defaultPhotoShape = PhotoShape.CIRCLE,
@@ -227,7 +227,7 @@ object BuiltInTemplatesCatalog {
                 metadata = TemplateMetadata(
                     id = "template_managing_director",
                     name = "Managing Director Formal",
-                    description = "Double-rule formal executive layout with centered title block and corporate governance focus.",
+                    description = "Double-rule traditional executive structure focusing on corporate governance and strategic scale. Built for managing directors and board members.",
                     category = TemplateCategory.EXECUTIVE,
                     supportsPhoto = true,
                     defaultPhotoShape = PhotoShape.PASSPORT_RECT,
@@ -242,7 +242,7 @@ object BuiltInTemplatesCatalog {
                 metadata = TemplateMetadata(
                     id = "template_creative_wavy",
                     name = "Creative Studio Curve",
-                    description = "Vibrant top header curve accent with structured portfolio project cards and creative skill pills.",
+                    description = "Vibrant curved top accent with structured portfolio project cards and creative skill badges. Perfect for art directors, illustrators, and UI designers.",
                     category = TemplateCategory.CREATIVE,
                     supportsPhoto = true,
                     defaultPhotoShape = PhotoShape.CIRCLE,
@@ -255,7 +255,7 @@ object BuiltInTemplatesCatalog {
                 metadata = TemplateMetadata(
                     id = "template_ux_designer",
                     name = "UX Studio Sidebar",
-                    description = "Split-screen sidebar for avatar, GitHub/portfolio links, interaction design badges, and hobbies.",
+                    description = "Purple studio sidebar with portfolio links, design process badges, and tools. Tailored for product designers, UX researchers, and design leads.",
                     category = TemplateCategory.CREATIVE,
                     supportsPhoto = true,
                     defaultPhotoShape = PhotoShape.ROUNDED_SQUARE,
@@ -268,7 +268,7 @@ object BuiltInTemplatesCatalog {
                 metadata = TemplateMetadata(
                     id = "template_clinical_sidebar",
                     name = "Clinical Specialist Sidebar",
-                    description = "Medical blue sidebar panel for doctor avatar, hospital contact details, board certs, and references.",
+                    description = "Medical blue sidebar panel showcasing clinical credentials, hospital affiliations, and board certifications. Built for physicians and specialists.",
                     category = TemplateCategory.CREATIVE,
                     supportsPhoto = true,
                     defaultPhotoShape = PhotoShape.ROUNDED_SQUARE,
@@ -281,7 +281,7 @@ object BuiltInTemplatesCatalog {
                 metadata = TemplateMetadata(
                     id = "template_clinical_doctor",
                     name = "Clinical Doctor Credentials",
-                    description = "Medical blue header banner with top-right clinical credentials & board certification box.",
+                    description = "Header banner featuring dedicated medical board certification boxes and clinical appointments. Designed for doctors, surgeons, and medical leads.",
                     category = TemplateCategory.CREATIVE,
                     supportsPhoto = false,
                     defaultPhotoShape = PhotoShape.ROUNDED_SQUARE,
@@ -294,7 +294,7 @@ object BuiltInTemplatesCatalog {
                 metadata = TemplateMetadata(
                     id = "template_healthcare_specialist",
                     name = "Healthcare Specialist",
-                    description = "Structured clinical appointment timeline highlighting hospital affiliations and medical research.",
+                    description = "Structured appointment timeline with patient care highlights and clinical research publications. Ideal for nurses and healthcare administrators.",
                     category = TemplateCategory.CREATIVE,
                     supportsPhoto = true,
                     defaultPhotoShape = PhotoShape.PASSPORT_RECT,
@@ -307,7 +307,7 @@ object BuiltInTemplatesCatalog {
                 metadata = TemplateMetadata(
                     id = "template_artisan_studio",
                     name = "Artisan Design Studio",
-                    description = "Warm studio tone with refined typography rules for creative directors, architects, and designers.",
+                    description = "Warm amber studio palette with refined architectural typography rules. Ideal for interior designers, architects, and creative directors.",
                     category = TemplateCategory.CREATIVE,
                     supportsPhoto = true,
                     defaultPhotoShape = PhotoShape.CIRCLE,

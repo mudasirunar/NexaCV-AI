@@ -98,6 +98,22 @@ class TemplatesViewModel @Inject constructor(
         _state.value = _state.value.copy(showPhotoInTemplate = showPhoto)
     }
 
+    fun toggleTemplateFlip(templateId: String) {
+        val currentFlipped = _state.value.flippedTemplateIds
+        val updated = if (currentFlipped.contains(templateId)) {
+            currentFlipped - templateId
+        } else {
+            currentFlipped + templateId
+        }
+        _state.value = _state.value.copy(flippedTemplateIds = updated)
+    }
+
+    fun resetFlippedTemplates() {
+        if (_state.value.flippedTemplateIds.isNotEmpty()) {
+            _state.value = _state.value.copy(flippedTemplateIds = emptySet())
+        }
+    }
+
     fun openTemplateDetail(template: ResumeTemplate) {
         _state.value = _state.value.copy(selectedTemplateForDetail = template)
     }

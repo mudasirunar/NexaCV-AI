@@ -18,5 +18,6 @@ data class TemplatesState(
     val selectedTemplateForDetail: ResumeTemplate? = null,
     val showPhotoInTemplate: Boolean = true,
     val isInjectingProfile: Boolean = false,
+    val flippedTemplateIds: Set<String> = emptySet(),
     val errorMessage: String? = null
 )

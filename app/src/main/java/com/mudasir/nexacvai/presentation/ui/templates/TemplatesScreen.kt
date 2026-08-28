@@ -41,6 +41,12 @@ fun TemplatesScreen(
     val state by viewModel.state.collectAsState()
     var showImportDialog by remember { mutableStateOf(false) }
 
+    DisposableEffect(Unit) {
+        onDispose {
+            viewModel.resetFlippedTemplates()
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -163,6 +169,8 @@ fun TemplatesScreen(
                     items(state.filteredTemplates, key = { it.metadata.id }) { template ->
                         TemplateCard(
                             template = template,
+                            isFlipped = state.flippedTemplateIds.contains(template.metadata.id),
+                            onToggleFlip = { viewModel.toggleTemplateFlip(template.metadata.id) },
                             onSelectTemplate = { onOpenTemplatePreview(template.metadata.id) }
                         )
                     }
