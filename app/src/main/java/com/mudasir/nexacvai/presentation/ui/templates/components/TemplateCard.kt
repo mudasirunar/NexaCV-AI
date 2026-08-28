@@ -12,9 +12,6 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PhotoCamera
-import androidx.compose.material.icons.outlined.DoNotDisturb
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -80,17 +77,17 @@ fun TemplateCard(
             ),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
-            // Document Studio Workbench Box
+            // Document Studio Workbench Box (Proportionally fitted for multi-column grid)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(260.dp)
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f))
-                    .padding(12.dp),
+                    .height(220.dp)
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
+                    .padding(10.dp),
                 contentAlignment = Alignment.Center
             ) {
                 // Real A4 Paper Document Sheet (Aspect Ratio 1 : 1.414)
@@ -98,11 +95,11 @@ fun TemplateCard(
                     modifier = Modifier
                         .fillMaxHeight()
                         .aspectRatio(1f / 1.414f)
-                        .shadow(6.dp, RoundedCornerShape(4.dp))
+                        .shadow(4.dp, RoundedCornerShape(4.dp))
                         .clip(RoundedCornerShape(4.dp))
                         .clipToBounds()
                         .background(Color.White)
-                        .border(1.dp, Color(0xFFCBD5E1), RoundedCornerShape(4.dp)),
+                        .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.18f), RoundedCornerShape(4.dp)),
                     contentAlignment = Alignment.Center
                 ) {
                     val bitmap = thumbnailBitmap
@@ -121,45 +118,14 @@ fun TemplateCard(
                         )
                     }
                 }
-
-                // Category Badge Overlay
-                Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)),
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(8.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(5.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(8.dp)
-                                .clip(CircleShape)
-                                .background(previewPrimaryColor)
-                        )
-                        Text(
-                            text = meta.category.displayName,
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                fontSize = 10.sp
-                            )
-                        )
-                    }
-                }
             }
 
-            // Structured Details & Info Footer Section
+            // Clean Details & Color Palette Header
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(14.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -169,7 +135,7 @@ fun TemplateCard(
                     // Template Name
                     Text(
                         text = meta.name,
-                        style = MaterialTheme.typography.titleMedium.copy(
+                        style = MaterialTheme.typography.titleSmall.copy(
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         ),
@@ -178,76 +144,43 @@ fun TemplateCard(
                         modifier = Modifier.weight(1f)
                     )
 
-                    // Photo Capability Badge
-                    Surface(
-                        shape = RoundedCornerShape(6.dp),
-                        color = if (meta.supportsPhoto) {
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
-                        } else {
-                            MaterialTheme.colorScheme.surfaceVariant
-                        }
+                    Spacer(modifier = Modifier.width(6.dp))
+
+                    // Color Theme Indicator Dots
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(3.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Icon(
-                                imageVector = if (meta.supportsPhoto) Icons.Default.PhotoCamera else Icons.Outlined.DoNotDisturb,
-                                contentDescription = null,
-                                tint = if (meta.supportsPhoto) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(12.dp)
-                            )
-                            Text(
-                                text = if (meta.supportsPhoto) "Photo Layout" else "ATS Text Only",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (meta.supportsPhoto) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            )
-                        }
-                    }
-                }
-
-                // Description & Palette Indicators
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = meta.description,
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 12.sp,
-                            lineHeight = 16.sp
-                        ),
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         Box(
                             modifier = Modifier
-                                .size(14.dp)
+                                .size(11.dp)
                                 .clip(CircleShape)
                                 .background(previewPrimaryColor)
-                                .border(1.dp, Color.White, CircleShape)
+                                .border(1.dp, MaterialTheme.colorScheme.surface, CircleShape)
                         )
                         Box(
                             modifier = Modifier
-                                .size(14.dp)
+                                .size(11.dp)
                                 .clip(CircleShape)
                                 .background(previewAccentColor)
-                                .border(1.dp, Color.White, CircleShape)
+                                .border(1.dp, MaterialTheme.colorScheme.surface, CircleShape)
                         )
                     }
                 }
+
+                // Short Description
+                Text(
+                    text = meta.description,
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 11.sp,
+                        lineHeight = 15.sp
+                    ),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
         }
     }
 }
+

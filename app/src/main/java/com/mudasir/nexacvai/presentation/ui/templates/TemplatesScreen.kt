@@ -125,18 +125,18 @@ fun TemplatesScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             val configuration = androidx.compose.ui.platform.LocalConfiguration.current
-            val gridColumnCount = if (configuration.screenWidthDp < 600) 1 else 2
+            val gridColumnCount = if (configuration.screenWidthDp < 600) 2 else if (configuration.screenWidthDp < 900) 3 else 4
 
             // Templates Grid View
             if (state.isLoading) {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(gridColumnCount),
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
+                    contentPadding = PaddingValues(14.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(4) {
+                    items(6) {
                         TemplateCardSkeleton()
                     }
                 }
@@ -156,7 +156,7 @@ fun TemplatesScreen(
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(gridColumnCount),
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
+                    contentPadding = PaddingValues(14.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {

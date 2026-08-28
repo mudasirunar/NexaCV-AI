@@ -12,7 +12,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -23,17 +22,17 @@ fun TemplateCardSkeleton(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
-            // Document Studio Workbench Box (Matches TemplateCard 260.dp height)
+            // Document Studio Workbench Box (Matches TemplateCard 220.dp height)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(260.dp)
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f))
-                    .padding(12.dp),
+                    .height(220.dp)
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
+                    .padding(10.dp),
                 contentAlignment = Alignment.Center
             ) {
                 // Real A4 Paper Document Sheet Skeleton
@@ -46,14 +45,14 @@ fun TemplateCardSkeleton(
                 )
             }
 
-            // Structured Details & Info Footer Section (Matches TemplateCard padding)
+            // Clean Details & Color Palette Header
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(14.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                // Name & Badge Shimmer Line
+                // Name & Color Dots Shimmer Line
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -61,64 +60,52 @@ fun TemplateCardSkeleton(
                 ) {
                     Box(
                         modifier = Modifier
-                            .fillMaxWidth(0.55f)
-                            .height(18.dp)
+                            .fillMaxWidth(0.6f)
+                            .height(16.dp)
                             .clip(RoundedCornerShape(4.dp))
                             .shimmerEffect()
                     )
-                    Box(
-                        modifier = Modifier
-                            .width(80.dp)
-                            .height(18.dp)
-                            .clip(RoundedCornerShape(6.dp))
-                            .shimmerEffect()
-                    )
-                }
 
-                // Description & Palette Shimmer Line
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    Spacer(modifier = Modifier.width(6.dp))
+
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(3.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Box(
                             modifier = Modifier
-                                .fillMaxWidth(0.9f)
-                                .height(10.dp)
-                                .clip(RoundedCornerShape(3.dp))
-                                .shimmerEffect()
-                        )
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth(0.6f)
-                                .height(10.dp)
-                                .clip(RoundedCornerShape(3.dp))
-                                .shimmerEffect()
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Box(
-                            modifier = Modifier
-                                .size(14.dp)
+                                .size(11.dp)
                                 .clip(CircleShape)
                                 .shimmerEffect()
                         )
                         Box(
                             modifier = Modifier
-                                .size(14.dp)
+                                .size(11.dp)
                                 .clip(CircleShape)
                                 .shimmerEffect()
                         )
                     }
+                }
+
+                // Description Shimmer Lines
+                Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(0.95f)
+                            .height(10.dp)
+                            .clip(RoundedCornerShape(3.dp))
+                            .shimmerEffect()
+                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(0.65f)
+                            .height(10.dp)
+                            .clip(RoundedCornerShape(3.dp))
+                            .shimmerEffect()
+                    )
                 }
             }
         }
     }
 }
+
