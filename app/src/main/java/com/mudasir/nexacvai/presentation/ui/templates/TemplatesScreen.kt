@@ -20,6 +20,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -77,10 +78,18 @@ fun TemplatesScreen(
         }
     }
 
-    // Smoothly scroll back to top when search query or filter category changes
+    // Track previous search/filter states to only scroll to top when actively changed, preserving scroll position on navigation
+    var previousQuery by rememberSaveable { mutableStateOf(state.searchQuery) }
+    var previousCategory by rememberSaveable { mutableStateOf(state.selectedCategory.name) }
+
     LaunchedEffect(state.searchQuery, state.selectedCategory) {
-        if (state.filteredTemplates.isNotEmpty()) {
-            gridState.scrollToItem(0)
+        val currentCategoryName = state.selectedCategory.name
+        if (state.searchQuery != previousQuery || currentCategoryName != previousCategory) {
+            previousQuery = state.searchQuery
+            previousCategory = currentCategoryName
+            if (state.filteredTemplates.isNotEmpty()) {
+                gridState.scrollToItem(0)
+            }
         }
     }
 
