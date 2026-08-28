@@ -131,7 +131,19 @@ fun TemplatesScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             val configuration = androidx.compose.ui.platform.LocalConfiguration.current
-            val gridColumnCount = if (configuration.screenWidthDp < 600) 2 else if (configuration.screenWidthDp < 900) 3 else 4
+            val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+            val isTabletOrFoldableUnfolded = configuration.smallestScreenWidthDp >= 580 || configuration.screenWidthDp >= 580
+
+            // Responsive grid column span matrix:
+            // - Phone / Folded Closed (Portrait): 2 cards
+            // - Phone / Folded Closed (Landscape): 3 cards
+            // - Tablet / Foldable Unfolded (Portrait): 3 cards
+            // - Tablet / Foldable Unfolded (Landscape): 4 cards
+            val gridColumnCount = when {
+                isTabletOrFoldableUnfolded -> if (isLandscape) 4 else 3
+                isLandscape -> 3
+                else -> 2
+            }
 
             // Templates Grid View
             if (state.isLoading) {
