@@ -1,7 +1,10 @@
 package com.mudasir.nexacvai.presentation.ui.templates.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mudasir.nexacvai.core.pdf.PdfGeneratorEngine
+import com.mudasir.nexacvai.core.pdf.TemplateThumbnailGenerator
 import com.mudasir.nexacvai.core.result.AppResult
 import com.mudasir.nexacvai.domain.model.UserProfile
 import com.mudasir.nexacvai.domain.model.template.*
@@ -9,6 +12,8 @@ import com.mudasir.nexacvai.domain.repository.TemplateRepository
 import com.mudasir.nexacvai.domain.repository.UserProfileRepository
 import com.mudasir.nexacvai.presentation.ui.templates.TemplatesState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -16,8 +21,10 @@ import javax.inject.Inject
 
 @HiltViewModel
 class TemplatesViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val templateRepository: TemplateRepository,
-    private val profileRepository: UserProfileRepository
+    private val profileRepository: UserProfileRepository,
+    private val pdfEngine: PdfGeneratorEngine
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(TemplatesState(isLoading = true))
@@ -41,7 +48,7 @@ class TemplatesViewModel @Inject constructor(
             _state.value = _state.value.copy(isLoading = true, errorMessage = null)
 
             val templatesResult = templateRepository.getAllTemplates()
-            val profiles = profileRepository.getAllProfiles().first()
+            val profiles = profileRepository.getAllProfiles().firstOrNull() ?: emptyList()
 
             val templates = if (templatesResult is AppResult.Success) templatesResult.data else emptyList()
 
@@ -51,6 +58,13 @@ class TemplatesViewModel @Inject constructor(
                 filteredTemplates = filterTemplates(templates, _state.value.selectedCategory, _state.value.searchQuery),
                 profiles = profiles
             )
+
+            // Warm up real PDF thumbnail cache in background
+            viewModelScope.launch(Dispatchers.IO) {
+                templates.forEach { template ->
+                    TemplateThumbnailGenerator.generateThumbnail(context, pdfEngine, template)
+                }
+            }
         }
     }
 

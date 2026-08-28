@@ -1,7 +1,9 @@
 package com.mudasir.nexacvai.presentation.ui.templates.components
 
+import android.graphics.Bitmap
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -21,15 +23,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.mudasir.nexacvai.core.pdf.PdfGeneratorEngine
+import com.mudasir.nexacvai.core.pdf.TemplateThumbnailGenerator
 import com.mudasir.nexacvai.domain.model.template.ResumeTemplate
-import com.mudasir.nexacvai.domain.model.template.TemplateData
-import com.mudasir.nexacvai.domain.model.template.TemplateStyle
 
 @Composable
 fun TemplateCard(
@@ -37,6 +41,14 @@ fun TemplateCard(
     onSelectTemplate: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    val pdfEngine = remember(context) { PdfGeneratorEngine(context) }
+    var thumbnailBitmap by remember(template.metadata.id) { mutableStateOf<Bitmap?>(null) }
+
+    LaunchedEffect(template.metadata.id) {
+        thumbnailBitmap = TemplateThumbnailGenerator.generateThumbnail(context, pdfEngine, template)
+    }
+
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(if (isPressed) 0.98f else 1f, label = "templateCardScale")
@@ -81,37 +93,31 @@ fun TemplateCard(
                     .padding(12.dp),
                 contentAlignment = Alignment.Center
             ) {
-                // Real A4 Paper Document Sheet (Aspect Ratio ~1 : 1.414)
+                // Real A4 Paper Document Sheet (Aspect Ratio 1 : 1.414)
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth(0.92f)
-                        .height(236.dp)
+                        .fillMaxHeight()
+                        .aspectRatio(1f / 1.414f)
                         .shadow(6.dp, RoundedCornerShape(4.dp))
                         .clip(RoundedCornerShape(4.dp))
                         .clipToBounds()
                         .background(Color.White)
-                        .border(1.dp, Color(0xFFCBD5E1), RoundedCornerShape(4.dp))
+                        .border(1.dp, Color(0xFFCBD5E1), RoundedCornerShape(4.dp)),
+                    contentAlignment = Alignment.Center
                 ) {
-                    // Scaled Real PDF Document Layout Canvas
-                    Box(
-                        modifier = Modifier
-                            .width(360.dp)
-                            .height(510.dp)
-                            .graphicsLayer(
-                                scaleX = 0.54f,
-                                scaleY = 0.54f,
-                                transformOrigin = TransformOrigin(0f, 0f)
-                            )
-                    ) {
-                        template.Render(
-                            data = TemplateData.SAMPLE_FILLER,
-                            style = TemplateStyle(
-                                primaryColor = previewPrimaryColor,
-                                accentColor = previewAccentColor,
-                                showPhoto = meta.supportsPhoto,
-                                photoShape = meta.defaultPhotoShape
-                            ),
+                    val bitmap = thumbnailBitmap
+                    if (bitmap != null) {
+                        Image(
+                            bitmap = bitmap.asImageBitmap(),
+                            contentDescription = "${meta.name} preview",
+                            contentScale = ContentScale.FillBounds,
                             modifier = Modifier.fillMaxSize()
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .shimmerEffect()
                         )
                     }
                 }

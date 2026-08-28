@@ -6,6 +6,7 @@ import com.mudasir.nexacvai.core.pdf.renderers.*
 import com.mudasir.nexacvai.domain.model.template.ResumeTemplate
 import com.mudasir.nexacvai.domain.model.template.TemplateData
 import com.mudasir.nexacvai.domain.model.template.TemplateStyle
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -20,7 +21,7 @@ import javax.inject.Singleton
  */
 @Singleton
 class PdfGeneratorEngine @Inject constructor(
-    private val context: Context
+    @ApplicationContext private val context: Context
 ) {
     companion object {
         const val A4_WIDTH_PT = 595
