@@ -31,6 +31,7 @@ import com.mudasir.nexacvai.core.pdf.PdfGeneratorEngine
 import com.mudasir.nexacvai.domain.model.template.TemplateData
 import com.mudasir.nexacvai.domain.model.template.TemplateStyle
 import com.mudasir.nexacvai.presentation.ui.components.PdfDocumentViewer
+import com.mudasir.nexacvai.presentation.ui.templates.components.FavoriteStarButton
 import com.mudasir.nexacvai.presentation.ui.templates.components.shimmerEffect
 import com.mudasir.nexacvai.presentation.ui.templates.viewmodel.TemplatesViewModel
 import com.mudasir.nexacvai.ui.theme.getPdfCanvasBgColor
@@ -161,15 +162,22 @@ fun TemplatePreviewScreen(
                     )
                 },
                 actions = {
-                    meta?.let {
+                    meta?.let { currentMeta ->
+                        val isFav = state.favoriteTemplateIds.contains(currentMeta.id)
+                        FavoriteStarButton(
+                            isFavorite = isFav,
+                            onToggleFavorite = { viewModel.toggleFavorite(currentMeta.id) },
+                            modifier = Modifier.padding(end = 4.dp)
+                        )
+
                         val confirmInteractionSource = remember { MutableInteractionSource() }
                         val confirmPressed by confirmInteractionSource.collectIsPressedAsState()
                         val confirmScale by animateFloatAsState(if (confirmPressed) 0.96f else 1f, label = "createBtnScale")
 
                         Button(
                             onClick = {
-                                Toast.makeText(context, "Selected ${it.name}", Toast.LENGTH_SHORT).show()
-                                onConfirmCreateCv(it.id, null)
+                                Toast.makeText(context, "Selected ${currentMeta.name}", Toast.LENGTH_SHORT).show()
+                                onConfirmCreateCv(currentMeta.id, null)
                             },
                             interactionSource = confirmInteractionSource,
                             shape = RoundedCornerShape(10.dp),
@@ -179,7 +187,7 @@ fun TemplatePreviewScreen(
                                 .padding(end = 8.dp)
                         ) {
                             Text(
-                                text = "Use Template",
+                                text = "Use",
                                 style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold)
                             )
                         }

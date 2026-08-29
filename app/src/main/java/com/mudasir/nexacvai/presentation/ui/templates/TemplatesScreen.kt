@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
@@ -21,6 +22,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -52,11 +54,38 @@ fun TemplatesScreen(
         }
     }
 
-    // Scroll state & responsive collapsible header controller
-    val gridState = rememberLazyGridState()
+    // Independent persistent scroll state allocated per category & responsive collapsible header controller
+    val categoryGridStates = rememberSaveable(
+        saver = Saver(
+            save = { map ->
+                map.map { (category, state) ->
+                    "${category.name}:${state.firstVisibleItemIndex}:${state.firstVisibleItemScrollOffset}"
+                }
+            },
+            restore = { list ->
+                val restored = mutableMapOf<TemplateCategory, LazyGridState>()
+                for (category in TemplateCategory.entries) {
+                    val entry = list.find { it.startsWith("${category.name}:") }
+                    if (entry != null) {
+                        val parts = entry.split(":")
+                        val index = parts.getOrNull(1)?.toIntOrNull() ?: 0
+                        val offset = parts.getOrNull(2)?.toIntOrNull() ?: 0
+                        restored[category] = LazyGridState(index, offset)
+                    } else {
+                        restored[category] = LazyGridState()
+                    }
+                }
+                restored
+            }
+        )
+    ) {
+        TemplateCategory.entries.associateWith { LazyGridState() }.toMutableMap()
+    }
+
+    val gridState = categoryGridStates[state.selectedCategory] ?: rememberLazyGridState()
     val filterChipRowState = rememberSaveable(saver = LazyListState.Saver) { LazyListState() }
     var isHeaderVisible by remember { mutableStateOf(true) }
-    val nestedScrollConnection = remember {
+    val nestedScrollConnection = remember(gridState) {
         object : NestedScrollConnection {
             override fun onPostScroll(
                 consumed: Offset,
@@ -76,22 +105,19 @@ fun TemplatesScreen(
     }
 
     // Ensure header is always visible when at the very top of the list or on search/category change
-    LaunchedEffect(gridState.canScrollBackward, gridState.firstVisibleItemIndex, gridState.firstVisibleItemScrollOffset, state.searchQuery, state.selectedCategory) {
+    LaunchedEffect(gridState, gridState.canScrollBackward, gridState.firstVisibleItemIndex, gridState.firstVisibleItemScrollOffset) {
         if (!gridState.canScrollBackward || (gridState.firstVisibleItemIndex == 0 && gridState.firstVisibleItemScrollOffset <= 12)) {
             isHeaderVisible = true
         }
     }
 
-    // Track previous search/filter states to only scroll to top when actively changed, preserving scroll position on navigation
+    // Reset scroll to top ONLY when user searches, keeping filter chips and favorites purely persistent
     var previousQuery by rememberSaveable { mutableStateOf(state.searchQuery) }
-    var previousCategory by rememberSaveable { mutableStateOf(state.selectedCategory.name) }
 
-    LaunchedEffect(state.searchQuery, state.selectedCategory) {
-        val currentCategoryName = state.selectedCategory.name
-        if (state.searchQuery != previousQuery || currentCategoryName != previousCategory) {
+    LaunchedEffect(state.searchQuery) {
+        if (state.searchQuery != previousQuery) {
             previousQuery = state.searchQuery
-            previousCategory = currentCategoryName
-            if (state.filteredTemplates.isNotEmpty()) {
+            if (state.searchQuery.isNotBlank() && state.filteredTemplates.isNotEmpty()) {
                 gridState.scrollToItem(0)
             }
         }
@@ -199,12 +225,17 @@ fun TemplatesScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(state.filteredTemplates, key = { it.metadata.id }) { template ->
+                    items(state.filteredTemplates, key = { "${state.selectedCategory.name}_${it.metadata.id}" }) { template ->
+                        val templateId = template.metadata.id
+                        val isFav = state.favoriteTemplateIds.contains(templateId)
                         TemplateCard(
                             template = template,
-                            isFlipped = state.flippedTemplateIds.contains(template.metadata.id),
-                            onToggleFlip = { viewModel.toggleTemplateFlip(template.metadata.id) },
-                            onSelectTemplate = { onOpenTemplatePreview(template.metadata.id) }
+                            isFlipped = state.flippedTemplateIds.contains(templateId),
+                            isFavorite = isFav,
+                            onToggleFlip = { viewModel.toggleTemplateFlip(templateId, state.selectedCategory) },
+                            onToggleFavorite = { viewModel.toggleFavorite(templateId) },
+                            onAddFavorite = { viewModel.addFavorite(templateId) },
+                            onSelectTemplate = { onOpenTemplatePreview(templateId) }
                         )
                     }
                 }

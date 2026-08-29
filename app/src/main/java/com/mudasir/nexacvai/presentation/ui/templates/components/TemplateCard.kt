@@ -1,6 +1,7 @@
 package com.mudasir.nexacvai.presentation.ui.templates.components
 
 import android.graphics.Bitmap
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -47,7 +48,10 @@ fun TemplateCard(
     onSelectTemplate: () -> Unit,
     modifier: Modifier = Modifier,
     isFlipped: Boolean = false,
-    onToggleFlip: () -> Unit = {}
+    isFavorite: Boolean = false,
+    onToggleFlip: () -> Unit = {},
+    onToggleFavorite: () -> Unit = {},
+    onAddFavorite: () -> Unit = {}
 ) {
     val meta = template.metadata
     val context = LocalContext.current
@@ -66,18 +70,34 @@ fun TemplateCard(
     val isPressed by interactionSource.collectIsPressedAsState()
     val pressScale by animateFloatAsState(if (isPressed) 0.98f else 1f, label = "templateCardPressScale")
 
-    // Smooth Organic 3D Flip Rotation
-    val rotation by animateFloatAsState(
-        targetValue = if (isFlipped) 180f else 0f,
-        animationSpec = spring(
-            dampingRatio = 0.85f,
-            stiffness = 420f
-        ),
-        label = "cardFlipRotation"
-    )
+    // Robust navigation click debounce preventing rapid double-launches
+    var lastClickTime by remember { mutableLongStateOf(0L) }
+    val debouncedSelectTemplate = {
+        val now = System.currentTimeMillis()
+        if (now - lastClickTime >= 500L) {
+            lastClickTime = now
+            onSelectTemplate()
+        }
+    }
+
+    // Smooth Organic 3D Flip Rotation (Instant initial position, animations only when explicitly triggered by user)
+    val rotation = remember { Animatable(if (isFlipped) 180f else 0f) }
+
+    LaunchedEffect(isFlipped) {
+        val target = if (isFlipped) 180f else 0f
+        if (rotation.value != target) {
+            rotation.animateTo(
+                targetValue = target,
+                animationSpec = spring(
+                    dampingRatio = 0.85f,
+                    stiffness = 420f
+                )
+            )
+        }
+    }
 
     // Derived front-facing state: Only triggers recomposition ONCE at 90-degree crossing
-    val isFrontFacing by remember { derivedStateOf { rotation <= 90f } }
+    val isFrontFacing by remember { derivedStateOf { rotation.value <= 90f } }
 
     val previewPrimaryColor = remember(meta.previewPrimaryColorHex) {
         try {
@@ -99,13 +119,14 @@ fun TemplateCard(
             .fillMaxWidth()
             .height(280.dp)
             .graphicsLayer {
-                val rad = Math.toRadians(rotation.toDouble())
+                val currentRot = rotation.value
+                val rad = Math.toRadians(currentRot.toDouble())
                 // Subtle 3.5% 3D depth lift at the 90-deg apex for natural physical perspective
                 val midLift = 1f + 0.035f * kotlin.math.sin(rad).toFloat()
 
                 // When front-facing (0..90 deg): rotate 0..90 deg
                 // When back-facing (90..180 deg): rotate -90..0 deg so back content is normal and rest at 0 deg!
-                rotationY = if (rotation <= 90f) rotation else rotation - 180f
+                rotationY = if (currentRot <= 90f) currentRot else currentRot - 180f
                 cameraDistance = 16f * density
                 scaleX = pressScale * midLift
                 scaleY = pressScale * midLift
@@ -117,7 +138,13 @@ fun TemplateCard(
                     if (isFlipped) {
                         onToggleFlip()
                     } else {
-                        onSelectTemplate()
+                        debouncedSelectTemplate()
+                    }
+                },
+                onDoubleClick = {
+                    // Double-tap on front toggles favorite state (fav <-> unfav)
+                    if (!isFlipped) {
+                        onToggleFavorite()
                     }
                 },
                 onLongClick = {
@@ -169,6 +196,16 @@ fun TemplateCard(
                             )
                         }
                     }
+
+                    // Floating Bottom-Right Glassmorphism Favorite Star Pill
+                    FavoriteStarButton(
+                        isFavorite = isFavorite,
+                        onToggleFavorite = onToggleFavorite,
+                        hasGlassmorphismBackground = true,
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(4.dp)
+                    )
                 }
 
                 // Front Footer: Left Column (Title) & Right Column (Info Icon + Color Dots)
@@ -334,36 +371,50 @@ fun TemplateCard(
                     }
                 }
 
-                // Bottom Action CTA Button
-                Surface(
-                    onClick = onSelectTemplate,
-                    shape = RoundedCornerShape(10.dp),
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)),
-                    modifier = Modifier.fillMaxWidth()
+                // Bottom Action CTA Row (Preview Button + Favorite Button)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
+                    Surface(
+                        onClick = debouncedSelectTemplate,
+                        shape = RoundedCornerShape(10.dp),
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)),
+                        modifier = Modifier.weight(1f)
                     ) {
-                        Text(
-                            text = "Open Preview",
-                            style = MaterialTheme.typography.labelMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Preview",
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
                             )
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(14.dp)
-                        )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(14.dp)
+                            )
+                        }
                     }
+
+                    FavoriteStarButton(
+                        isFavorite = isFavorite,
+                        onToggleFavorite = onToggleFavorite,
+                        hasGlassmorphismBackground = true,
+                        size = 36.dp,
+                        iconSize = 20.dp
+                    )
                 }
             }
         }

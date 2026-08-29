@@ -1,11 +1,16 @@
 package com.mudasir.nexacvai.templatetests
 
 import com.mudasir.nexacvai.core.result.AppResult
+import com.mudasir.nexacvai.data.local.dao.FavoriteTemplateDao
+import com.mudasir.nexacvai.data.local.entity.FavoriteTemplateEntity
 import com.mudasir.nexacvai.data.parser.ExternalTemplateParser
 import com.mudasir.nexacvai.data.repository.TemplateRepositoryImpl
 import com.mudasir.nexacvai.domain.model.UserProfile
 import com.mudasir.nexacvai.domain.model.template.TemplateCategory
 import com.mudasir.nexacvai.domain.model.template.toTemplateData
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
 import org.junit.Before
@@ -14,12 +19,42 @@ import org.junit.Test
 class TemplateRepositoryTest {
 
     private lateinit var parser: ExternalTemplateParser
+    private lateinit var fakeFavoriteDao: FakeFavoriteTemplateDao
     private lateinit var repository: TemplateRepositoryImpl
+
+    private class FakeFavoriteTemplateDao : FavoriteTemplateDao {
+        private val favoritesFlow = MutableStateFlow<List<String>>(emptyList())
+
+        override fun getFavoriteTemplateIds(): Flow<List<String>> = favoritesFlow
+
+        override suspend fun isFavorite(templateId: String): Boolean {
+            return favoritesFlow.value.contains(templateId)
+        }
+
+        override suspend fun addFavorite(entity: FavoriteTemplateEntity) {
+            val current = favoritesFlow.value.toMutableList()
+            if (!current.contains(entity.templateId)) {
+                current.add(0, entity.templateId)
+                favoritesFlow.value = current
+            }
+        }
+
+        override suspend fun removeFavorite(templateId: String) {
+            val current = favoritesFlow.value.toMutableList()
+            current.remove(templateId)
+            favoritesFlow.value = current
+        }
+
+        override suspend fun clearAllFavorites() {
+            favoritesFlow.value = emptyList()
+        }
+    }
 
     @Before
     fun setUp() {
         parser = ExternalTemplateParser()
-        repository = TemplateRepositoryImpl(parser)
+        fakeFavoriteDao = FakeFavoriteTemplateDao()
+        repository = TemplateRepositoryImpl(parser, fakeFavoriteDao)
     }
 
     @Test
@@ -73,6 +108,28 @@ class TemplateRepositoryTest {
         val allResult = repository.getAllTemplates()
         val allTemplates = (allResult as AppResult.Success).data
         assertTrue(allTemplates.any { it.metadata.id == "custom_dark_template" })
+    }
+
+    @Test
+    fun favoriteOperations_toggleAndPersistCorrectly() = runTest {
+        val templateId = "template_modern_wavy"
+
+        assertFalse(repository.isFavorite(templateId))
+
+        // Toggle ON
+        val toggleResult = repository.toggleFavorite(templateId)
+        assertTrue(toggleResult is AppResult.Success)
+        assertTrue((toggleResult as AppResult.Success).data)
+        assertTrue(repository.isFavorite(templateId))
+
+        val favorites = repository.getFavoriteTemplateIds().first()
+        assertTrue(favorites.contains(templateId))
+
+        // Toggle OFF
+        val toggleOffResult = repository.toggleFavorite(templateId)
+        assertTrue(toggleOffResult is AppResult.Success)
+        assertFalse((toggleOffResult as AppResult.Success).data)
+        assertFalse(repository.isFavorite(templateId))
     }
 
     @Test

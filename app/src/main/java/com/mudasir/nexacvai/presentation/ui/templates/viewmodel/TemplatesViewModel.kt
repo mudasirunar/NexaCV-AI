@@ -33,12 +33,38 @@ class TemplatesViewModel @Inject constructor(
     init {
         loadData()
         observeProfiles()
+        observeFavorites()
     }
 
     private fun observeProfiles() {
         profileRepository.getAllProfiles()
             .onEach { profiles ->
                 _state.value = _state.value.copy(profiles = profiles)
+            }
+            .launchIn(viewModelScope)
+    }
+
+    private fun observeFavorites() {
+        templateRepository.getFavoriteTemplateIds()
+            .onEach { favorites ->
+                val favFlipped = _state.value.flippedTemplateIdsByCategory[TemplateCategory.FAVORITES] ?: emptySet()
+                val cleanedFavFlipped = favFlipped.intersect(favorites)
+                val updatedFlippedMap = if (favFlipped != cleanedFavFlipped) {
+                    _state.value.flippedTemplateIdsByCategory + (TemplateCategory.FAVORITES to cleanedFavFlipped)
+                } else {
+                    _state.value.flippedTemplateIdsByCategory
+                }
+
+                _state.value = _state.value.copy(
+                    favoriteTemplateIds = favorites,
+                    flippedTemplateIdsByCategory = updatedFlippedMap,
+                    filteredTemplates = filterTemplates(
+                        templates = _state.value.templates,
+                        category = _state.value.selectedCategory,
+                        query = _state.value.searchQuery,
+                        favorites = favorites
+                    )
+                )
             }
             .launchIn(viewModelScope)
     }
@@ -83,21 +109,29 @@ class TemplatesViewModel @Inject constructor(
     }
 
     fun toggleFavorite(templateId: String) {
-        val currentFavorites = _state.value.favoriteTemplateIds
-        val updatedFavorites = if (currentFavorites.contains(templateId)) {
-            currentFavorites - templateId
-        } else {
-            currentFavorites + templateId
-        }
-        _state.value = _state.value.copy(
-            favoriteTemplateIds = updatedFavorites,
-            filteredTemplates = filterTemplates(
-                templates = _state.value.templates,
-                category = _state.value.selectedCategory,
-                query = _state.value.searchQuery,
-                favorites = updatedFavorites
+        val favFlipped = _state.value.flippedTemplateIdsByCategory[TemplateCategory.FAVORITES] ?: emptySet()
+        if (favFlipped.contains(templateId)) {
+            val updatedFavFlipped = favFlipped - templateId
+            _state.value = _state.value.copy(
+                flippedTemplateIdsByCategory = _state.value.flippedTemplateIdsByCategory + (TemplateCategory.FAVORITES to updatedFavFlipped)
             )
-        )
+        }
+        viewModelScope.launch {
+            templateRepository.toggleFavorite(templateId)
+        }
+    }
+
+    fun addFavorite(templateId: String) {
+        val favFlipped = _state.value.flippedTemplateIdsByCategory[TemplateCategory.FAVORITES] ?: emptySet()
+        if (favFlipped.contains(templateId)) {
+            val updatedFavFlipped = favFlipped - templateId
+            _state.value = _state.value.copy(
+                flippedTemplateIdsByCategory = _state.value.flippedTemplateIdsByCategory + (TemplateCategory.FAVORITES to updatedFavFlipped)
+            )
+        }
+        viewModelScope.launch {
+            templateRepository.addFavorite(templateId)
+        }
     }
 
     fun selectProfileForInjection(profile: UserProfile?) {
@@ -116,19 +150,21 @@ class TemplatesViewModel @Inject constructor(
         _state.value = _state.value.copy(showPhotoInTemplate = showPhoto)
     }
 
-    fun toggleTemplateFlip(templateId: String) {
-        val currentFlipped = _state.value.flippedTemplateIds
-        val updated = if (currentFlipped.contains(templateId)) {
-            currentFlipped - templateId
+    fun toggleTemplateFlip(templateId: String, category: TemplateCategory = _state.value.selectedCategory) {
+        val currentFlippedForCat = _state.value.flippedTemplateIdsByCategory[category] ?: emptySet()
+        val updatedForCat = if (currentFlippedForCat.contains(templateId)) {
+            currentFlippedForCat - templateId
         } else {
-            currentFlipped + templateId
+            currentFlippedForCat + templateId
         }
-        _state.value = _state.value.copy(flippedTemplateIds = updated)
+        _state.value = _state.value.copy(
+            flippedTemplateIdsByCategory = _state.value.flippedTemplateIdsByCategory + (category to updatedForCat)
+        )
     }
 
     fun resetFlippedTemplates() {
-        if (_state.value.flippedTemplateIds.isNotEmpty()) {
-            _state.value = _state.value.copy(flippedTemplateIds = emptySet())
+        if (_state.value.flippedTemplateIdsByCategory.isNotEmpty()) {
+            _state.value = _state.value.copy(flippedTemplateIdsByCategory = emptyMap())
         }
     }
 
@@ -140,7 +176,7 @@ class TemplatesViewModel @Inject constructor(
         _state.value = _state.value.copy(selectedTemplateForDetail = null)
     }
 
-    fun importCustomTemplate(jsonSchema: String) {
+    fun importTemplate(jsonSchema: String) {
         viewModelScope.launch {
             when (val result = templateRepository.importTemplateFromJson(jsonSchema)) {
                 is AppResult.Success -> {
@@ -249,37 +285,28 @@ class TemplatesViewModel @Inject constructor(
     }
 
     private fun resolveColorKeywords(primaryHex: String, accentHex: String): List<String> {
-        val hexes = listOf(primaryHex.uppercase(), accentHex.uppercase())
         val keywords = mutableListOf<String>()
+        val combined = "$primaryHex $accentHex".uppercase()
 
-        for (hex in hexes) {
-            when {
-                hex.contains("1E293B") || hex.contains("0F172A") || hex.contains("334155") || hex.contains("374151") -> {
-                    keywords.addAll(listOf("slate", "dark", "charcoal", "gray", "black", "minimal"))
-                }
-                hex.contains("1E1B4B") || hex.contains("312E81") || hex.contains("4338CA") -> {
-                    keywords.addAll(listOf("navy", "indigo", "dark blue", "midnight", "executive"))
-                }
-                hex.contains("0284C7") || hex.contains("0369A1") || hex.contains("2563EB") || hex.contains("38BDF8") || hex.contains("0EA5E9") || hex.contains("3B82F6") -> {
-                    keywords.addAll(listOf("blue", "sky blue", "cyan", "azure", "ocean", "tech"))
-                }
-                hex.contains("0D9488") || hex.contains("14B8A6") || hex.contains("2DD4BF") -> {
-                    keywords.addAll(listOf("teal", "cyan", "turquoise", "aqua", "cyber"))
-                }
-                hex.contains("059669") || hex.contains("10B981") -> {
-                    keywords.addAll(listOf("green", "emerald", "mint", "healthcare"))
-                }
-                hex.contains("4F46E5") || hex.contains("6366F1") || hex.contains("9333EA") || hex.contains("A855F7") -> {
-                    keywords.addAll(listOf("purple", "violet", "indigo", "lavender", "creative"))
-                }
-                hex.contains("E11D48") || hex.contains("F43F5E") -> {
-                    keywords.addAll(listOf("rose", "red", "crimson", "coral", "pink", "creative"))
-                }
-                hex.contains("B45309") || hex.contains("D97706") || hex.contains("F59E0B") -> {
-                    keywords.addAll(listOf("gold", "amber", "yellow", "orange", "bronze", "warm", "banking"))
-                }
-            }
+        if (combined.contains("2563EB") || combined.contains("3B82F6") || combined.contains("0284C7") || combined.contains("0369A1")) {
+            keywords.addAll(listOf("blue", "ocean", "azure", "navy", "sky", "corporate"))
         }
-        return keywords.distinct()
+        if (combined.contains("1E1B4B") || combined.contains("0F172A") || combined.contains("1E293B") || combined.contains("334155") || combined.contains("374151")) {
+            keywords.addAll(listOf("dark", "slate", "black", "navy", "midnight", "formal", "executive"))
+        }
+        if (combined.contains("0D9488") || combined.contains("14B8A6") || combined.contains("2DD4BF") || combined.contains("059669") || combined.contains("10B981")) {
+            keywords.addAll(listOf("green", "teal", "emerald", "cyan", "mint", "medical"))
+        }
+        if (combined.contains("9333EA") || combined.contains("A855F7") || combined.contains("4F46E5") || combined.contains("6366F1")) {
+            keywords.addAll(listOf("purple", "violet", "indigo", "creative", "studio"))
+        }
+        if (combined.contains("E11D48") || combined.contains("F43F5E")) {
+            keywords.addAll(listOf("red", "rose", "coral", "pink", "vibrant"))
+        }
+        if (combined.contains("D97706") || combined.contains("F59E0B") || combined.contains("B45309")) {
+            keywords.addAll(listOf("amber", "gold", "orange", "yellow", "artisan", "warm"))
+        }
+
+        return keywords
     }
 }

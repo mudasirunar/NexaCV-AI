@@ -20,7 +20,10 @@ data class TemplatesState(
     val selectedTemplateForDetail: ResumeTemplate? = null,
     val showPhotoInTemplate: Boolean = true,
     val isInjectingProfile: Boolean = false,
-    val flippedTemplateIds: Set<String> = emptySet(),
+    val flippedTemplateIdsByCategory: Map<TemplateCategory, Set<String>> = emptyMap(),
     val favoriteTemplateIds: Set<String> = emptySet(),
     val errorMessage: String? = null
-)
+) {
+    val flippedTemplateIds: Set<String>
+        get() = flippedTemplateIdsByCategory[selectedCategory] ?: emptySet()
+}

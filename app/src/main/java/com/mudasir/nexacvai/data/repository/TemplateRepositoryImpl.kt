@@ -1,21 +1,27 @@
 package com.mudasir.nexacvai.data.repository
 
 import com.mudasir.nexacvai.core.result.AppResult
+import com.mudasir.nexacvai.core.result.ErrorType
+import com.mudasir.nexacvai.data.local.dao.FavoriteTemplateDao
+import com.mudasir.nexacvai.data.local.entity.FavoriteTemplateEntity
 import com.mudasir.nexacvai.data.parser.ExternalTemplateParser
 import com.mudasir.nexacvai.data.templates.BuiltInTemplatesCatalog
 import com.mudasir.nexacvai.domain.model.template.ResumeTemplate
 import com.mudasir.nexacvai.domain.model.template.TemplateCategory
 import com.mudasir.nexacvai.domain.repository.TemplateRepository
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
  * Concrete implementation of [TemplateRepository].
- * Manages built-in templates and user-imported custom JSON templates.
+ * Manages built-in templates, user-imported custom JSON templates, and Room-backed favorite states.
  */
 @Singleton
 class TemplateRepositoryImpl @Inject constructor(
-    private val externalTemplateParser: ExternalTemplateParser
+    private val externalTemplateParser: ExternalTemplateParser,
+    private val favoriteTemplateDao: FavoriteTemplateDao
 ) : TemplateRepository {
 
     private val customTemplates = mutableListOf<ResumeTemplate>()
@@ -29,7 +35,7 @@ class TemplateRepositoryImpl @Inject constructor(
             val all = builtInTemplates + customTemplates
             AppResult.Success(all)
         } catch (e: Exception) {
-            AppResult.Error(e, com.mudasir.nexacvai.core.result.ErrorType.UNKNOWN)
+            AppResult.Error(e, ErrorType.UNKNOWN)
         }
     }
 
@@ -44,7 +50,7 @@ class TemplateRepositoryImpl @Inject constructor(
             }
             AppResult.Success(filtered)
         } catch (e: Exception) {
-            AppResult.Error(e, com.mudasir.nexacvai.core.result.ErrorType.UNKNOWN)
+            AppResult.Error(e, ErrorType.UNKNOWN)
         }
     }
 
@@ -54,11 +60,11 @@ class TemplateRepositoryImpl @Inject constructor(
             val found = all.find { it.metadata.id == templateId }
                 ?: return AppResult.Error(
                     IllegalArgumentException("Template not found: $templateId"),
-                    com.mudasir.nexacvai.core.result.ErrorType.NOT_FOUND
+                    ErrorType.NOT_FOUND
                 )
             AppResult.Success(found)
         } catch (e: Exception) {
-            AppResult.Error(e, com.mudasir.nexacvai.core.result.ErrorType.UNKNOWN)
+            AppResult.Error(e, ErrorType.UNKNOWN)
         }
     }
 
@@ -68,7 +74,48 @@ class TemplateRepositoryImpl @Inject constructor(
             customTemplates.add(0, parsedTemplate)
             AppResult.Success(parsedTemplate)
         } catch (e: Exception) {
-            AppResult.Error(e, com.mudasir.nexacvai.core.result.ErrorType.VALIDATION)
+            AppResult.Error(e, ErrorType.VALIDATION)
+        }
+    }
+
+    override fun getFavoriteTemplateIds(): Flow<Set<String>> {
+        return favoriteTemplateDao.getFavoriteTemplateIds().map { it.toSet() }
+    }
+
+    override suspend fun isFavorite(templateId: String): Boolean {
+        return favoriteTemplateDao.isFavorite(templateId)
+    }
+
+    override suspend fun toggleFavorite(templateId: String): AppResult<Boolean> {
+        return try {
+            val exists = favoriteTemplateDao.isFavorite(templateId)
+            if (exists) {
+                favoriteTemplateDao.removeFavorite(templateId)
+                AppResult.Success(false)
+            } else {
+                favoriteTemplateDao.addFavorite(FavoriteTemplateEntity(templateId = templateId))
+                AppResult.Success(true)
+            }
+        } catch (e: Exception) {
+            AppResult.Error(e, ErrorType.DATABASE)
+        }
+    }
+
+    override suspend fun addFavorite(templateId: String): AppResult<Unit> {
+        return try {
+            favoriteTemplateDao.addFavorite(FavoriteTemplateEntity(templateId = templateId))
+            AppResult.Success(Unit)
+        } catch (e: Exception) {
+            AppResult.Error(e, ErrorType.DATABASE)
+        }
+    }
+
+    override suspend fun removeFavorite(templateId: String): AppResult<Unit> {
+        return try {
+            favoriteTemplateDao.removeFavorite(templateId)
+            AppResult.Success(Unit)
+        } catch (e: Exception) {
+            AppResult.Error(e, ErrorType.DATABASE)
         }
     }
 }

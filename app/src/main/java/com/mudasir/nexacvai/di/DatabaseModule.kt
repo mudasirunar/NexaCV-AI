@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.mudasir.nexacvai.data.local.NexaCVDatabase
 import com.mudasir.nexacvai.data.local.dao.CVGenerationDao
+import com.mudasir.nexacvai.data.local.dao.FavoriteTemplateDao
 import com.mudasir.nexacvai.data.local.dao.TemplateDao
 import com.mudasir.nexacvai.data.local.dao.UserProfileDao
 import dagger.Module
@@ -62,5 +63,10 @@ object DatabaseModule {
     @Provides
     fun provideTemplateDao(db: NexaCVDatabase): TemplateDao {
         return db.templateDao
+    }
+
+    @Provides
+    fun provideFavoriteTemplateDao(db: NexaCVDatabase): FavoriteTemplateDao {
+        return db.favoriteTemplateDao
     }
 }
