@@ -1,11 +1,13 @@
 package com.mudasir.nexacvai.presentation.ui.templates
 
+import androidx.compose.runtime.Immutable
 import com.mudasir.nexacvai.domain.model.UserProfile
 import com.mudasir.nexacvai.domain.model.template.*
 
 /**
  * UI state for the Templates Showcase & Selection Screen.
  */
+@Immutable
 data class TemplatesState(
     val isLoading: Boolean = false,
     val templates: List<ResumeTemplate> = emptyList(),

@@ -31,6 +31,12 @@ class TemplateThumbnailGenerator @Inject constructor(
     companion object {
         private val memoryCache = LruCache<String, Bitmap>(32)
 
+        fun getThumbnailFromMemory(templateId: String, primaryColorHex: String): Bitmap? {
+            val cleanPrimaryHex = primaryColorHex.removePrefix("#")
+            val cacheKey = "thumb_${templateId}_$cleanPrimaryHex"
+            return memoryCache.get(cacheKey)
+        }
+
         suspend fun generateThumbnail(
             context: Context,
             pdfEngine: PdfGeneratorEngine,

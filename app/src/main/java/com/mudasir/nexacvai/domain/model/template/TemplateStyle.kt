@@ -1,10 +1,12 @@
 package com.mudasir.nexacvai.domain.model.template
 
+import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 
 /**
  * Visual shape options for profile photo frames across different resume templates.
  */
+@Immutable
 enum class PhotoShape {
     CIRCLE,          // Executive & classic round avatar
     ROUNDED_SQUARE,  // Modern tech rounded rectangle
@@ -14,6 +16,7 @@ enum class PhotoShape {
 /**
  * Visual styling configuration for a rendered template instance.
  */
+@Immutable
 data class TemplateStyle(
     val primaryColor: Color = Color(0xFF1E3A8A),      // Deep Navy
     val accentColor: Color = Color(0xFF3B82F6),       // Vibrant Blue

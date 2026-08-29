@@ -3,6 +3,7 @@ package com.mudasir.nexacvai.presentation.ui.templates.components
 import android.graphics.Bitmap
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -48,26 +49,36 @@ fun TemplateCard(
     isFlipped: Boolean = false,
     onToggleFlip: () -> Unit = {}
 ) {
+    val meta = template.metadata
     val context = LocalContext.current
-    val pdfEngine = remember(context) { PdfGeneratorEngine(context) }
-    var thumbnailBitmap by remember(template.metadata.id) { mutableStateOf<Bitmap?>(null) }
+    var thumbnailBitmap by remember(meta.id, meta.previewPrimaryColorHex) {
+        mutableStateOf(TemplateThumbnailGenerator.getThumbnailFromMemory(meta.id, meta.previewPrimaryColorHex))
+    }
 
-    LaunchedEffect(template.metadata.id) {
-        thumbnailBitmap = TemplateThumbnailGenerator.generateThumbnail(context, pdfEngine, template)
+    LaunchedEffect(meta.id, meta.previewPrimaryColorHex) {
+        if (thumbnailBitmap == null) {
+            val pdfEngine = PdfGeneratorEngine(context)
+            thumbnailBitmap = TemplateThumbnailGenerator.generateThumbnail(context, pdfEngine, template)
+        }
     }
 
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val pressScale by animateFloatAsState(if (isPressed) 0.98f else 1f, label = "templateCardPressScale")
 
-    // Smooth 3D Flip Rotation
+    // Smooth Organic 3D Flip Rotation
     val rotation by animateFloatAsState(
         targetValue = if (isFlipped) 180f else 0f,
-        animationSpec = tween(durationMillis = 380, easing = FastOutSlowInEasing),
+        animationSpec = spring(
+            dampingRatio = 0.85f,
+            stiffness = 420f
+        ),
         label = "cardFlipRotation"
     )
 
-    val meta = template.metadata
+    // Derived front-facing state: Only triggers recomposition ONCE at 90-degree crossing
+    val isFrontFacing by remember { derivedStateOf { rotation <= 90f } }
+
     val previewPrimaryColor = remember(meta.previewPrimaryColorHex) {
         try {
             Color(android.graphics.Color.parseColor(meta.previewPrimaryColorHex))
@@ -88,10 +99,16 @@ fun TemplateCard(
             .fillMaxWidth()
             .height(280.dp)
             .graphicsLayer {
-                rotationY = rotation
-                cameraDistance = 14f * density
-                scaleX = pressScale
-                scaleY = pressScale
+                val rad = Math.toRadians(rotation.toDouble())
+                // Subtle 3.5% 3D depth lift at the 90-deg apex for natural physical perspective
+                val midLift = 1f + 0.035f * kotlin.math.sin(rad).toFloat()
+
+                // When front-facing (0..90 deg): rotate 0..90 deg
+                // When back-facing (90..180 deg): rotate -90..0 deg so back content is normal and rest at 0 deg!
+                rotationY = if (rotation <= 90f) rotation else rotation - 180f
+                cameraDistance = 16f * density
+                scaleX = pressScale * midLift
+                scaleY = pressScale * midLift
             }
             .combinedClickable(
                 interactionSource = interactionSource,
@@ -112,7 +129,7 @@ fun TemplateCard(
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        if (rotation <= 90f) {
+        if (isFrontFacing) {
             // FRONT OF CARD
             Column(modifier = Modifier.fillMaxSize()) {
                 // Document Studio Workbench Box
@@ -223,11 +240,10 @@ fun TemplateCard(
                 }
             }
         } else {
-            // BACK OF CARD (Flipped State - counter-rotate by 180 to read normally)
+            // BACK OF CARD (Flipped State - Clean 2D Layout with 0 extra graphicsLayer nesting)
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .graphicsLayer { rotationY = 180f }
                     .background(MaterialTheme.colorScheme.surface)
                     .padding(14.dp),
                 verticalArrangement = Arrangement.SpaceBetween

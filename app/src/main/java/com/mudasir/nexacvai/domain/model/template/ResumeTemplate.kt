@@ -1,12 +1,14 @@
 package com.mudasir.nexacvai.domain.model.template
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
 
 /**
  * Domain contract interface implemented by all built-in Jetpack Compose templates
  * and dynamic external template renderers.
  */
+@Stable
 interface ResumeTemplate {
     /** Metadata descriptor (id, name, category, supportsPhoto, isImported) */
     val metadata: TemplateMetadata

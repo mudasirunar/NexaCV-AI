@@ -1,8 +1,11 @@
 package com.mudasir.nexacvai.domain.model.template
 
+import androidx.compose.runtime.Immutable
+
 /**
  * Descriptor metadata for a CV template.
  */
+@Immutable
 data class TemplateMetadata(
     val id: String,
     val name: String,
