@@ -2,11 +2,13 @@ package com.mudasir.nexacvai.presentation.ui.templates
 
 import android.content.res.Configuration
 import androidx.compose.animation.*
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
@@ -154,7 +156,7 @@ fun TemplatesScreen(
                 },
                 title = {
                     Text(
-                        text = "CV Templates",
+                        text = "Templates",
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
@@ -237,7 +239,12 @@ fun TemplatesScreen(
                             onToggleFlip = { viewModel.toggleTemplateFlip(templateId, state.selectedCategory) },
                             onToggleFavorite = { viewModel.toggleFavorite(templateId) },
                             onAddFavorite = { viewModel.addFavorite(templateId) },
-                            onSelectTemplate = { onOpenTemplatePreview(templateId) }
+                            onSelectTemplate = { onOpenTemplatePreview(templateId) },
+                            modifier = Modifier.animateItem(
+                                fadeInSpec = tween(durationMillis = 240, easing = FastOutSlowInEasing),
+                                fadeOutSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing),
+                                placementSpec = tween(durationMillis = 280, easing = FastOutSlowInEasing)
+                            )
                         )
                     }
                 }
@@ -260,6 +267,11 @@ fun TemplatesScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(MaterialTheme.colorScheme.background.copy(alpha = 0.96f))
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = {} // Consume clicks in empty spaces of header to prevent pass-through
+                        )
                         .padding(top = 10.dp, bottom = 8.dp)
                 ) {
                     // Modern Search Bar
