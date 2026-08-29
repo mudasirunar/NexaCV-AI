@@ -74,7 +74,33 @@ fun TemplateCard(
 
     val interactionSource = remember { MutableInteractionSource() }
     val pressScale = remember { Animatable(1f) }
+    val favBurstScale = remember { Animatable(1f) }
     val coroutineScope = rememberCoroutineScope()
+    var previousFavorite by remember { mutableStateOf(isFavorite) }
+
+    LaunchedEffect(isFavorite) {
+        if (isFavorite && !previousFavorite) {
+            // Bouncy burst pop on whole card when favorited
+            favBurstScale.snapTo(1f)
+            favBurstScale.animateTo(
+                targetValue = 1.035f,
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessMedium
+                )
+            )
+            favBurstScale.animateTo(
+                targetValue = 1f,
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessLow
+                )
+            )
+        } else if (!isFavorite) {
+            favBurstScale.snapTo(1f)
+        }
+        previousFavorite = isFavorite
+    }
 
     val handleLongPress = {
         coroutineScope.launch {
@@ -159,8 +185,8 @@ fun TemplateCard(
                     // When back-facing (90..180 deg): rotate -90..0 deg so back content is normal and rest at 0 deg!
                     rotationY = if (currentRot <= 90f) currentRot else currentRot - 180f
                     cameraDistance = 16f * density
-                    scaleX = pressScale.value * midLift
-                    scaleY = pressScale.value * midLift
+                    scaleX = pressScale.value * favBurstScale.value * midLift
+                    scaleY = pressScale.value * favBurstScale.value * midLift
                 }
                 .combinedClickable(
                     interactionSource = interactionSource,
@@ -172,11 +198,7 @@ fun TemplateCard(
                             debouncedSelectTemplate()
                         }
                     },
-                    onDoubleClick = {
-                        if (!isFlipped) {
-                            onToggleFavorite()
-                        }
-                    },
+                    onDoubleClick = if (!isFlipped) onToggleFavorite else null,
                     onLongClick = handleLongPress
                 ),
         shape = RoundedCornerShape(16.dp),
