@@ -37,6 +37,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.mudasir.nexacvai.domain.model.template.TemplateCategory
 import com.mudasir.nexacvai.presentation.ui.templates.components.*
 import com.mudasir.nexacvai.presentation.ui.templates.viewmodel.TemplatesViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,6 +48,7 @@ fun TemplatesScreen(
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val state by viewModel.state.collectAsState()
+    val coroutineScope = rememberCoroutineScope()
 
     DisposableEffect(Unit) {
         onDispose {
@@ -284,7 +286,16 @@ fun TemplatesScreen(
                             val isSelected = state.selectedCategory == category
                             FilterChip(
                                 selected = isSelected,
-                                onClick = { viewModel.selectCategory(category) },
+                                onClick = {
+                                    if (isSelected) {
+                                        coroutineScope.launch {
+                                            isHeaderVisible = true
+                                            gridState.animateScrollToItem(0)
+                                        }
+                                    } else {
+                                        viewModel.selectCategory(category)
+                                    }
+                                },
                                 label = {
                                     Text(
                                         text = category.displayName,
