@@ -55,7 +55,7 @@ class TemplatesViewModel @Inject constructor(
             _state.value = _state.value.copy(
                 isLoading = false,
                 templates = templates,
-                filteredTemplates = filterTemplates(templates, _state.value.selectedCategory, _state.value.searchQuery),
+                filteredTemplates = filterTemplates(templates, _state.value.selectedCategory, _state.value.searchQuery, _state.value.favoriteTemplateIds),
                 profiles = profiles
             )
 
@@ -71,14 +71,32 @@ class TemplatesViewModel @Inject constructor(
     fun selectCategory(category: TemplateCategory) {
         _state.value = _state.value.copy(
             selectedCategory = category,
-            filteredTemplates = filterTemplates(_state.value.templates, category, _state.value.searchQuery)
+            filteredTemplates = filterTemplates(_state.value.templates, category, _state.value.searchQuery, _state.value.favoriteTemplateIds)
         )
     }
 
     fun updateSearchQuery(query: String) {
         _state.value = _state.value.copy(
             searchQuery = query,
-            filteredTemplates = filterTemplates(_state.value.templates, _state.value.selectedCategory, query)
+            filteredTemplates = filterTemplates(_state.value.templates, _state.value.selectedCategory, query, _state.value.favoriteTemplateIds)
+        )
+    }
+
+    fun toggleFavorite(templateId: String) {
+        val currentFavorites = _state.value.favoriteTemplateIds
+        val updatedFavorites = if (currentFavorites.contains(templateId)) {
+            currentFavorites - templateId
+        } else {
+            currentFavorites + templateId
+        }
+        _state.value = _state.value.copy(
+            favoriteTemplateIds = updatedFavorites,
+            filteredTemplates = filterTemplates(
+                templates = _state.value.templates,
+                category = _state.value.selectedCategory,
+                query = _state.value.searchQuery,
+                favorites = updatedFavorites
+            )
         )
     }
 
@@ -139,15 +157,17 @@ class TemplatesViewModel @Inject constructor(
     private fun filterTemplates(
         templates: List<ResumeTemplate>,
         category: TemplateCategory,
-        query: String
+        query: String,
+        favorites: Set<String> = emptySet()
     ): List<ResumeTemplate> {
         val trimmed = query.trim()
         val tokens = if (trimmed.isNotEmpty()) trimmed.lowercase().split("\\s+".toRegex()).filter { it.isNotBlank() } else emptyList()
 
-        val categoryFiltered = if (category == TemplateCategory.ALL) {
-            templates
-        } else {
-            templates.filter { it.metadata.category == category }
+        val categoryFiltered = when (category) {
+            TemplateCategory.ALL -> templates
+            TemplateCategory.FAVORITES -> templates.filter { favorites.contains(it.metadata.id) }
+            TemplateCategory.CUSTOM -> templates.filter { it.metadata.isImported || it.metadata.category == TemplateCategory.CUSTOM }
+            else -> templates.filter { it.metadata.category == category }
         }
 
         if (tokens.isEmpty()) {

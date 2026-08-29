@@ -8,6 +8,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -42,8 +43,8 @@ fun TemplatesScreen(
     onOpenTemplatePreview: (templateId: String) -> Unit = {},
     viewModel: TemplatesViewModel = hiltViewModel()
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     val state by viewModel.state.collectAsState()
-    var showImportDialog by remember { mutableStateOf(false) }
 
     DisposableEffect(Unit) {
         onDispose {
@@ -53,17 +54,20 @@ fun TemplatesScreen(
 
     // Scroll state & responsive collapsible header controller
     val gridState = rememberLazyGridState()
+    val filterChipRowState = rememberSaveable(saver = LazyListState.Saver) { LazyListState() }
     var isHeaderVisible by remember { mutableStateOf(true) }
-
     val nestedScrollConnection = remember {
         object : NestedScrollConnection {
-            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-                val delta = available.y
-                if (delta < -10f && isHeaderVisible) {
-                    // Scrolling down -> smoothly slide up floating header
+            override fun onPostScroll(
+                consumed: Offset,
+                available: Offset,
+                source: NestedScrollSource
+            ): Offset {
+                val delta = consumed.y
+                // Only hide if the list ACTUALLY moved down and has remaining content to scroll
+                if (delta < -8f && isHeaderVisible && gridState.canScrollForward) {
                     isHeaderVisible = false
-                } else if (delta > 10f && !isHeaderVisible) {
-                    // Scrolling up -> smoothly slide down floating header
+                } else if (delta > 8f && !isHeaderVisible) {
                     isHeaderVisible = true
                 }
                 return Offset.Zero
@@ -72,8 +76,8 @@ fun TemplatesScreen(
     }
 
     // Ensure header is always visible when at the very top of the list or on search/category change
-    LaunchedEffect(gridState.firstVisibleItemIndex, gridState.firstVisibleItemScrollOffset, state.searchQuery, state.selectedCategory) {
-        if (gridState.firstVisibleItemIndex == 0 && gridState.firstVisibleItemScrollOffset <= 12) {
+    LaunchedEffect(gridState.canScrollBackward, gridState.firstVisibleItemIndex, gridState.firstVisibleItemScrollOffset, state.searchQuery, state.selectedCategory) {
+        if (!gridState.canScrollBackward || (gridState.firstVisibleItemIndex == 0 && gridState.firstVisibleItemScrollOffset <= 12)) {
             isHeaderVisible = true
         }
     }
@@ -129,15 +133,6 @@ fun TemplatesScreen(
                         )
                     )
                 },
-                actions = {
-                    IconButton(onClick = { showImportDialog = true }) {
-                        Icon(
-                            imageVector = Icons.Default.FileDownload,
-                            contentDescription = "Import Custom Template",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
             )
         },
@@ -164,11 +159,35 @@ fun TemplatesScreen(
                     }
                 }
             } else if (state.filteredTemplates.isEmpty()) {
-                TemplateEmptySearchScreen(
-                    query = state.searchQuery,
-                    onClearSearchClick = { viewModel.updateSearchQuery("") },
-                    modifier = Modifier.padding(top = 110.dp)
-                )
+                if (state.searchQuery.isNotBlank()) {
+                    TemplateEmptySearchScreen(
+                        query = state.searchQuery,
+                        onClearSearchClick = { viewModel.updateSearchQuery("") },
+                        modifier = Modifier.padding(top = 108.dp)
+                    )
+                } else if (state.selectedCategory == TemplateCategory.FAVORITES) {
+                    TemplateEmptyFavoritesScreen(
+                        onExploreAllClick = { viewModel.selectCategory(TemplateCategory.ALL) },
+                        modifier = Modifier.padding(top = 108.dp)
+                    )
+                } else if (state.selectedCategory == TemplateCategory.CUSTOM) {
+                    TemplateEmptyCustomScreen(
+                        onCreateCustomClick = {
+                            android.widget.Toast.makeText(
+                                context,
+                                "Custom Template Studio is coming soon!",
+                                android.widget.Toast.LENGTH_SHORT
+                            ).show()
+                        },
+                        modifier = Modifier.padding(top = 108.dp)
+                    )
+                } else {
+                    TemplateEmptySearchScreen(
+                        query = state.searchQuery,
+                        onClearSearchClick = { viewModel.updateSearchQuery("") },
+                        modifier = Modifier.padding(top = 108.dp)
+                    )
+                }
             } else {
                 LazyVerticalGrid(
                     state = gridState,
@@ -225,11 +244,12 @@ fun TemplatesScreen(
 
                     // Category Filter Pills Row
                     LazyRow(
+                        state = filterChipRowState,
                         modifier = Modifier.fillMaxWidth(),
                         contentPadding = PaddingValues(horizontal = 16.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        items(TemplateCategory.entries.toTypedArray()) { category ->
+                        items(TemplateCategory.entries.toTypedArray(), key = { it.name }) { category ->
                             val isSelected = state.selectedCategory == category
                             FilterChip(
                                 selected = isSelected,
@@ -255,13 +275,5 @@ fun TemplatesScreen(
                 }
             }
         }
-    }
-
-    // Custom Template JSON Import Dialog
-    if (showImportDialog) {
-        CustomTemplateImportDialog(
-            onDismissRequest = { showImportDialog = false },
-            onImportJson = { json -> viewModel.importCustomTemplate(json) }
-        )
     }
 }

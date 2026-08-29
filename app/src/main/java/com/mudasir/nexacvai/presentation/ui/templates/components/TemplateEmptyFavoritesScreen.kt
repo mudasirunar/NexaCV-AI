@@ -3,43 +3,31 @@ package com.mudasir.nexacvai.presentation.ui.templates.components
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.airbnb.lottie.compose.LottieAnimation
-import com.airbnb.lottie.compose.LottieCompositionSpec
-import com.airbnb.lottie.compose.LottieConstants
-import com.airbnb.lottie.compose.animateLottieCompositionAsState
-import com.airbnb.lottie.compose.rememberLottieComposition
 import com.mudasir.nexacvai.R
 import com.mudasir.nexacvai.presentation.ui.components.NexaButton
 
 @Composable
-fun TemplateEmptySearchScreen(
-    query: String,
-    onClearSearchClick: () -> Unit,
+fun TemplateEmptyFavoritesScreen(
+    onExploreAllClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val composition by rememberLottieComposition(
-        LottieCompositionSpec.RawRes(R.raw.empty_search)
-    )
-    val progress by animateLottieCompositionAsState(
-        composition = composition,
-        iterations = LottieConstants.IterateForever
-    )
-
     BoxWithConstraints(
         modifier = modifier
             .fillMaxSize()
@@ -47,23 +35,23 @@ fun TemplateEmptySearchScreen(
         contentAlignment = Alignment.Center
     ) {
         val isCompact = maxHeight < 360.dp
-        val animSize by animateDpAsState(
-            targetValue = if (isCompact) 84.dp else 130.dp,
+        val iconSize by animateDpAsState(
+            targetValue = if (isCompact) 80.dp else 120.dp,
             animationSpec = spring(
                 dampingRatio = Spring.DampingRatioNoBouncy,
                 stiffness = Spring.StiffnessMediumLow
             ),
-            label = "emptySearchAnimSize"
+            label = "emptyFavIconSize"
         )
         val topSpacer by animateDpAsState(
-            targetValue = if (isCompact) 6.dp else 12.dp,
+            targetValue = if (isCompact) 8.dp else 14.dp,
             animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
-            label = "emptySearchTopSpacer"
+            label = "emptyFavTopSpacer"
         )
         val bottomSpacer by animateDpAsState(
-            targetValue = if (isCompact) 10.dp else 16.dp,
+            targetValue = if (isCompact) 10.dp else 18.dp,
             animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
-            label = "emptySearchBottomSpacer"
+            label = "emptyFavBottomSpacer"
         )
 
         Column(
@@ -74,32 +62,28 @@ fun TemplateEmptySearchScreen(
                 .padding(horizontal = 24.dp, vertical = 4.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            LottieAnimation(
-                composition = composition,
-                progress = { progress },
-                modifier = Modifier.size(animSize)
+            Image(
+                painter = painterResource(id = R.drawable.ic_empty_favorites),
+                contentDescription = "No Favorites",
+                modifier = Modifier.size(iconSize)
             )
 
             Spacer(modifier = Modifier.height(topSpacer))
 
             Text(
-                text = "No Templates Found",
+                text = "No Favorites Yet",
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Bold,
-                    fontSize = if (isCompact) 15.sp else 16.sp
+                    fontSize = if (isCompact) 15.sp else 17.sp
                 ),
                 color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(3.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
             Text(
-                text = if (query.isNotBlank()) {
-                    "No templates matched \"$query\". Try searching for a role, style, layout, or color."
-                } else {
-                    "Try searching for keywords like \"tech\", \"executive\", \"ATS\", or \"blue\"."
-                },
+                text = "Star or bookmark your preferred resume layouts to quickly access them in one place.",
                 style = MaterialTheme.typography.bodySmall.copy(
                     fontSize = if (isCompact) 12.sp else 13.sp,
                     lineHeight = if (isCompact) 16.sp else 18.sp
@@ -111,9 +95,9 @@ fun TemplateEmptySearchScreen(
             Spacer(modifier = Modifier.height(bottomSpacer))
 
             NexaButton(
-                onClick = onClearSearchClick,
-                text = "Clear Search",
-                icon = Icons.Default.Close,
+                onClick = onExploreAllClick,
+                text = "Explore All Templates",
+                icon = Icons.AutoMirrored.Filled.ArrowForward,
                 hasBorder = true,
                 fillOpacity = 0.12f
             )

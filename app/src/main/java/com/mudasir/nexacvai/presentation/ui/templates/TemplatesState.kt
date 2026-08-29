@@ -21,5 +21,6 @@ data class TemplatesState(
     val showPhotoInTemplate: Boolean = true,
     val isInjectingProfile: Boolean = false,
     val flippedTemplateIds: Set<String> = emptySet(),
+    val favoriteTemplateIds: Set<String> = emptySet(),
     val errorMessage: String? = null
 )

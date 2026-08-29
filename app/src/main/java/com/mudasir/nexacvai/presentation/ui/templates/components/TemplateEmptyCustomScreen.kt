@@ -3,43 +3,34 @@ package com.mudasir.nexacvai.presentation.ui.templates.components
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.outlined.Palette
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.airbnb.lottie.compose.LottieAnimation
-import com.airbnb.lottie.compose.LottieCompositionSpec
-import com.airbnb.lottie.compose.LottieConstants
-import com.airbnb.lottie.compose.animateLottieCompositionAsState
-import com.airbnb.lottie.compose.rememberLottieComposition
-import com.mudasir.nexacvai.R
 import com.mudasir.nexacvai.presentation.ui.components.NexaButton
 
 @Composable
-fun TemplateEmptySearchScreen(
-    query: String,
-    onClearSearchClick: () -> Unit,
+fun TemplateEmptyCustomScreen(
+    onCreateCustomClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val composition by rememberLottieComposition(
-        LottieCompositionSpec.RawRes(R.raw.empty_search)
-    )
-    val progress by animateLottieCompositionAsState(
-        composition = composition,
-        iterations = LottieConstants.IterateForever
-    )
-
     BoxWithConstraints(
         modifier = modifier
             .fillMaxSize()
@@ -47,23 +38,31 @@ fun TemplateEmptySearchScreen(
         contentAlignment = Alignment.Center
     ) {
         val isCompact = maxHeight < 360.dp
-        val animSize by animateDpAsState(
-            targetValue = if (isCompact) 84.dp else 130.dp,
+        val badgeSize by animateDpAsState(
+            targetValue = if (isCompact) 80.dp else 120.dp,
             animationSpec = spring(
                 dampingRatio = Spring.DampingRatioNoBouncy,
                 stiffness = Spring.StiffnessMediumLow
             ),
-            label = "emptySearchAnimSize"
+            label = "emptyCustomBadgeSize"
+        )
+        val iconSize by animateDpAsState(
+            targetValue = if (isCompact) 40.dp else 56.dp,
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioNoBouncy,
+                stiffness = Spring.StiffnessMediumLow
+            ),
+            label = "emptyCustomIconSize"
         )
         val topSpacer by animateDpAsState(
-            targetValue = if (isCompact) 6.dp else 12.dp,
+            targetValue = if (isCompact) 8.dp else 14.dp,
             animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
-            label = "emptySearchTopSpacer"
+            label = "emptyCustomTopSpacer"
         )
         val bottomSpacer by animateDpAsState(
-            targetValue = if (isCompact) 10.dp else 16.dp,
+            targetValue = if (isCompact) 10.dp else 18.dp,
             animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
-            label = "emptySearchBottomSpacer"
+            label = "emptyCustomBottomSpacer"
         )
 
         Column(
@@ -74,32 +73,38 @@ fun TemplateEmptySearchScreen(
                 .padding(horizontal = 24.dp, vertical = 4.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            LottieAnimation(
-                composition = composition,
-                progress = { progress },
-                modifier = Modifier.size(animSize)
-            )
+            Box(
+                modifier = Modifier
+                    .size(badgeSize)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
+                    .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f), CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Palette,
+                    contentDescription = "Custom Templates",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(iconSize)
+                )
+            }
 
             Spacer(modifier = Modifier.height(topSpacer))
 
             Text(
-                text = "No Templates Found",
+                text = "No Custom Templates Yet",
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Bold,
-                    fontSize = if (isCompact) 15.sp else 16.sp
+                    fontSize = if (isCompact) 15.sp else 17.sp
                 ),
                 color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(3.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
             Text(
-                text = if (query.isNotBlank()) {
-                    "No templates matched \"$query\". Try searching for a role, style, layout, or color."
-                } else {
-                    "Try searching for keywords like \"tech\", \"executive\", \"ATS\", or \"blue\"."
-                },
+                text = "Design personalized CV layouts with custom color palettes, or let AI generate a tailored style for you.",
                 style = MaterialTheme.typography.bodySmall.copy(
                     fontSize = if (isCompact) 12.sp else 13.sp,
                     lineHeight = if (isCompact) 16.sp else 18.sp
@@ -111,9 +116,9 @@ fun TemplateEmptySearchScreen(
             Spacer(modifier = Modifier.height(bottomSpacer))
 
             NexaButton(
-                onClick = onClearSearchClick,
-                text = "Clear Search",
-                icon = Icons.Default.Close,
+                onClick = onCreateCustomClick,
+                text = "Create Custom Template",
+                icon = Icons.Default.Add,
                 hasBorder = true,
                 fillOpacity = 0.12f
             )

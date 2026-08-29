@@ -36,10 +36,11 @@ class TemplateRepositoryImpl @Inject constructor(
     override suspend fun getTemplatesByCategory(category: TemplateCategory): AppResult<List<ResumeTemplate>> {
         return try {
             val all = builtInTemplates + customTemplates
-            val filtered = if (category == TemplateCategory.ALL) {
-                all
-            } else {
-                all.filter { it.metadata.category == category }
+            val filtered = when (category) {
+                TemplateCategory.ALL -> all
+                TemplateCategory.FAVORITES -> emptyList()
+                TemplateCategory.CUSTOM -> customTemplates + all.filter { it.metadata.isImported || it.metadata.category == TemplateCategory.CUSTOM }
+                else -> all.filter { it.metadata.category == category }
             }
             AppResult.Success(filtered)
         } catch (e: Exception) {

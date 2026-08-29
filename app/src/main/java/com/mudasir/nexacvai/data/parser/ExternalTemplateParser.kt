@@ -26,7 +26,7 @@ class ExternalTemplateParser @Inject constructor() {
         val category = try {
             TemplateCategory.valueOf(categoryName.uppercase())
         } catch (e: Exception) {
-            TemplateCategory.IMPORTED
+            TemplateCategory.CUSTOM
         }
 
         val metadata = TemplateMetadata(
