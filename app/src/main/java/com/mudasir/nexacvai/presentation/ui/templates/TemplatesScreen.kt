@@ -191,12 +191,12 @@ fun TemplatesScreen(
                     TemplateEmptySearchScreen(
                         query = state.searchQuery,
                         onClearSearchClick = { viewModel.updateSearchQuery("") },
-                        modifier = Modifier.padding(top = 108.dp)
+                        modifier = Modifier.padding(top = 126.dp)
                     )
                 } else if (state.selectedCategory == TemplateCategory.FAVORITES) {
                     TemplateEmptyFavoritesScreen(
                         onExploreAllClick = { viewModel.selectCategory(TemplateCategory.ALL) },
-                        modifier = Modifier.padding(top = 108.dp)
+                        modifier = Modifier.padding(top = 126.dp)
                     )
                 } else if (state.selectedCategory == TemplateCategory.CUSTOM) {
                     TemplateEmptyCustomScreen(
@@ -207,13 +207,13 @@ fun TemplatesScreen(
                                 android.widget.Toast.LENGTH_SHORT
                             ).show()
                         },
-                        modifier = Modifier.padding(top = 108.dp)
+                        modifier = Modifier.padding(top = 126.dp)
                     )
                 } else {
                     TemplateEmptySearchScreen(
                         query = state.searchQuery,
                         onClearSearchClick = { viewModel.updateSearchQuery("") },
-                        modifier = Modifier.padding(top = 108.dp)
+                        modifier = Modifier.padding(top = 126.dp)
                     )
                 }
             } else {
@@ -223,7 +223,7 @@ fun TemplatesScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .nestedScroll(nestedScrollConnection),
-                    contentPadding = PaddingValues(start = 14.dp, end = 14.dp, bottom = 14.dp, top = 116.dp),
+                    contentPadding = PaddingValues(start = 14.dp, end = 14.dp, bottom = 14.dp, top = 126.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
