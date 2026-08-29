@@ -3,6 +3,7 @@ package com.mudasir.nexacvai.presentation.ui.templates.components
 import android.graphics.Bitmap
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -12,11 +13,14 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.input.pointer.pointerInput
+import kotlinx.coroutines.launch
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Close
@@ -33,6 +37,8 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalViewConfiguration
+import androidx.compose.ui.platform.ViewConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -67,8 +73,25 @@ fun TemplateCard(
     }
 
     val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val pressScale by animateFloatAsState(if (isPressed) 0.98f else 1f, label = "templateCardPressScale")
+    val pressScale = remember { Animatable(1f) }
+    val coroutineScope = rememberCoroutineScope()
+
+    val handleLongPress = {
+        coroutineScope.launch {
+            pressScale.animateTo(
+                targetValue = 0.94f,
+                animationSpec = tween(durationMillis = 100, easing = FastOutSlowInEasing)
+            )
+            pressScale.animateTo(
+                targetValue = 1f,
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessLow
+                )
+            )
+        }
+        onToggleFlip()
+    }
 
     // Robust navigation click debounce preventing rapid double-launches
     var lastClickTime by remember { mutableLongStateOf(0L) }
@@ -114,43 +137,48 @@ fun TemplateCard(
         }
     }
 
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(280.dp)
-            .graphicsLayer {
-                val currentRot = rotation.value
-                val rad = Math.toRadians(currentRot.toDouble())
-                // Subtle 3.5% 3D depth lift at the 90-deg apex for natural physical perspective
-                val midLift = 1f + 0.035f * kotlin.math.sin(rad).toFloat()
+    val currentViewConfig = LocalViewConfiguration.current
+    val customViewConfig = remember(currentViewConfig) {
+        object : ViewConfiguration by currentViewConfig {
+            override val doubleTapTimeoutMillis: Long = 200L
+        }
+    }
 
-                // When front-facing (0..90 deg): rotate 0..90 deg
-                // When back-facing (90..180 deg): rotate -90..0 deg so back content is normal and rest at 0 deg!
-                rotationY = if (currentRot <= 90f) currentRot else currentRot - 180f
-                cameraDistance = 16f * density
-                scaleX = pressScale * midLift
-                scaleY = pressScale * midLift
-            }
-            .combinedClickable(
-                interactionSource = interactionSource,
-                indication = null,
-                onClick = {
-                    if (isFlipped) {
-                        onToggleFlip()
-                    } else {
-                        debouncedSelectTemplate()
-                    }
-                },
-                onDoubleClick = {
-                    // Double-tap on front toggles favorite state (fav <-> unfav)
-                    if (!isFlipped) {
-                        onToggleFavorite()
-                    }
-                },
-                onLongClick = {
-                    onToggleFlip()
+    CompositionLocalProvider(LocalViewConfiguration provides customViewConfig) {
+        Card(
+            modifier = modifier
+                .fillMaxWidth()
+                .height(280.dp)
+                .graphicsLayer {
+                    val currentRot = rotation.value
+                    val rad = Math.toRadians(currentRot.toDouble())
+                    // Subtle 3.5% 3D depth lift at the 90-deg apex for natural physical perspective
+                    val midLift = 1f + 0.035f * kotlin.math.sin(rad).toFloat()
+
+                    // When front-facing (0..90 deg): rotate 0..90 deg
+                    // When back-facing (90..180 deg): rotate -90..0 deg so back content is normal and rest at 0 deg!
+                    rotationY = if (currentRot <= 90f) currentRot else currentRot - 180f
+                    cameraDistance = 16f * density
+                    scaleX = pressScale.value * midLift
+                    scaleY = pressScale.value * midLift
                 }
-            ),
+                .combinedClickable(
+                    interactionSource = interactionSource,
+                    indication = null,
+                    onClick = {
+                        if (isFlipped) {
+                            onToggleFlip()
+                        } else {
+                            debouncedSelectTemplate()
+                        }
+                    },
+                    onDoubleClick = {
+                        if (!isFlipped) {
+                            onToggleFavorite()
+                        }
+                    },
+                    onLongClick = handleLongPress
+                ),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)),
@@ -419,4 +447,5 @@ fun TemplateCard(
             }
         }
     }
+}
 }
