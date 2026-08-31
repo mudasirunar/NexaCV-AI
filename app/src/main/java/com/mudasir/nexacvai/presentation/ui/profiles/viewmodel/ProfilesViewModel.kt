@@ -91,11 +91,16 @@ class ProfilesViewModel @Inject constructor(
             combine(
                 getAllProfilesUseCase(),
                 profileDeleteManager.pendingDeleteProfiles,
+                profileDeleteManager.committedDeletedIds,
                 appSettingsManager.profileSortOrderFlow,
                 searchQueryFlow
-            ) { allProfiles: List<UserProfile>, pendingDeletes: List<UserProfile>, sortOrder: ProfileSortOrder, query: String ->
+            ) { allProfiles: List<UserProfile>, pendingDeletes: List<UserProfile>, committedIds: Set<Long>, sortOrder: ProfileSortOrder, query: String ->
+                val allExistingIds = allProfiles.map { it.id }.toSet()
+                profileDeleteManager.cleanupCommittedDeletedIds(allExistingIds)
+
                 val pendingIds = pendingDeletes.map { it.id }.toSet()
-                val unDeleted = allProfiles.filter { it.id !in pendingIds }
+                val excludedIds = pendingIds + committedIds
+                val unDeleted = allProfiles.filter { it.id !in excludedIds }
                 val filtered = if (query.isBlank()) {
                     unDeleted
                 } else {

@@ -41,10 +41,23 @@ class ProfileDeleteManager @Inject constructor(
     private val _selectedProfileIds = MutableStateFlow<Set<Long>>(emptySet())
     val selectedProfileIds: StateFlow<Set<Long>> = _selectedProfileIds.asStateFlow()
 
+    private val _committedDeletedIds = MutableStateFlow<Set<Long>>(emptySet())
+    val committedDeletedIds: StateFlow<Set<Long>> = _committedDeletedIds.asStateFlow()
+
     private val _lastUndoneProfileId = MutableStateFlow<Long?>(null)
     val lastUndoneProfileId: StateFlow<Long?> = _lastUndoneProfileId.asStateFlow()
 
     private var autoCommitJob: Job? = null
+
+    fun cleanupCommittedDeletedIds(existingProfileIds: Set<Long>) {
+        val current = _committedDeletedIds.value
+        if (current.isNotEmpty()) {
+            val stillExisting = current.intersect(existingProfileIds)
+            if (stillExisting.size != current.size) {
+                _committedDeletedIds.value = stillExisting
+            }
+        }
+    }
 
     fun setFabVisible(visible: Boolean) {
         _isFabVisible.value = visible
@@ -128,14 +141,14 @@ class ProfileDeleteManager @Inject constructor(
 
         if (profilesToDelete.isNotEmpty()) {
             _isFabVisible.value = true
+            val deletingIds = profilesToDelete.map { it.id }.toSet()
+            _committedDeletedIds.value = _committedDeletedIds.value + deletingIds
+            _pendingDeleteProfiles.value = emptyList()
+            _pendingDeleteProfile.value = null
+
             scope.launch {
-                try {
-                    profilesToDelete.forEach { profile ->
-                        deleteProfileUseCase(profile)
-                    }
-                } finally {
-                    _pendingDeleteProfiles.value = emptyList()
-                    _pendingDeleteProfile.value = null
+                profilesToDelete.forEach { profile ->
+                    deleteProfileUseCase(profile)
                 }
             }
         }
