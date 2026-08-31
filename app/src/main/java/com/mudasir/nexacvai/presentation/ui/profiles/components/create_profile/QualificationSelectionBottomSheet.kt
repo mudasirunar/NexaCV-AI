@@ -47,6 +47,8 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
+import com.mudasir.nexacvai.presentation.ui.components.NexaBottomSheetDragHandle
+import com.mudasir.nexacvai.presentation.ui.components.NexaModalBottomSheet
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.compositionLocalOf
@@ -334,25 +336,15 @@ fun QualificationSelectionBottomSheet(
         }
     }
 
-    ModalBottomSheet(
+    NexaModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-        containerColor = MaterialTheme.colorScheme.surface,
         dragHandle = {
-            Box(
-                modifier = Modifier
-                    .padding(top = if (isLandscape) 6.dp else 12.dp, bottom = 4.dp)
-                    .width(36.dp)
-                    .height(4.dp)
-                    .clip(RoundedCornerShape(2.dp))
-                    .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f))
+            NexaBottomSheetDragHandle(
+                topPadding = if (isLandscape) 6.dp else 12.dp,
+                bottomPadding = 4.dp
             )
-        },
-        contentWindowInsets = { WindowInsets(0, 0, 0, 0) },
-        modifier = Modifier
-            .widthIn(max = 560.dp)
-            .fillMaxWidth()
+        }
     ) {
         val dialogView = LocalView.current
         val keyboardController = LocalSoftwareKeyboardController.current

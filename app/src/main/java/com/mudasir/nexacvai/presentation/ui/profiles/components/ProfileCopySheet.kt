@@ -17,6 +17,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mudasir.nexacvai.presentation.ui.components.NexaButton
+import com.mudasir.nexacvai.presentation.ui.components.NexaModalBottomSheet
 import com.mudasir.nexacvai.ui.theme.SheetIconSuccessGreen
 
 sealed interface ProfileCopySheetContent {
@@ -31,16 +32,8 @@ fun ProfileCopySheet(
     onViewProfile: () -> Unit,
     onDone: () -> Unit
 ) {
-    ModalBottomSheet(
-        onDismissRequest = onDone,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-        containerColor = MaterialTheme.colorScheme.surface,
-        dragHandle = {
-            BottomSheetDefaults.DragHandle(
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
-            )
-        }
+    NexaModalBottomSheet(
+        onDismissRequest = onDone
     ) {
         Column(
             modifier = Modifier

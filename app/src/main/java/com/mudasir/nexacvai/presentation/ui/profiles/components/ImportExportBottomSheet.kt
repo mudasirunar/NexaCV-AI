@@ -36,6 +36,7 @@ import com.mudasir.nexacvai.core.utils.NameUtils
 import com.mudasir.nexacvai.core.utils.ProfileImportExportHelper
 import com.mudasir.nexacvai.domain.model.UserProfile
 import com.mudasir.nexacvai.presentation.ui.components.NexaButton
+import com.mudasir.nexacvai.presentation.ui.components.NexaModalBottomSheet
 import com.mudasir.nexacvai.presentation.ui.profiles.viewmodel.DuplicateResolution
 import com.mudasir.nexacvai.ui.theme.AvatarColorPairs
 import com.mudasir.nexacvai.ui.theme.SheetIconSuccessGreen
@@ -83,27 +84,13 @@ fun ImportExportBottomSheet(
         }
     )
 
-    ModalBottomSheet(
+    NexaModalBottomSheet(
         onDismissRequest = {
             if (content !is ImportExportSheetContent.Importing) {
                 onDismiss()
             }
         },
-        sheetState = sheetState,
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-        containerColor = MaterialTheme.colorScheme.surface,
-        dragHandle = {
-            Box(
-                modifier = Modifier
-                    .padding(top = 12.dp, bottom = 4.dp)
-                    .width(32.dp)
-                    .height(4.dp)
-                    .clip(RoundedCornerShape(2.dp))
-                    .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
-            )
-        },
-        contentWindowInsets = { WindowInsets(0, 0, 0, 0) },
-        modifier = Modifier.widthIn(max = 520.dp)
+        sheetState = sheetState
     ) {
         val contentKey = remember(content) {
             when (content) {
