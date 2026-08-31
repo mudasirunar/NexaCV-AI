@@ -77,10 +77,16 @@ fun TemplateCard(
     val favBurstScale = remember { Animatable(1f) }
     val coroutineScope = rememberCoroutineScope()
     var previousFavorite by remember { mutableStateOf(isFavorite) }
+    var isFirstMount by remember { mutableStateOf(true) }
+
+    LaunchedEffect(Unit) {
+        kotlinx.coroutines.delay(200)
+        isFirstMount = false
+    }
 
     LaunchedEffect(isFavorite) {
-        if (isFavorite && !previousFavorite) {
-            // Bouncy burst pop on whole card when favorited
+        if (!isFirstMount && isFavorite && !previousFavorite) {
+            // Bouncy burst pop on whole card only when actively favorited by user
             favBurstScale.snapTo(1f)
             favBurstScale.animateTo(
                 targetValue = 1.035f,

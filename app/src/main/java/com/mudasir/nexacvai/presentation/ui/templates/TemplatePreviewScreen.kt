@@ -50,6 +50,7 @@ fun TemplatePreviewScreen(
 
     val template = remember(state.templates, templateId) {
         state.templates.find { it.metadata.id == templateId }
+            ?: com.mudasir.nexacvai.data.templates.BuiltInTemplatesCatalog.ALL_TEMPLATES.find { it.metadata.id == templateId }
     }
 
     val meta = template?.metadata

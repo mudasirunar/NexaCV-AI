@@ -45,10 +45,16 @@ fun FavoriteStarButton(
 ) {
     val scale = remember { Animatable(1f) }
     var previousFavorite by remember { mutableStateOf(isFavorite) }
+    var isFirstMount by remember { mutableStateOf(true) }
+
+    LaunchedEffect(Unit) {
+        kotlinx.coroutines.delay(200)
+        isFirstMount = false
+    }
 
     LaunchedEffect(isFavorite) {
-        if (isFavorite && !previousFavorite) {
-            // Transitioned to FAVORITED: Run spring burst pop animation
+        if (!isFirstMount && isFavorite && !previousFavorite) {
+            // Transitioned to FAVORITED by user action: Run spring burst pop animation
             scale.snapTo(1f)
             scale.animateTo(
                 targetValue = 1.38f,

@@ -31,7 +31,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 
 // Shared transition durations for consistent, snappy navigation feel
-private const val NAV_ANIM_DURATION = 180
+private const val NAV_SLIDE_DURATION = 240
+private const val NAV_FADE_DURATION = 180
 
 @Composable
 fun AppNavHost(
@@ -50,8 +51,8 @@ fun AppNavHost(
             enterTransition = {
                 val targetRoute = targetState.destination.route?.split("?")?.get(0)
                 if (!routeIndices.containsKey(targetRoute)) {
-                    slideInHorizontally(tween(NAV_ANIM_DURATION, easing = FastOutSlowInEasing)) { width -> width / 3 } +
-                            fadeIn(tween(NAV_ANIM_DURATION))
+                    slideInHorizontally(tween(NAV_SLIDE_DURATION, easing = FastOutSlowInEasing)) { width -> width } +
+                            fadeIn(tween(NAV_FADE_DURATION))
                 } else {
                     fadeIn(tween(120))
                 }
@@ -59,8 +60,8 @@ fun AppNavHost(
             exitTransition = {
                 val targetRoute = targetState.destination.route?.split("?")?.get(0)
                 if (!routeIndices.containsKey(targetRoute)) {
-                    slideOutHorizontally(tween(NAV_ANIM_DURATION, easing = FastOutSlowInEasing)) { width -> -width / 3 } +
-                            fadeOut(tween(NAV_ANIM_DURATION))
+                    slideOutHorizontally(tween(NAV_SLIDE_DURATION, easing = FastOutSlowInEasing)) { width -> -width / 4 } +
+                            fadeOut(tween(NAV_FADE_DURATION))
                 } else {
                     fadeOut(tween(120))
                 }
@@ -68,8 +69,8 @@ fun AppNavHost(
             popEnterTransition = {
                 val initialRoute = initialState.destination.route?.split("?")?.get(0)
                 if (!routeIndices.containsKey(initialRoute)) {
-                    slideInHorizontally(tween(NAV_ANIM_DURATION, easing = FastOutSlowInEasing)) { width -> -width / 3 } +
-                            fadeIn(tween(NAV_ANIM_DURATION))
+                    slideInHorizontally(tween(NAV_SLIDE_DURATION, easing = FastOutSlowInEasing)) { width -> -width / 4 } +
+                            fadeIn(tween(NAV_FADE_DURATION))
                 } else {
                     fadeIn(tween(120))
                 }
@@ -77,8 +78,8 @@ fun AppNavHost(
             popExitTransition = {
                 val initialRoute = initialState.destination.route?.split("?")?.get(0)
                 if (!routeIndices.containsKey(initialRoute)) {
-                    slideOutHorizontally(tween(NAV_ANIM_DURATION, easing = FastOutSlowInEasing)) { width -> width / 3 } +
-                            fadeOut(tween(NAV_ANIM_DURATION))
+                    slideOutHorizontally(tween(NAV_SLIDE_DURATION, easing = FastOutSlowInEasing)) { width -> width } +
+                            fadeOut(tween(NAV_FADE_DURATION))
                 } else {
                     fadeOut(tween(120))
                 }

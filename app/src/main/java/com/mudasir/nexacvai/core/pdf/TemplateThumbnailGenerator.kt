@@ -82,7 +82,7 @@ class TemplateThumbnailGenerator @Inject constructor(
                     template = template,
                     data = template.defaultData,
                     templateStyle = style,
-                    outputFileName = "thumb_temp_${meta.id}.pdf"
+                    outputFileName = "thumb_temp_${meta.id}_${System.nanoTime()}.pdf"
                 )
 
                 if (!tempPdf.exists() || tempPdf.length() == 0L) {

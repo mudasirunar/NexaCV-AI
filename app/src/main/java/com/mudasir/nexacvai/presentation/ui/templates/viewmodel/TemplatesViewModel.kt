@@ -27,7 +27,14 @@ class TemplatesViewModel @Inject constructor(
     private val pdfEngine: PdfGeneratorEngine
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(TemplatesState(isLoading = true))
+    private val initialTemplates = com.mudasir.nexacvai.data.templates.BuiltInTemplatesCatalog.ALL_TEMPLATES
+    private val _state = MutableStateFlow(
+        TemplatesState(
+            isLoading = false,
+            templates = initialTemplates,
+            filteredTemplates = initialTemplates
+        )
+    )
     val state: StateFlow<TemplatesState> = _state.asStateFlow()
 
     init {
@@ -71,12 +78,10 @@ class TemplatesViewModel @Inject constructor(
 
     fun loadData() {
         viewModelScope.launch {
-            _state.value = _state.value.copy(isLoading = true, errorMessage = null)
-
             val templatesResult = templateRepository.getAllTemplates()
             val profiles = profileRepository.getAllProfiles().firstOrNull() ?: emptyList()
 
-            val templates = if (templatesResult is AppResult.Success) templatesResult.data else emptyList()
+            val templates = if (templatesResult is AppResult.Success) templatesResult.data else _state.value.templates
 
             _state.value = _state.value.copy(
                 isLoading = false,
