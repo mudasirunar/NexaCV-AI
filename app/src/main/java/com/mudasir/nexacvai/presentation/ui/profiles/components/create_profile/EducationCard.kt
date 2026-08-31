@@ -8,7 +8,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.ArrowDropUp
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material3.*
@@ -22,6 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.PopupProperties
 import com.mudasir.nexacvai.domain.model.Education
 import com.mudasir.nexacvai.presentation.ui.components.NexaTextField
 import com.mudasir.nexacvai.presentation.ui.components.NexaDateTextField
@@ -44,11 +50,22 @@ fun EducationCard(
         mutableStateOf(education.startDate.count { it == '/' } == 2 || education.endDate.count { it == '/' } == 2)
     }
 
-    // Local DatePicker / MonthYear dialog visibility
+    // Local DatePicker / MonthYear / Sheet dialog visibility
+    var showQualificationSheet by rememberSaveable { mutableStateOf(false) }
     var showStartDatePicker by remember { mutableStateOf(false) }
     var showEndDatePicker by remember { mutableStateOf(false) }
     var showStartMonthYearPicker by remember { mutableStateOf(false) }
     var showEndMonthYearPicker by remember { mutableStateOf(false) }
+
+    if (showQualificationSheet) {
+        QualificationSelectionBottomSheet(
+            onSelectQualification = { selected ->
+                onUpdateEducation(education.copy(degree = selected))
+                showQualificationSheet = false
+            },
+            onDismiss = { showQualificationSheet = false }
+        )
+    }
 
     // Dialogs localized inside the card
     if (showStartDatePicker) {
@@ -173,8 +190,20 @@ fun EducationCard(
             NexaTextField(
                 value = education.degree,
                 onValueChange = { onUpdateEducation(education.copy(degree = it)) },
-                label = "Degree / Certificate*",
+                label = "Degree / Qualification*",
                 placeholder = "e.g. Bachelor of Science",
+                trailingIcon = {
+                    IconButton(
+                        onClick = { showQualificationSheet = true },
+                        modifier = Modifier.size(28.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowDropDown,
+                            contentDescription = "Select qualification preset",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                },
                 keyboardOptions = KeyboardOptions(
                     capitalization = KeyboardCapitalization.Words,
                     imeAction = ImeAction.Next
@@ -186,7 +215,7 @@ fun EducationCard(
             NexaTextField(
                 value = education.fieldOfStudy,
                 onValueChange = { onUpdateEducation(education.copy(fieldOfStudy = it)) },
-                label = "Field of Study",
+                label = "Field of Study / Major",
                 placeholder = "e.g. Computer Science",
                 keyboardOptions = KeyboardOptions(
                     capitalization = KeyboardCapitalization.Words,
@@ -199,7 +228,7 @@ fun EducationCard(
             NexaTextField(
                 value = education.instituteName,
                 onValueChange = { onUpdateEducation(education.copy(instituteName = it)) },
-                label = "School / Institute*",
+                label = "School / College / University*",
                 placeholder = "e.g. Stanford University",
                 keyboardOptions = KeyboardOptions(
                     capitalization = KeyboardCapitalization.Words,

@@ -37,6 +37,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.ui.platform.LocalView
+import android.view.ViewTreeObserver
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -228,11 +230,24 @@ fun CreateProfileScreen(
         )
     }
 
+    val currentView = LocalView.current
+    var hasWindowFocus by remember { mutableStateOf(currentView.hasWindowFocus()) }
+    DisposableEffect(currentView) {
+        val listener = ViewTreeObserver.OnWindowFocusChangeListener { focused ->
+            hasWindowFocus = focused
+        }
+        currentView.viewTreeObserver.addOnWindowFocusChangeListener(listener)
+        onDispose {
+            currentView.viewTreeObserver.removeOnWindowFocusChangeListener(listener)
+        }
+    }
+
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     val isLandscapePhone = isLandscape && configuration.smallestScreenWidthDp < 600
     val isImeVisible = WindowInsets.isImeVisible
- 
+    val isTypingOnScreen = isImeVisible && hasWindowFocus
+
     Scaffold(
         topBar = {
             Column(
@@ -241,7 +256,7 @@ fun CreateProfileScreen(
                     .animateContentSize(animationSpec = tween(250))
             ) {
                 AnimatedVisibility(
-                    visible = !(isLandscapePhone && isImeVisible),
+                    visible = !(isLandscapePhone && isTypingOnScreen),
                     enter = expandVertically(animationSpec = tween(250)) + fadeIn(tween(250)),
                     exit = shrinkVertically(animationSpec = tween(250)) + fadeOut(tween(250))
                 ) {
@@ -283,9 +298,11 @@ fun CreateProfileScreen(
         bottomBar = {
             Surface(
                 modifier = Modifier
-                    .imePadding()
                     .then(
-                        if (WindowInsets.isImeVisible) Modifier else Modifier.navigationBarsPadding()
+                        if (hasWindowFocus) Modifier.imePadding() else Modifier
+                    )
+                    .then(
+                        if (isTypingOnScreen) Modifier else Modifier.navigationBarsPadding()
                     ),
                 color = MaterialTheme.colorScheme.surface,
                 tonalElevation = 0.dp,
