@@ -54,9 +54,18 @@ class ViewProfileViewModel @Inject constructor(
         ) { profiles, exportFields, exportProgress, dupState ->
             val profile = profiles.find { it.id == profileId }
             if (profile != null) {
+                val liveSourceProfile = profile.sourceProfileId?.let { srcId ->
+                    profiles.find { it.id == srcId }
+                }
+                val liveSourceProfileName = liveSourceProfile?.fullName?.ifBlank { "Untitled Profile" }
+                    ?: profile.sourceProfileName
+                val isSourceProfileAlive = liveSourceProfile != null
+
                 ViewProfileState(
                     isLoading = false,
                     profile = profile,
+                    liveSourceProfileName = liveSourceProfileName,
+                    isSourceProfileAlive = isSourceProfileAlive,
                     exportingProfile = exportFields.first,
                     showExportConfirm = exportFields.second,
                     exportState = exportProgress.first,
@@ -73,7 +82,19 @@ class ViewProfileViewModel @Inject constructor(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = if (initialCachedProfile != null) {
-                ViewProfileState(isLoading = false, profile = initialCachedProfile)
+                val cachedProfiles = userProfileRepository.getCachedProfiles()
+                val liveSourceProfile = initialCachedProfile.sourceProfileId?.let { srcId ->
+                    cachedProfiles.find { it.id == srcId }
+                }
+                val cachedSourceProfileName = liveSourceProfile?.fullName?.ifBlank { "Untitled Profile" }
+                    ?: initialCachedProfile.sourceProfileName
+
+                ViewProfileState(
+                    isLoading = false,
+                    profile = initialCachedProfile,
+                    liveSourceProfileName = cachedSourceProfileName,
+                    isSourceProfileAlive = liveSourceProfile != null
+                )
             } else {
                 ViewProfileState(isLoading = true)
             }

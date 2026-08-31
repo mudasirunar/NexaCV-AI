@@ -81,6 +81,22 @@ class UserProfileRepositoryTest {
             }
         }
 
+        override suspend fun updateCopiedSourceProfileNames(sourceProfileId: Long, newName: String) {
+            val currentList = profilesFlow.value.toMutableList()
+            var modified = false
+            for (i in currentList.indices) {
+                if (currentList[i].profile.sourceProfileId == sourceProfileId) {
+                    currentList[i] = currentList[i].copy(
+                        profile = currentList[i].profile.copy(sourceProfileName = newName)
+                    )
+                    modified = true
+                }
+            }
+            if (modified) {
+                profilesFlow.value = currentList
+            }
+        }
+
         override suspend fun insertExperiences(experiences: List<ExperienceEntity>) {}
         override suspend fun insertProjects(projects: List<ProjectEntity>) {}
         override suspend fun insertEducations(educations: List<EducationEntity>) {}
@@ -158,5 +174,40 @@ class UserProfileRepositoryTest {
         repository.deleteProfile(testProfile)
         assertEquals(0, repository.getAllProfiles().first().size)
         assertNull(repository.getProfileById(3L))
+    }
+
+    @Test
+    fun updateProfile_updatesCopiedSourceProfileNames_inDatabase() = runTest {
+        val parentProfile = UserProfile(
+            id = 10L,
+            uuid = "uuid-parent",
+            fullName = "Original John",
+            professionalTitle = "Dev"
+        )
+        val childProfile = UserProfile(
+            id = 20L,
+            uuid = "uuid-child",
+            fullName = "Copied Profile",
+            professionalTitle = "Dev",
+            sourceProfileId = 10L,
+            sourceProfileName = "Original John"
+        )
+        repository.insertProfile(parentProfile)
+        repository.insertProfile(childProfile)
+
+        assertEquals("Original John", repository.getProfileById(20L)?.sourceProfileName)
+
+        // Rename the parent profile to "Lead Architect John"
+        val renamedParent = parentProfile.copy(fullName = "Lead Architect John")
+        repository.updateProfile(renamedParent)
+
+        // Verify child profile's sourceProfileName is updated in DB
+        val updatedChild = repository.getProfileById(20L)
+        assertEquals("Lead Architect John", updatedChild?.sourceProfileName)
+
+        // Even after deleting the parent, child retains the latest updated name
+        repository.deleteProfile(renamedParent)
+        val childAfterParentDeleted = repository.getProfileById(20L)
+        assertEquals("Lead Architect John", childAfterParentDeleted?.sourceProfileName)
     }
 }

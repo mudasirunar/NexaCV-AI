@@ -28,6 +28,9 @@ interface UserProfileDao {
     @Query("UPDATE user_profiles SET isCopyTagDismissed = 1 WHERE id = :profileId")
     suspend fun dismissCopyTag(profileId: Long)
 
+    @Query("UPDATE user_profiles SET sourceProfileName = :newName WHERE sourceProfileId = :sourceProfileId")
+    suspend fun updateCopiedSourceProfileNames(sourceProfileId: Long, newName: String)
+
     @Delete
     suspend fun deleteProfile(profile: UserProfileEntity)
 

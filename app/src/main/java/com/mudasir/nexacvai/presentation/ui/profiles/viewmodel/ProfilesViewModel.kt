@@ -104,7 +104,11 @@ class ProfilesViewModel @Inject constructor(
                 val filtered = if (query.isBlank()) {
                     unDeleted
                 } else {
-                    unDeleted.filter { it.matchesSearchQuery(query) }
+                    val profileMap = allProfiles.associateBy { it.id }
+                    unDeleted.filter { profile ->
+                        val liveSource = profile.sourceProfileId?.let { profileMap[it]?.fullName }
+                        profile.matchesSearchQuery(query, liveSource)
+                    }
                 }
                 val sorted = when (sortOrder) {
                     ProfileSortOrder.NEWEST_FIRST -> filtered.sortedByDescending { it.createdAt }

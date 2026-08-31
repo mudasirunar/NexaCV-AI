@@ -63,6 +63,9 @@ class UserProfileRepositoryImpl @Inject constructor(
     override suspend fun updateProfile(profile: UserProfile) = withContext(Dispatchers.IO) {
         dao.updateProfile(profile.toEntity())
         saveSubEntities(profile.id, profile)
+        if (profile.fullName.isNotBlank()) {
+            dao.updateCopiedSourceProfileNames(profile.id, profile.fullName)
+        }
     }
 
     override suspend fun dismissCopyTag(profileId: Long) = withContext(Dispatchers.IO) {

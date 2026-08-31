@@ -14,5 +14,7 @@ data class ViewProfileState(
     val exportError: String? = null,
     val duplicateState: DuplicateProgressState = DuplicateProgressState.Idle,
     val newlyDuplicatedProfileId: Long? = null,
-    val duplicatedProfileName: String = ""
+    val duplicatedProfileName: String = "",
+    val liveSourceProfileName: String? = null,
+    val isSourceProfileAlive: Boolean = false
 )

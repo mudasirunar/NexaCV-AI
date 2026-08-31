@@ -1,6 +1,6 @@
 package com.mudasir.nexacvai.domain.model
 
-fun UserProfile.matchesSearchQuery(query: String): Boolean {
+fun UserProfile.matchesSearchQuery(query: String, liveSourceProfileName: String? = null): Boolean {
     val trimmed = query.trim()
     if (trimmed.isEmpty()) return true
 
@@ -24,6 +24,7 @@ fun UserProfile.matchesSearchQuery(query: String): Boolean {
     if (hobbies.containsQuery()) return true
     if (volunteerWork.containsQuery()) return true
     if (awards.containsQuery()) return true
+    if (liveSourceProfileName.containsQuery()) return true
     if (sourceProfileName.containsQuery()) return true
 
     // Lists of primitives

@@ -48,6 +48,7 @@ fun ViewProfileScreen(
     val state by viewModel.state.collectAsState()
     val profile = state.profile
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showDeletedSourceDialog by remember { mutableStateOf(false) }
     var showFullScreenImage by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
@@ -476,8 +477,13 @@ fun ViewProfileScreen(
                             // 13. Profile Metadata & Activity Section (Creation, Update, Copy Source & Stats)
                             ProfileMetadataSection(
                                 profile = profile,
+                                sourceProfileNameOverride = state.liveSourceProfileName,
                                 onSourceProfileClick = { sourceId ->
-                                    navController.navigate("${Screen.ViewProfile.route}?profileId=$sourceId")
+                                    if (state.isSourceProfileAlive) {
+                                        navController.navigate("${Screen.ViewProfile.route}?profileId=$sourceId")
+                                    } else {
+                                        showDeletedSourceDialog = true
+                                    }
                                 }
                             )
 
@@ -495,6 +501,19 @@ fun ViewProfileScreen(
                     profile = profile,
                     colorPair = colorPair,
                     isReadOnly = true
+                )
+            }
+
+            if (showDeletedSourceDialog && profile != null) {
+                val sourceName = state.liveSourceProfileName ?: profile.sourceProfileName ?: "Original Profile"
+                NexaAlertDialog(
+                    onDismissRequest = { showDeletedSourceDialog = false },
+                    title = "Original Profile Deleted",
+                    message = "The original profile (\"$sourceName\") from which this profile was copied is no longer available because it has been deleted.",
+                    confirmLabel = "Got It",
+                    onConfirm = { showDeletedSourceDialog = false },
+                    dismissLabel = null,
+                    icon = Icons.Outlined.Info
                 )
             }
 

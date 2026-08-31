@@ -518,6 +518,7 @@ private fun openBrowser(context: Context, url: String) {
 fun ProfileMetadataSection(
     profile: UserProfile,
     onSourceProfileClick: (Long) -> Unit = {},
+    sourceProfileNameOverride: String? = null,
     modifier: Modifier = Modifier
 ) {
     val createdFormatted = remember(profile.createdAt) {
@@ -702,7 +703,7 @@ fun ProfileMetadataSection(
                             )
                             Text(
                                 text = if (isCopied) {
-                                    profile.sourceProfileName ?: "Duplicated Profile"
+                                    sourceProfileNameOverride ?: profile.sourceProfileName ?: "Duplicated Profile"
                                 } else {
                                     "Original Record"
                                 },

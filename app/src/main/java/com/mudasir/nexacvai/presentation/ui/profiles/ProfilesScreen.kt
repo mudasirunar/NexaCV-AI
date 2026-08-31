@@ -46,6 +46,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.Info
 import com.mudasir.nexacvai.presentation.ui.profiles.components.profiles_dashboard.EmptySearchResultScreen
 import com.mudasir.nexacvai.presentation.ui.profiles.components.profiles_dashboard.ProfileSearchBar
 import androidx.compose.material3.Button
@@ -127,6 +128,7 @@ fun ProfilesScreen(
     val context = LocalContext.current
     val bottomSpacing = 80.dp
     var profileToDelete by remember { mutableStateOf<UserProfile?>(null) }
+    var unavailableSourceProfileName by remember { mutableStateOf<String?>(null) }
     var highlightedProfileId by remember { mutableStateOf<Long?>(null) }
     val coroutineScope = rememberCoroutineScope()
     val gridState = rememberLazyGridState()
@@ -568,6 +570,10 @@ fun ProfilesScreen(
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         items(state.profiles ?: emptyList(), key = { it.id }) { profile ->
+                            val liveSourceProfileName = profile.sourceProfileId?.let { sourceId ->
+                                state.profiles?.find { it.id == sourceId }?.fullName?.ifBlank { "Untitled Profile" }
+                            } ?: profile.sourceProfileName
+
                             UserProfileCard(
                                 profile = profile,
                                 onCardClick = {
@@ -598,7 +604,7 @@ fun ProfilesScreen(
                                     }
                                 },
                                 isHighlighted = highlightedProfileId == profile.id,
-                                onSourceProfileClick = { sourceId ->
+                                onSourceProfileClick = { sourceId, fallbackName ->
                                     val sourceIndex = state.profiles?.indexOfFirst { it.id == sourceId } ?: -1
                                     if (sourceIndex != -1) {
                                         coroutineScope.launch {
@@ -609,11 +615,14 @@ fun ProfilesScreen(
                                                 highlightedProfileId = null
                                             }
                                         }
+                                    } else {
+                                        unavailableSourceProfileName = fallbackName
                                     }
                                 },
                                 onRemoveCopyTagClick = {
                                     viewModel.removeSourceProfileTag(profile.id)
                                 },
+                                sourceProfileNameOverride = liveSourceProfileName,
                                 modifier = Modifier.animateItem(
                                     fadeInSpec = spring(
                                         dampingRatio = Spring.DampingRatioMediumBouncy,
@@ -645,6 +654,19 @@ fun ProfilesScreen(
                     },
                     dismissLabel = "Cancel",
                     isDestructive = true
+                )
+            }
+
+            if (unavailableSourceProfileName != null) {
+                val sourceName = unavailableSourceProfileName!!
+                NexaAlertDialog(
+                    onDismissRequest = { unavailableSourceProfileName = null },
+                    title = "Original Profile Deleted",
+                    message = "The original profile (\"$sourceName\") from which this profile was copied is no longer available because it has been deleted.",
+                    confirmLabel = "Got It",
+                    onConfirm = { unavailableSourceProfileName = null },
+                    dismissLabel = null,
+                    icon = Icons.Outlined.Info
                 )
             }
 

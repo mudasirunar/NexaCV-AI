@@ -101,8 +101,9 @@ fun UserProfileCard(
     isInSelectionMode: Boolean = false,
     onCardLongClick: () -> Unit = {},
     isHighlighted: Boolean = false,
-    onSourceProfileClick: (Long) -> Unit = {},
-    onRemoveCopyTagClick: () -> Unit = {}
+    onSourceProfileClick: (Long, String) -> Unit = { _, _ -> },
+    onRemoveCopyTagClick: () -> Unit = {},
+    sourceProfileNameOverride: String? = null
 ) {
     var isPressed by remember { mutableStateOf(false) }
     var showFullScreenImage by remember { mutableStateOf(false) }
@@ -540,8 +541,8 @@ fun UserProfileCard(
 
                         Spacer(modifier = Modifier.width(8.dp))
 
-                        val hasCopyTag = (profile.sourceProfileName != null || profile.sourceProfileId != null) && !profile.isCopyTagDismissed
-                        val displayCopyName = profile.sourceProfileName ?: "Profile"
+                        val hasCopyTag = (sourceProfileNameOverride != null || profile.sourceProfileName != null || profile.sourceProfileId != null) && !profile.isCopyTagDismissed
+                        val displayCopyName = sourceProfileNameOverride ?: profile.sourceProfileName ?: "Profile"
 
                         // 2. Chip + Buttons share one self-sized Box (mutually exclusive slot)
                         Box(contentAlignment = Alignment.CenterEnd) {
@@ -574,8 +575,11 @@ fun UserProfileCard(
                                         Row(
                                             verticalAlignment = Alignment.CenterVertically,
                                             horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                            modifier = Modifier.clickable {
-                                                profile.sourceProfileId?.let { onSourceProfileClick(it) }
+                                            modifier = Modifier.clickable(
+                                                interactionSource = remember { MutableInteractionSource() },
+                                                indication = null
+                                            ) {
+                                                profile.sourceProfileId?.let { onSourceProfileClick(it, displayCopyName) }
                                             }
                                         ) {
                                             Icon(
@@ -599,7 +603,10 @@ fun UserProfileCard(
                                             shape = RoundedCornerShape(10.dp),
                                             color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.18f),
                                             modifier = Modifier
-                                                .clickable { onRemoveCopyTagClick() }
+                                                .clickable(
+                                                    interactionSource = remember { MutableInteractionSource() },
+                                                    indication = null
+                                                ) { onRemoveCopyTagClick() }
                                                 .padding(1.dp)
                                         ) {
                                             Icon(
