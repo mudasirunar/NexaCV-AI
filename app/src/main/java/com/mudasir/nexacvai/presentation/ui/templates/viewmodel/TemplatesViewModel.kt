@@ -89,13 +89,6 @@ class TemplatesViewModel @Inject constructor(
                 filteredTemplates = filterTemplates(templates, _state.value.selectedCategory, _state.value.searchQuery, _state.value.favoriteTemplateIds),
                 profiles = profiles
             )
-
-            // Warm up real PDF thumbnail cache in background
-            viewModelScope.launch(Dispatchers.IO) {
-                templates.forEach { template ->
-                    TemplateThumbnailGenerator.generateThumbnail(context, pdfEngine, template)
-                }
-            }
         }
     }
 

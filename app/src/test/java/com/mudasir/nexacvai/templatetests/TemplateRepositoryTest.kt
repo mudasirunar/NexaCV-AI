@@ -50,11 +50,16 @@ class TemplateRepositoryTest {
         }
     }
 
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     @Before
     fun setUp() {
         parser = ExternalTemplateParser()
         fakeFavoriteDao = FakeFavoriteTemplateDao()
-        repository = TemplateRepositoryImpl(parser, fakeFavoriteDao)
+        repository = TemplateRepositoryImpl(
+            externalTemplateParser = parser,
+            favoriteTemplateDao = fakeFavoriteDao,
+            applicationScope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.test.UnconfinedTestDispatcher())
+        )
     }
 
     @Test

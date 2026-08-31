@@ -50,12 +50,6 @@ fun ViewProfileScreen(
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showFullScreenImage by remember { mutableStateOf(false) }
     val context = LocalContext.current
-    var isTransitionComplete by remember { mutableStateOf(false) }
-
-    LaunchedEffect(Unit) {
-        kotlinx.coroutines.delay(180)
-        isTransitionComplete = true
-    }
 
     val exportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/octet-stream"),
@@ -243,7 +237,7 @@ fun ViewProfileScreen(
                 .padding(paddingValues)
         ) {
             when {
-                state.isLoading || !isTransitionComplete -> {
+                state.isLoading -> {
                     ViewProfileSkeleton()
                 }
                 state.error != null -> {

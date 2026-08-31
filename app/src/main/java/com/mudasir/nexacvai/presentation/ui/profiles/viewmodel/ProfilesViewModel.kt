@@ -45,7 +45,14 @@ class ProfilesViewModel @Inject constructor(
     private val appSettingsManager: AppSettingsManager
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(ProfilesState())
+    private val initialProfiles = userProfileRepository.getCachedProfiles()
+    private val _state = MutableStateFlow(
+        ProfilesState(
+            isLoading = false,
+            profiles = initialProfiles,
+            isTotalProfilesEmpty = initialProfiles.isEmpty()
+        )
+    )
     val state: StateFlow<ProfilesState> = _state.asStateFlow()
 
     private val searchQueryFlow = MutableStateFlow("")

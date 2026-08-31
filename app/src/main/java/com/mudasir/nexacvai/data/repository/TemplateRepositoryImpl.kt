@@ -6,11 +6,16 @@ import com.mudasir.nexacvai.data.local.dao.FavoriteTemplateDao
 import com.mudasir.nexacvai.data.local.entity.FavoriteTemplateEntity
 import com.mudasir.nexacvai.data.parser.ExternalTemplateParser
 import com.mudasir.nexacvai.data.templates.BuiltInTemplatesCatalog
+import com.mudasir.nexacvai.di.ApplicationScope
 import com.mudasir.nexacvai.domain.model.template.ResumeTemplate
 import com.mudasir.nexacvai.domain.model.template.TemplateCategory
 import com.mudasir.nexacvai.domain.repository.TemplateRepository
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -21,14 +26,21 @@ import javax.inject.Singleton
 @Singleton
 class TemplateRepositoryImpl @Inject constructor(
     private val externalTemplateParser: ExternalTemplateParser,
-    private val favoriteTemplateDao: FavoriteTemplateDao
+    private val favoriteTemplateDao: FavoriteTemplateDao,
+    @ApplicationScope private val applicationScope: CoroutineScope
 ) : TemplateRepository {
 
     private val customTemplates = mutableListOf<ResumeTemplate>()
 
-    private val builtInTemplates: List<ResumeTemplate> by lazy {
-        BuiltInTemplatesCatalog.ALL_TEMPLATES
-    }
+    private val builtInTemplates: List<ResumeTemplate> = BuiltInTemplatesCatalog.ALL_TEMPLATES
+
+    private val _favoriteIdsStateFlow: StateFlow<Set<String>> = favoriteTemplateDao.getFavoriteTemplateIds()
+        .map { it.toSet() }
+        .stateIn(
+            scope = applicationScope,
+            started = SharingStarted.Eagerly,
+            initialValue = emptySet()
+        )
 
     override suspend fun getAllTemplates(): AppResult<List<ResumeTemplate>> {
         return try {
@@ -78,17 +90,15 @@ class TemplateRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun getFavoriteTemplateIds(): Flow<Set<String>> {
-        return favoriteTemplateDao.getFavoriteTemplateIds().map { it.toSet() }
-    }
+    override fun getFavoriteTemplateIds(): Flow<Set<String>> = _favoriteIdsStateFlow
 
     override suspend fun isFavorite(templateId: String): Boolean {
-        return favoriteTemplateDao.isFavorite(templateId)
+        return _favoriteIdsStateFlow.value.contains(templateId)
     }
 
     override suspend fun toggleFavorite(templateId: String): AppResult<Boolean> {
         return try {
-            val exists = favoriteTemplateDao.isFavorite(templateId)
+            val exists = _favoriteIdsStateFlow.value.contains(templateId)
             if (exists) {
                 favoriteTemplateDao.removeFavorite(templateId)
                 AppResult.Success(false)

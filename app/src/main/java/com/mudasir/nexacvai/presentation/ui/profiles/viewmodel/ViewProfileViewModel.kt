@@ -24,6 +24,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ViewProfileViewModel @Inject constructor(
     private val getAllProfilesUseCase: GetAllProfilesUseCase,
+    private val userProfileRepository: com.mudasir.nexacvai.domain.repository.UserProfileRepository,
     private val duplicateProfileUseCase: DuplicateProfileUseCase,
     val profileDeleteManager: ProfileDeleteManager,
     private val profileExportManager: ProfileExportManager,
@@ -35,6 +36,9 @@ class ViewProfileViewModel @Inject constructor(
     }
 
     private val profileId = savedStateHandle.get<Long>("profileId")?.takeIf { it != -1L }
+    private val initialCachedProfile = profileId?.let { id ->
+        userProfileRepository.getCachedProfiles().find { it.id == id }
+    }
     private val _exportFields = MutableStateFlow(Pair<UserProfile?, Boolean>(null, false))
     private val _exportProgress = MutableStateFlow(Pair<ExportProgressState, String?>(ExportProgressState.Idle, null))
     private val _duplicateState = MutableStateFlow(
@@ -68,7 +72,11 @@ class ViewProfileViewModel @Inject constructor(
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = ViewProfileState(isLoading = true)
+            initialValue = if (initialCachedProfile != null) {
+                ViewProfileState(isLoading = false, profile = initialCachedProfile)
+            } else {
+                ViewProfileState(isLoading = true)
+            }
         )
     } else {
         MutableStateFlow(
