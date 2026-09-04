@@ -121,18 +121,29 @@ fun AppNavHost(
         composable(Screen.Templates.route) {
             com.mudasir.nexacvai.presentation.ui.templates.TemplatesScreen(
                 onNavigateBack = { navController.popBackStack() },
-                onOpenTemplatePreview = { templateId ->
-                    navController.navigate("${Screen.TemplatePreview.route}?templateId=$templateId")
+                onOpenTemplatePreview = { templateId, category ->
+                    navController.navigate("${Screen.TemplatePreview.route}?templateId=$templateId&category=${category.name}")
                 }
             )
         }
         composable(
-            route = "${Screen.TemplatePreview.route}?templateId={templateId}",
-            arguments = listOf(navArgument("templateId") { type = NavType.StringType })
+            route = "${Screen.TemplatePreview.route}?templateId={templateId}&category={category}",
+            arguments = listOf(
+                navArgument("templateId") { 
+                    type = NavType.StringType
+                    defaultValue = "template_modern_tech"
+                },
+                navArgument("category") { 
+                    type = NavType.StringType
+                    defaultValue = "ALL"
+                }
+            )
         ) { backStackEntry ->
             val templateId = backStackEntry.arguments?.getString("templateId") ?: "template_modern_tech"
+            val category = backStackEntry.arguments?.getString("category") ?: "ALL"
             com.mudasir.nexacvai.presentation.ui.templates.TemplatePreviewScreen(
                 templateId = templateId,
+                categoryName = category,
                 onNavigateBack = { navController.popBackStack() },
                 onConfirmCreateCv = { tId, pId ->
                     navController.navigate(Screen.Generate.route) {

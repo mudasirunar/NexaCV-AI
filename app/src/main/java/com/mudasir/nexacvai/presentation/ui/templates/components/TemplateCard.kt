@@ -252,6 +252,7 @@ fun TemplateCard(
                         FavoriteStarButton(
                             isFavorite = isFavorite,
                             onToggleFavorite = onToggleFavorite,
+                            templateId = meta.id,
                             enabled = isFrontFacing,
                             hasGlassmorphismBackground = true,
                             modifier = Modifier
@@ -470,6 +471,7 @@ fun TemplateCard(
                         FavoriteStarButton(
                             isFavorite = isFavorite,
                             onToggleFavorite = onToggleFavorite,
+                            templateId = meta.id,
                             enabled = !isFrontFacing,
                             hasGlassmorphismBackground = true,
                             size = 36.dp,

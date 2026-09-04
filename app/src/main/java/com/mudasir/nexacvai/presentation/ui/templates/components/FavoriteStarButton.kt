@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 
 // Gold Amber Star Color for Favorite State
 val FavoriteStarGold = Color(0xFFF59E0B)
@@ -39,20 +40,21 @@ fun FavoriteStarButton(
     isFavorite: Boolean,
     onToggleFavorite: () -> Unit,
     modifier: Modifier = Modifier,
+    templateId: String = "",
     enabled: Boolean = true,
     size: Dp = 32.dp,
     iconSize: Dp = 18.dp,
     hasGlassmorphismBackground: Boolean = false
 ) {
     val scale = remember { Animatable(1f) }
-    var previousFavorite by remember { mutableStateOf(isFavorite) }
+    var previousFavorite by remember(templateId) { mutableStateOf(isFavorite) }
 
-    LaunchedEffect(isFavorite) {
+    LaunchedEffect(isFavorite, templateId) {
         if (isFavorite && !previousFavorite) {
-            // Transitioned to FAVORITED: Run spring burst pop animation
+            // Favorited this template (either directly or via card double-tap): run spring burst pop animation
             scale.snapTo(1f)
             scale.animateTo(
-                targetValue = 1.38f,
+                targetValue = 1.35f,
                 animationSpec = spring(
                     dampingRatio = Spring.DampingRatioMediumBouncy,
                     stiffness = Spring.StiffnessMedium
@@ -66,7 +68,6 @@ fun FavoriteStarButton(
                 )
             )
         } else if (!isFavorite) {
-            // Transitioned to UN-FAVORITED: Instant snap with zero jerk
             scale.snapTo(1f)
         }
         previousFavorite = isFavorite

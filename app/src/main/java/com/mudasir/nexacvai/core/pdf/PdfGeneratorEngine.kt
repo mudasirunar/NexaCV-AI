@@ -35,6 +35,7 @@ class PdfGeneratorEngine @Inject constructor(
         outputFileName: String = "generated_cv_preview.pdf"
     ): File = withContext(Dispatchers.IO) {
         val outputFile = File(context.cacheDir, outputFileName)
+        val tempFile = File(context.cacheDir, "${outputFileName}.tmp_${System.nanoTime()}")
         val pdfDocument = PdfDocument()
 
         try {
@@ -42,11 +43,21 @@ class PdfGeneratorEngine @Inject constructor(
             val renderer = getRendererForTemplate(template)
             renderer.render(pageManager, data, templateStyle)
 
-            FileOutputStream(outputFile).use { out ->
+            FileOutputStream(tempFile).use { out ->
                 pdfDocument.writeTo(out)
+            }
+
+            if (tempFile.exists() && tempFile.length() > 0) {
+                if (outputFile.exists()) {
+                    outputFile.delete()
+                }
+                tempFile.renameTo(outputFile)
             }
         } finally {
             pdfDocument.close()
+            if (tempFile.exists()) {
+                tempFile.delete()
+            }
         }
 
         outputFile

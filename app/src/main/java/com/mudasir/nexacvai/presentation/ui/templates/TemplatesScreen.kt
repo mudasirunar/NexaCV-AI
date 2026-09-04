@@ -45,7 +45,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun TemplatesScreen(
     onNavigateBack: () -> Unit = {},
-    onOpenTemplatePreview: (templateId: String) -> Unit = {},
+    onOpenTemplatePreview: (templateId: String, category: TemplateCategory) -> Unit = { _, _ -> },
     viewModel: TemplatesViewModel = hiltViewModel()
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -247,8 +247,8 @@ fun TemplatesScreen(
                             onAddFavorite = remember(templateId) {
                                 { viewModel.addFavorite(templateId) }
                             },
-                            onSelectTemplate = remember(templateId) {
-                                { onOpenTemplatePreview(templateId) }
+                            onSelectTemplate = remember(templateId, currentCategory) {
+                                { onOpenTemplatePreview(templateId, currentCategory) }
                             },
                             modifier = Modifier.animateItem(
                                 fadeInSpec = tween(durationMillis = 240, easing = FastOutSlowInEasing),

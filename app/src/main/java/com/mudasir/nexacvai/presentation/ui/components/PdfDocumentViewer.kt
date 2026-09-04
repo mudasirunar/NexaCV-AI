@@ -1,5 +1,8 @@
 package com.mudasir.nexacvai.presentation.ui.components
 
+import android.annotation.SuppressLint
+import android.graphics.PointF
+import android.view.MotionEvent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -39,7 +42,8 @@ fun PdfDocumentViewer(
     pdfFile: File?,
     modifier: Modifier = Modifier,
     isTopBarVisible: Boolean = true,
-    onToggleTopBar: (Boolean) -> Unit = {}
+    onToggleTopBar: (Boolean) -> Unit = {},
+    onZoomChange: (Float) -> Unit = {}
 ) {
     var pdfViewRef by remember { mutableStateOf<PDFView?>(null) }
     var currentPage by remember { mutableIntStateOf(1) }
@@ -67,6 +71,7 @@ fun PdfDocumentViewer(
 
     val currentTopBarVisible by rememberUpdatedState(isTopBarVisible)
     val currentToggleTopBar by rememberUpdatedState(onToggleTopBar)
+    val currentOnZoomChange by rememberUpdatedState(onZoomChange)
 
     val configuration = androidx.compose.ui.platform.LocalConfiguration.current
     val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
@@ -81,7 +86,6 @@ fun PdfDocumentViewer(
     // Device classification:
     // - Foldables (Unfolded): Large screen (>= 580dp) with almost square aspect ratio (< 1.35)
     // - Tablets: Large screen (>= 580dp) with widescreen ratio (>= 1.35)
-    // - Phones: Narrow screen (< 580dp)
     val isFoldable = smallestWidthDp >= 580 && aspectRatio < 1.35
     val isTablet = smallestWidthDp >= 580 && aspectRatio >= 1.35
     val isPhone = smallestWidthDp < 580
@@ -95,10 +99,10 @@ fun PdfDocumentViewer(
         else -> 1.0f
     }
 
-    LaunchedEffect(pdfFile, pdfViewRef, isLandscape, isFoldable, isTablet) {
+    LaunchedEffect(pdfFile?.absolutePath, pdfViewRef, isLandscape, isFoldable, isTablet) {
         val view = pdfViewRef ?: return@LaunchedEffect
         val file = pdfFile ?: return@LaunchedEffect
-        if (!file.exists()) return@LaunchedEffect
+        if (!file.exists() || file.length() == 0L) return@LaunchedEffect
 
         var lastYOffset = 0f
         var hasAppliedInitialZoom = false
@@ -120,15 +124,17 @@ fun PdfDocumentViewer(
                 if (!hasAppliedInitialZoom && targetInitialZoom != 1.0f) {
                     hasAppliedInitialZoom = true
                     val centerX = if (view.width > 0) view.width / 2f else 0f
-                    view.zoomWithAnimation(centerX, 0f, targetInitialZoom)
+                    view.zoomCenteredTo(targetInitialZoom, PointF(centerX, 0f))
                 }
                 currentZoom = view.zoom
+                currentOnZoomChange(view.zoom)
                 wakeUpControls()
             })
             .onDraw(OnDrawListener { canvas, pageWidth, pageHeight, _ ->
                 val z = view.zoom
                 if (kotlin.math.abs(z - currentZoom) > 0.01f) {
                     currentZoom = z
+                    currentOnZoomChange(z)
                     wakeUpControls()
                 }
 
@@ -186,7 +192,7 @@ fun PdfDocumentViewer(
 
             AndroidView(
                 factory = { context ->
-                    PDFView(context, null).apply {
+                    TouchInterceptPdfView(context, targetInitialZoom).apply {
                         setBackgroundColor(android.graphics.Color.parseColor(canvasBgHex))
                         lastAppliedBgHex = canvasBgHex
                         setMinZoom(MIN_ZOOM_LEVEL)
@@ -199,6 +205,7 @@ fun PdfDocumentViewer(
                 },
                 update = { pdfView ->
                     pdfViewRef = pdfView
+                    (pdfView as? TouchInterceptPdfView)?.initialZoom = targetInitialZoom
                     if (lastAppliedBgHex != canvasBgHex) {
                         pdfView.setBackgroundColor(android.graphics.Color.parseColor(canvasBgHex))
                         lastAppliedBgHex = canvasBgHex
@@ -317,5 +324,37 @@ fun PdfDocumentViewer(
                 }
             }
         }
+    }
+}
+
+@SuppressLint("ViewConstructor")
+private class TouchInterceptPdfView(
+    context: android.content.Context,
+    var initialZoom: Float
+) : PDFView(context, null) {
+    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+        when (ev.actionMasked) {
+            MotionEvent.ACTION_DOWN -> {
+                if (zoom > (initialZoom + 0.05f)) {
+                    parent?.requestDisallowInterceptTouchEvent(true)
+                } else {
+                    parent?.requestDisallowInterceptTouchEvent(false)
+                }
+            }
+            MotionEvent.ACTION_POINTER_DOWN -> {
+                // Multi-touch detected (2 or more fingers -> pinch to zoom).
+                // Block parent pagers from intercepting this gesture!
+                parent?.requestDisallowInterceptTouchEvent(true)
+            }
+            MotionEvent.ACTION_MOVE -> {
+                if (ev.pointerCount >= 2 || zoom > (initialZoom + 0.05f)) {
+                    parent?.requestDisallowInterceptTouchEvent(true)
+                }
+            }
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                parent?.requestDisallowInterceptTouchEvent(false)
+            }
+        }
+        return super.dispatchTouchEvent(ev)
     }
 }
