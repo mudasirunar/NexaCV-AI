@@ -18,6 +18,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.mudasir.nexacvai.ui.theme.*
 import kotlin.math.roundToInt
@@ -88,199 +90,101 @@ fun FloatingZoomControls(
         exit = fadeOut() + slideOutVertically(targetOffsetY = { it / 2 }),
         modifier = modifier
     ) {
-        if (showNavigation) {
+        Surface(
+            shape = RoundedCornerShape(28.dp),
+            color = PdfControlsContainerBg,
+            border = BorderStroke(1.dp, PdfControlsBorder),
+            shadowElevation = 12.dp,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        ) {
             Row(
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier
-                    .padding(horizontal = 16.dp)
-                    .height(IntrinsicSize.Min)
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                // Previous Button: Left semi-circle / half-oval wing
-                Surface(
-                    shape = RoundedCornerShape(
-                        topStart = 24.dp,
-                        bottomStart = 24.dp,
-                        topEnd = 4.dp,
-                        bottomEnd = 4.dp
-                    ),
-                    color = PdfControlsContainerBg,
-                    border = BorderStroke(1.dp, PdfControlsBorder),
-                    shadowElevation = 12.dp,
-                    modifier = Modifier.fillMaxHeight()
-                ) {
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .padding(horizontal = 2.dp)
-                    ) {
-                        IconButton(
-                            onClick = { onPrevious?.invoke() },
-                            enabled = hasPrevious,
-                            modifier = Modifier.size(40.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.ChevronLeft,
-                                contentDescription = "Previous Template",
-                                tint = if (hasPrevious) PdfControlsIconTintEnabled else PdfControlsIconTintDisabled
-                            )
-                        }
-                    }
-                }
-
-                // Center Rectangle: no rounded ends
-                Surface(
-                    shape = RoundedCornerShape(4.dp),
-                    color = PdfControlsContainerBg,
-                    border = BorderStroke(1.dp, PdfControlsBorder),
-                    shadowElevation = 12.dp,
-                    modifier = Modifier.fillMaxHeight()
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(2.dp)
-                    ) {
-                        IconButton(
-                            onClick = onZoomOut,
-                            enabled = isCanZoomOut,
-                            modifier = Modifier.size(40.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Remove,
-                                contentDescription = "Zoom Out",
-                                tint = if (isCanZoomOut) PdfControlsIconTintEnabled else PdfControlsIconTintDisabled
-                            )
-                        }
-
-                        Surface(
-                            shape = RoundedCornerShape(12.dp),
-                            color = PdfControlsPillBg
-                        ) {
-                            Text(
-                                text = if (totalPages > 1) "Page $currentPage of $totalPages" else "$displayZoomPercent%",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = PdfControlsIconTintEnabled,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
-                            )
-                        }
-
-                        IconButton(
-                            onClick = onZoomIn,
-                            enabled = isCanZoomIn,
-                            modifier = Modifier.size(40.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Add,
-                                contentDescription = "Zoom In",
-                                tint = if (isCanZoomIn) PdfControlsIconTintEnabled else PdfControlsIconTintDisabled
-                            )
-                        }
-
-                        IconButton(
-                            onClick = onResetZoom,
-                            enabled = isCanReset,
-                            modifier = Modifier.size(40.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.RestartAlt,
-                                contentDescription = "Reset Zoom",
-                                tint = if (isCanReset) PdfControlsIconTintEnabled else PdfControlsIconTintDisabled
-                            )
-                        }
-                    }
-                }
-
-                // Next Button: Right semi-circle / half-oval wing
-                Surface(
-                    shape = RoundedCornerShape(
-                        topStart = 4.dp,
-                        bottomStart = 4.dp,
-                        topEnd = 24.dp,
-                        bottomEnd = 24.dp
-                    ),
-                    color = PdfControlsContainerBg,
-                    border = BorderStroke(1.dp, PdfControlsBorder),
-                    shadowElevation = 12.dp,
-                    modifier = Modifier.fillMaxHeight()
-                ) {
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .padding(horizontal = 2.dp)
-                    ) {
-                        IconButton(
-                            onClick = { onNext?.invoke() },
-                            enabled = hasNext,
-                            modifier = Modifier.size(40.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.ChevronRight,
-                                contentDescription = "Next Template",
-                                tint = if (hasNext) PdfControlsIconTintEnabled else PdfControlsIconTintDisabled
-                            )
-                        }
-                    }
-                }
-            }
-        } else {
-            // Standalone view without navigation: original pill shape
-            Surface(
-                shape = RoundedCornerShape(28.dp),
-                color = PdfControlsContainerBg,
-                border = BorderStroke(1.dp, PdfControlsBorder),
-                shadowElevation = 12.dp,
-                modifier = Modifier.padding(horizontal = 16.dp)
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
+                if (showNavigation) {
                     IconButton(
-                        onClick = onZoomOut,
-                        enabled = isCanZoomOut
+                        onClick = { onPrevious?.invoke() },
+                        enabled = hasPrevious,
+                        modifier = Modifier.size(38.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Remove,
-                            contentDescription = "Zoom Out",
-                            tint = if (isCanZoomOut) PdfControlsIconTintEnabled else PdfControlsIconTintDisabled
+                            imageVector = Icons.Default.ChevronLeft,
+                            contentDescription = "Previous Template",
+                            tint = if (hasPrevious) PdfControlsIconTintEnabled else PdfControlsIconTintDisabled
                         )
                     }
+                }
 
-                    Surface(
-                        shape = RoundedCornerShape(14.dp),
-                        color = PdfControlsPillBg
+                IconButton(
+                    onClick = onZoomOut,
+                    enabled = isCanZoomOut,
+                    modifier = Modifier.size(38.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Remove,
+                        contentDescription = "Zoom Out",
+                        tint = if (isCanZoomOut) PdfControlsIconTintEnabled else PdfControlsIconTintDisabled
+                    )
+                }
+
+                Surface(
+                    shape = RoundedCornerShape(14.dp),
+                    color = PdfControlsPillBg,
+                    modifier = Modifier.width(54.dp)
+                ) {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 5.dp)
                     ) {
                         Text(
-                            text = if (totalPages > 1) "Page $currentPage of $totalPages" else "$displayZoomPercent%",
-                            style = MaterialTheme.typography.labelMedium,
+                            text = "$displayZoomPercent%",
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                fontWeight = FontWeight.SemiBold,
+                                textAlign = TextAlign.Center
+                            ),
                             color = PdfControlsIconTintEnabled,
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
+                            maxLines = 1
                         )
                     }
+                }
 
+                IconButton(
+                    onClick = onZoomIn,
+                    enabled = isCanZoomIn,
+                    modifier = Modifier.size(38.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Zoom In",
+                        tint = if (isCanZoomIn) PdfControlsIconTintEnabled else PdfControlsIconTintDisabled
+                    )
+                }
+
+                IconButton(
+                    onClick = onResetZoom,
+                    enabled = isCanReset,
+                    modifier = Modifier.size(38.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.RestartAlt,
+                        contentDescription = "Reset Zoom",
+                        tint = if (isCanReset) PdfControlsIconTintEnabled else PdfControlsIconTintDisabled
+                    )
+                }
+
+                if (showNavigation) {
                     IconButton(
-                        onClick = onZoomIn,
-                        enabled = isCanZoomIn
+                        onClick = { onNext?.invoke() },
+                        enabled = hasNext,
+                        modifier = Modifier.size(38.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = "Zoom In",
-                            tint = if (isCanZoomIn) PdfControlsIconTintEnabled else PdfControlsIconTintDisabled
-                        )
-                    }
-
-                    IconButton(
-                        onClick = onResetZoom,
-                        enabled = isCanReset
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.RestartAlt,
-                            contentDescription = "Reset Zoom",
-                            tint = if (isCanReset) PdfControlsIconTintEnabled else PdfControlsIconTintDisabled
+                            imageVector = Icons.Default.ChevronRight,
+                            contentDescription = "Next Template",
+                            tint = if (hasNext) PdfControlsIconTintEnabled else PdfControlsIconTintDisabled
                         )
                     }
                 }
