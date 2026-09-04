@@ -13,14 +13,10 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.input.pointer.pointerInput
-import kotlinx.coroutines.launch
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Close
@@ -43,9 +39,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import com.mudasir.nexacvai.core.pdf.PdfGeneratorEngine
 import com.mudasir.nexacvai.core.pdf.TemplateThumbnailGenerator
 import com.mudasir.nexacvai.domain.model.template.ResumeTemplate
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -77,16 +75,10 @@ fun TemplateCard(
     val favBurstScale = remember { Animatable(1f) }
     val coroutineScope = rememberCoroutineScope()
     var previousFavorite by remember { mutableStateOf(isFavorite) }
-    var isFirstMount by remember { mutableStateOf(true) }
-
-    LaunchedEffect(Unit) {
-        kotlinx.coroutines.delay(200)
-        isFirstMount = false
-    }
 
     LaunchedEffect(isFavorite) {
-        if (!isFirstMount && isFavorite && !previousFavorite) {
-            // Bouncy burst pop on whole card only when actively favorited by user
+        if (isFavorite && !previousFavorite) {
+            // Bouncy burst pop on whole card when favorited
             favBurstScale.snapTo(1f)
             favBurstScale.animateTo(
                 targetValue = 1.035f,
@@ -135,24 +127,20 @@ fun TemplateCard(
         }
     }
 
-    // Smooth Organic 3D Flip Rotation (Instant initial position, animations only when explicitly triggered by user)
-    val rotation = remember { Animatable(if (isFlipped) 180f else 0f) }
-
-    LaunchedEffect(isFlipped) {
-        val target = if (isFlipped) 180f else 0f
-        if (rotation.value != target) {
-            rotation.animateTo(
-                targetValue = target,
-                animationSpec = spring(
-                    dampingRatio = 0.85f,
-                    stiffness = 420f
-                )
-            )
-        }
-    }
+    // Smooth Organic 3D Flip Rotation (State-driven for Draw-phase GPU acceleration)
+    val rotationState = animateFloatAsState(
+        targetValue = if (isFlipped) 180f else 0f,
+        animationSpec = spring(
+            dampingRatio = 0.85f,
+            stiffness = 420f
+        ),
+        label = "cardFlipRotation"
+    )
 
     // Derived front-facing state: Only triggers recomposition ONCE at 90-degree crossing
-    val isFrontFacing by remember { derivedStateOf { rotation.value <= 90f } }
+    val isFrontFacing by remember {
+        derivedStateOf { rotationState.value <= 90f }
+    }
 
     val previewPrimaryColor = remember(meta.previewPrimaryColorHex) {
         try {
@@ -182,7 +170,7 @@ fun TemplateCard(
                 .fillMaxWidth()
                 .height(280.dp)
                 .graphicsLayer {
-                    val currentRot = rotation.value
+                    val currentRot = rotationState.value
                     val rad = Math.toRadians(currentRot.toDouble())
                     // Subtle 3.5% 3D depth lift at the 90-deg apex for natural physical perspective
                     val midLift = 1f + 0.035f * kotlin.math.sin(rad).toFloat()
@@ -207,109 +195,219 @@ fun TemplateCard(
                     onDoubleClick = if (!isFlipped) onToggleFavorite else null,
                     onLongClick = handleLongPress
                 ),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        if (isFrontFacing) {
-            // FRONT OF CARD
-            Column(modifier = Modifier.fillMaxSize()) {
-                // Document Studio Workbench Box
-                Box(
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        ) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                // FRONT OF CARD (Zero layout thrashing - Draw-phase alpha transition)
+                Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(220.dp)
-                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
-                        .padding(10.dp),
-                    contentAlignment = Alignment.Center
+                        .fillMaxSize()
+                        .zIndex(if (isFrontFacing) 1f else 0f)
+                        .graphicsLayer {
+                            alpha = if (rotationState.value <= 90f) 1f else 0f
+                        }
                 ) {
-                    // Real A4 Paper Document Sheet (Aspect Ratio 1 : 1.414)
+                    // Document Studio Workbench Box
                     Box(
                         modifier = Modifier
-                            .fillMaxHeight()
-                            .aspectRatio(1f / 1.414f)
-                            .shadow(4.dp, RoundedCornerShape(4.dp))
-                            .clip(RoundedCornerShape(4.dp))
-                            .clipToBounds()
-                            .background(Color.White)
-                            .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.18f), RoundedCornerShape(4.dp)),
+                            .fillMaxWidth()
+                            .height(220.dp)
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
+                            .padding(10.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        val bitmap = thumbnailBitmap
-                        if (bitmap != null) {
-                            Image(
-                                bitmap = bitmap.asImageBitmap(),
-                                contentDescription = "${meta.name} preview",
-                                contentScale = ContentScale.FillBounds,
-                                modifier = Modifier.fillMaxSize()
+                        // Real A4 Paper Document Sheet (Aspect Ratio 1 : 1.414)
+                        Box(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .aspectRatio(1f / 1.414f)
+                                .shadow(4.dp, RoundedCornerShape(4.dp))
+                                .clip(RoundedCornerShape(4.dp))
+                                .clipToBounds()
+                                .background(Color.White)
+                                .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.18f), RoundedCornerShape(4.dp)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            val bitmap = thumbnailBitmap
+                            if (bitmap != null) {
+                                Image(
+                                    bitmap = bitmap.asImageBitmap(),
+                                    contentDescription = "${meta.name} preview",
+                                    contentScale = ContentScale.FillBounds,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            } else {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .shimmerEffect()
+                                )
+                            }
+                        }
+
+                        // Floating Bottom-Right Glassmorphism Favorite Star Pill
+                        FavoriteStarButton(
+                            isFavorite = isFavorite,
+                            onToggleFavorite = onToggleFavorite,
+                            enabled = isFrontFacing,
+                            hasGlassmorphismBackground = true,
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .padding(4.dp)
+                        )
+                    }
+
+                    // Front Footer: Left Column (Title) & Right Column (Info Icon + Color Dots)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Left Column: Template Name (Full Size Title, Wraps to 2 lines if needed)
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(end = 6.dp),
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Text(
+                                text = meta.name,
+                                style = MaterialTheme.typography.titleSmall.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                ),
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis
                             )
-                        } else {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .shimmerEffect()
+                        }
+
+                        // Right Column: Info Icon (Top) & Color Dots (Bottom)
+                        Column(
+                            horizontalAlignment = Alignment.End,
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            // Info Button (Triggers 3D Flip)
+                            IconButton(
+                                onClick = onToggleFlip,
+                                enabled = isFrontFacing,
+                                modifier = Modifier.size(24.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Info,
+                                    contentDescription = "Template Info",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                                    modifier = Modifier.size(17.dp)
+                                )
+                            }
+
+                            // Dual Color Theme Dots
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(3.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(9.dp)
+                                        .clip(CircleShape)
+                                        .background(previewPrimaryColor)
+                                        .border(1.dp, MaterialTheme.colorScheme.surface, CircleShape)
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .size(9.dp)
+                                        .clip(CircleShape)
+                                        .background(previewAccentColor)
+                                        .border(1.dp, MaterialTheme.colorScheme.surface, CircleShape)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // BACK OF CARD (Zero layout thrashing - Draw-phase alpha transition)
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .zIndex(if (!isFrontFacing) 1f else 0f)
+                        .graphicsLayer {
+                            alpha = if (rotationState.value > 90f) 1f else 0f
+                        }
+                        .background(MaterialTheme.colorScheme.surface)
+                        .padding(14.dp),
+                    verticalArrangement = Arrangement.SpaceBetween
+                ) {
+                    // Top Header Row on Flipped Side
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Category Badge
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
+                        ) {
+                            Text(
+                                text = meta.category.displayName,
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontSize = 10.sp
+                                ),
+                                modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
+                            )
+                        }
+
+                        // Flip Back Icon Button
+                        IconButton(
+                            onClick = onToggleFlip,
+                            enabled = !isFrontFacing,
+                            modifier = Modifier.size(28.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Flip Back",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(18.dp)
                             )
                         }
                     }
 
-                    // Floating Bottom-Right Glassmorphism Favorite Star Pill
-                    FavoriteStarButton(
-                        isFavorite = isFavorite,
-                        onToggleFavorite = onToggleFavorite,
-                        hasGlassmorphismBackground = true,
-                        modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .padding(4.dp)
-                    )
-                }
-
-                // Front Footer: Left Column (Title) & Right Column (Info Icon + Color Dots)
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                        .padding(horizontal = 12.dp, vertical = 6.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Left Column: Template Name (Full Size Title, Wraps to 2 lines if needed)
+                    // Middle Content: Title, Description & Color Theme Dots
                     Column(
                         modifier = Modifier
+                            .fillMaxWidth()
                             .weight(1f)
-                            .padding(end = 6.dp),
-                        verticalArrangement = Arrangement.Center
+                            .padding(top = 8.dp, bottom = 6.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Text(
                             text = meta.name,
                             style = MaterialTheme.typography.titleSmall.copy(
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            ),
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-
-                    // Right Column: Info Icon (Top) & Color Dots (Bottom)
-                    Column(
-                        horizontalAlignment = Alignment.End,
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        // Info Button (Triggers 3D Flip)
-                        IconButton(
-                            onClick = onToggleFlip,
-                            modifier = Modifier.size(24.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.Info,
-                                contentDescription = "Template Info",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
-                                modifier = Modifier.size(17.dp)
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontSize = 13.sp,
+                                lineHeight = 17.sp
                             )
-                        }
+                        )
 
-                        // Dual Color Theme Dots
+                        Text(
+                            text = meta.description,
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontSize = 11.5.sp,
+                                lineHeight = 15.5.sp
+                            )
+                        )
+
+                        // Color Theme Indicator Dots on Flipped Side
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(3.dp),
                             verticalAlignment = Alignment.CenterVertically
@@ -330,150 +428,56 @@ fun TemplateCard(
                             )
                         }
                     }
-                }
-            }
-        } else {
-            // BACK OF CARD (Flipped State - Clean 2D Layout with 0 extra graphicsLayer nesting)
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.surface)
-                    .padding(14.dp),
-                verticalArrangement = Arrangement.SpaceBetween
-            ) {
-                // Top Header Row on Flipped Side
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Category Badge
-                    Surface(
-                        shape = RoundedCornerShape(6.dp),
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
-                    ) {
-                        Text(
-                            text = meta.category.displayName,
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary,
-                                fontSize = 10.sp
-                            ),
-                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
-                        )
-                    }
 
-                    // Flip Back Icon Button
-                    IconButton(
-                        onClick = onToggleFlip,
-                        modifier = Modifier.size(28.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Flip Back",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-                }
-
-                // Middle Content: Title, Description & Color Theme Dots
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                        .padding(top = 8.dp, bottom = 6.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    Text(
-                        text = meta.name,
-                        style = MaterialTheme.typography.titleSmall.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontSize = 13.sp,
-                            lineHeight = 17.sp
-                        )
-                    )
-
-                    Text(
-                        text = meta.description,
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 11.5.sp,
-                            lineHeight = 15.5.sp
-                        )
-                    )
-
-                    // Color Theme Indicator Dots on Flipped Side
+                    // Bottom Action CTA Row (Preview Button + Favorite Button)
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(3.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(9.dp)
-                                .clip(CircleShape)
-                                .background(previewPrimaryColor)
-                                .border(1.dp, MaterialTheme.colorScheme.surface, CircleShape)
-                        )
-                        Box(
-                            modifier = Modifier
-                                .size(9.dp)
-                                .clip(CircleShape)
-                                .background(previewAccentColor)
-                                .border(1.dp, MaterialTheme.colorScheme.surface, CircleShape)
-                        )
-                    }
-                }
-
-                // Bottom Action CTA Row (Preview Button + Favorite Button)
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Surface(
-                        onClick = debouncedSelectTemplate,
-                        shape = RoundedCornerShape(10.dp),
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 8.dp),
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically
+                        Surface(
+                            onClick = debouncedSelectTemplate,
+                            enabled = !isFrontFacing,
+                            shape = RoundedCornerShape(10.dp),
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)),
+                            modifier = Modifier.weight(1f)
                         ) {
-                            Text(
-                                text = "Preview",
-                                style = MaterialTheme.typography.labelMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Preview",
+                                    style = MaterialTheme.typography.labelMedium.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
                                 )
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(14.dp)
-                            )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                            }
                         }
-                    }
 
-                    FavoriteStarButton(
-                        isFavorite = isFavorite,
-                        onToggleFavorite = onToggleFavorite,
-                        hasGlassmorphismBackground = true,
-                        size = 36.dp,
-                        iconSize = 20.dp
-                    )
+                        FavoriteStarButton(
+                            isFavorite = isFavorite,
+                            onToggleFavorite = onToggleFavorite,
+                            enabled = !isFrontFacing,
+                            hasGlassmorphismBackground = true,
+                            size = 36.dp,
+                            iconSize = 20.dp
+                        )
+                    }
                 }
             }
         }
     }
-}
 }

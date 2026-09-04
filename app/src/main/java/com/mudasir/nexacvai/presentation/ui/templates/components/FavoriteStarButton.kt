@@ -39,22 +39,17 @@ fun FavoriteStarButton(
     isFavorite: Boolean,
     onToggleFavorite: () -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
     size: Dp = 32.dp,
     iconSize: Dp = 18.dp,
     hasGlassmorphismBackground: Boolean = false
 ) {
     val scale = remember { Animatable(1f) }
     var previousFavorite by remember { mutableStateOf(isFavorite) }
-    var isFirstMount by remember { mutableStateOf(true) }
-
-    LaunchedEffect(Unit) {
-        kotlinx.coroutines.delay(200)
-        isFirstMount = false
-    }
 
     LaunchedEffect(isFavorite) {
-        if (!isFirstMount && isFavorite && !previousFavorite) {
-            // Transitioned to FAVORITED by user action: Run spring burst pop animation
+        if (isFavorite && !previousFavorite) {
+            // Transitioned to FAVORITED: Run spring burst pop animation
             scale.snapTo(1f)
             scale.animateTo(
                 targetValue = 1.38f,
@@ -93,6 +88,7 @@ fun FavoriteStarButton(
                 .clickable(
                     interactionSource = interactionSource,
                     indication = null,
+                    enabled = enabled,
                     onClick = onToggleFavorite
                 ),
             contentAlignment = Alignment.Center
@@ -112,6 +108,7 @@ fun FavoriteStarButton(
     } else {
         IconButton(
             onClick = onToggleFavorite,
+            enabled = enabled,
             modifier = modifier.size(size)
         ) {
             Icon(

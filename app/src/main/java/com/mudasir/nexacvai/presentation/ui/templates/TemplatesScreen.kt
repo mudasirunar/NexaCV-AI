@@ -232,14 +232,24 @@ fun TemplatesScreen(
                     items(state.filteredTemplates, key = { "${state.selectedCategory.name}_${it.metadata.id}" }) { template ->
                         val templateId = template.metadata.id
                         val isFav = state.favoriteTemplateIds.contains(templateId)
+                        val isFlipped = state.flippedTemplateIds.contains(templateId)
+                        val currentCategory = state.selectedCategory
                         TemplateCard(
                             template = template,
-                            isFlipped = state.flippedTemplateIds.contains(templateId),
+                            isFlipped = isFlipped,
                             isFavorite = isFav,
-                            onToggleFlip = { viewModel.toggleTemplateFlip(templateId, state.selectedCategory) },
-                            onToggleFavorite = { viewModel.toggleFavorite(templateId) },
-                            onAddFavorite = { viewModel.addFavorite(templateId) },
-                            onSelectTemplate = { onOpenTemplatePreview(templateId) },
+                            onToggleFlip = remember(templateId, currentCategory) {
+                                { viewModel.toggleTemplateFlip(templateId, currentCategory) }
+                            },
+                            onToggleFavorite = remember(templateId) {
+                                { viewModel.toggleFavorite(templateId) }
+                            },
+                            onAddFavorite = remember(templateId) {
+                                { viewModel.addFavorite(templateId) }
+                            },
+                            onSelectTemplate = remember(templateId) {
+                                { onOpenTemplatePreview(templateId) }
+                            },
                             modifier = Modifier.animateItem(
                                 fadeInSpec = tween(durationMillis = 240, easing = FastOutSlowInEasing),
                                 fadeOutSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing),
