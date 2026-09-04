@@ -113,12 +113,12 @@ fun TemplatePreviewScreen(
 
     var currentZoomLevel by remember { mutableFloatStateOf(targetInitialZoom) }
     val isPagingEnabled = currentZoomLevel <= (targetInitialZoom + 0.05f)
+    var isTopBarVisible by remember { mutableStateOf(true) }
 
     LaunchedEffect(pagerState.currentPage, targetInitialZoom) {
         currentZoomLevel = targetInitialZoom
+        isTopBarVisible = true
     }
-
-    var isTopBarVisible by remember { mutableStateOf(true) }
 
     // Dynamic dark / light theme canvas color
     val canvasBgColor = getPdfCanvasBgColor()
@@ -170,6 +170,7 @@ fun TemplatePreviewScreen(
                         TemplatePreviewPageItem(
                             template = template,
                             isTopBarVisible = isTopBarVisible,
+                            isActivePage = pagerState.currentPage == page,
                             onToggleTopBar = { isTopBarVisible = it },
                             onZoomChange = { zoom ->
                                 if (pagerState.currentPage == page) {
@@ -254,6 +255,7 @@ fun TemplatePreviewScreen(
 private fun TemplatePreviewPageItem(
     template: ResumeTemplate,
     isTopBarVisible: Boolean,
+    isActivePage: Boolean,
     onToggleTopBar: (Boolean) -> Unit,
     onZoomChange: (Float) -> Unit,
     topPadding: Dp,
@@ -329,6 +331,7 @@ private fun TemplatePreviewPageItem(
                 .fillMaxSize()
                 .padding(top = topPadding),
             isTopBarVisible = isTopBarVisible,
+            isActivePage = isActivePage,
             onToggleTopBar = onToggleTopBar,
             onZoomChange = onZoomChange
         )

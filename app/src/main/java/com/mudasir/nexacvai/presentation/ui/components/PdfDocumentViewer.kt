@@ -24,7 +24,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.github.barteksc.pdfviewer.PDFView
 import com.github.barteksc.pdfviewer.listener.OnDrawListener
+import com.github.barteksc.pdfviewer.listener.OnLoadCompleteListener
 import com.github.barteksc.pdfviewer.listener.OnPageChangeListener
+import com.github.barteksc.pdfviewer.listener.OnRenderListener
 import com.github.barteksc.pdfviewer.listener.OnTapListener
 import com.github.barteksc.pdfviewer.util.Constants
 import com.github.barteksc.pdfviewer.util.FitPolicy
@@ -42,10 +44,12 @@ fun PdfDocumentViewer(
     pdfFile: File?,
     modifier: Modifier = Modifier,
     isTopBarVisible: Boolean = true,
+    isActivePage: Boolean = true,
     onToggleTopBar: (Boolean) -> Unit = {},
     onZoomChange: (Float) -> Unit = {}
 ) {
     var pdfViewRef by remember { mutableStateOf<PDFView?>(null) }
+    var isPdfLoaded by remember { mutableStateOf(false) }
     var currentPage by remember { mutableIntStateOf(1) }
     var totalPages by remember { mutableIntStateOf(1) }
     var currentZoom by remember { mutableFloatStateOf(1.0f) }
@@ -62,16 +66,21 @@ fun PdfDocumentViewer(
         isControlsVisible = true
     }
 
-    // 3s Inactivity Auto-Hide timer ONLY for floating zoom controls
-    LaunchedEffect(lastInteractionTime) {
-        isControlsVisible = true
-        delay(3000L)
-        isControlsVisible = false
+    // 3s Inactivity Auto-Hide timer ONLY for floating zoom controls on the active page
+    LaunchedEffect(lastInteractionTime, isActivePage) {
+        if (isActivePage) {
+            isControlsVisible = true
+            delay(3000L)
+            isControlsVisible = false
+        } else {
+            isControlsVisible = false
+        }
     }
 
     val currentTopBarVisible by rememberUpdatedState(isTopBarVisible)
     val currentToggleTopBar by rememberUpdatedState(onToggleTopBar)
     val currentOnZoomChange by rememberUpdatedState(onZoomChange)
+    val currentIsActivePage by rememberUpdatedState(isActivePage)
 
     val configuration = androidx.compose.ui.platform.LocalConfiguration.current
     val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
@@ -86,6 +95,7 @@ fun PdfDocumentViewer(
     // Device classification:
     // - Foldables (Unfolded): Large screen (>= 580dp) with almost square aspect ratio (< 1.35)
     // - Tablets: Large screen (>= 580dp) with widescreen ratio (>= 1.35)
+    // - Phones: Narrow screen (< 580dp)
     val isFoldable = smallestWidthDp >= 580 && aspectRatio < 1.35
     val isTablet = smallestWidthDp >= 580 && aspectRatio >= 1.35
     val isPhone = smallestWidthDp < 580
@@ -104,79 +114,144 @@ fun PdfDocumentViewer(
         val file = pdfFile ?: return@LaunchedEffect
         if (!file.exists() || file.length() == 0L) return@LaunchedEffect
 
+        isPdfLoaded = false
         var lastYOffset = 0f
         var hasAppliedInitialZoom = false
 
         Constants.THUMBNAIL_RATIO = 1f
         Constants.PRELOAD_OFFSET = 100
 
-        view.fromFile(file)
-            .defaultPage(0)
-            .enableAnnotationRendering(true)
-            .swipeHorizontal(false)
-            .spacing(16)
-            .pageFitPolicy(FitPolicy.BOTH)
-            .enableDoubletap(true)
-            .enableAntialiasing(true)
-            .onPageChange(OnPageChangeListener { page, pageCount ->
-                currentPage = page + 1
-                totalPages = pageCount
-                if (!hasAppliedInitialZoom && targetInitialZoom != 1.0f) {
-                    hasAppliedInitialZoom = true
-                    val centerX = if (view.width > 0) view.width / 2f else 0f
-                    view.zoomCenteredTo(targetInitialZoom, PointF(centerX, 0f))
-                }
-                currentZoom = view.zoom
-                currentOnZoomChange(view.zoom)
-                wakeUpControls()
-            })
-            .onDraw(OnDrawListener { canvas, pageWidth, pageHeight, _ ->
-                val z = view.zoom
-                if (kotlin.math.abs(z - currentZoom) > 0.01f) {
-                    currentZoom = z
-                    currentOnZoomChange(z)
-                    wakeUpControls()
-                }
-
-                // TopBar scroll rules: Scrolling DOWN hides TopBar, reaching TOP shows TopBar
-                val yOffset = view.currentYOffset
-                if (view.currentPage == 0 && yOffset >= -80f) {
-                    if (!currentTopBarVisible) {
-                        currentToggleTopBar(true)
-                    }
-                } else {
-                    val deltaY = lastYOffset - yOffset
-                    if (deltaY > 15f) {
-                        if (currentTopBarVisible) {
-                            currentToggleTopBar(false)
+        try {
+            view.fromFile(file)
+                .defaultPage(0)
+                .enableAnnotationRendering(true)
+                .swipeHorizontal(false)
+                .spacing(16)
+                .pageFitPolicy(FitPolicy.BOTH)
+                .enableDoubletap(true)
+                .enableAntialiasing(true)
+                .onLoad(OnLoadCompleteListener { nbPages ->
+                    isPdfLoaded = true
+                    totalPages = nbPages
+                    if (!hasAppliedInitialZoom && targetInitialZoom != 1.0f) {
+                        hasAppliedInitialZoom = true
+                        try {
+                            val centerX = if (view.width > 0) view.width / 2f else 0f
+                            view.zoomCenteredTo(targetInitialZoom, PointF(centerX, 0f))
+                        } catch (e: Exception) {
+                            android.util.Log.e("PdfDocumentViewer", "Error setting initial zoom on load", e)
                         }
                     }
-                }
-                lastYOffset = yOffset
+                    currentZoom = view.zoom
+                    if (currentIsActivePage) {
+                        currentOnZoomChange(view.zoom)
+                        wakeUpControls()
+                    }
+                })
+                .onRender(OnRenderListener {
+                    isPdfLoaded = true
+                })
+                .onPageChange(OnPageChangeListener { page, pageCount ->
+                    currentPage = page + 1
+                    totalPages = pageCount
+                    if (!hasAppliedInitialZoom && targetInitialZoom != 1.0f) {
+                        hasAppliedInitialZoom = true
+                        try {
+                            val centerX = if (view.width > 0) view.width / 2f else 0f
+                            view.zoomCenteredTo(targetInitialZoom, PointF(centerX, 0f))
+                        } catch (e: Exception) {
+                            android.util.Log.e("PdfDocumentViewer", "Error setting initial zoom on page change", e)
+                        }
+                    }
+                    currentZoom = view.zoom
+                    if (currentIsActivePage) {
+                        currentOnZoomChange(view.zoom)
+                    }
+                })
+                .onDraw(OnDrawListener { canvas, pageWidth, pageHeight, _ ->
+                    val z = view.zoom
+                    if (kotlin.math.abs(z - currentZoom) > 0.01f) {
+                        currentZoom = z
+                        if (currentIsActivePage) {
+                            currentOnZoomChange(z)
+                            wakeUpControls()
+                        }
+                    }
 
-                val shadowGradient = android.graphics.LinearGradient(
-                    0f, pageHeight,
-                    0f, pageHeight + 12f,
-                    intArrayOf(
-                        android.graphics.Color.parseColor("#28000000"),
-                        android.graphics.Color.parseColor("#0F000000"),
-                        android.graphics.Color.TRANSPARENT
-                    ),
-                    null,
-                    android.graphics.Shader.TileMode.CLAMP
-                )
-                val shadowPaint = android.graphics.Paint().apply {
-                    shader = shadowGradient
-                    style = android.graphics.Paint.Style.FILL
+                    // TopBar scroll rules ONLY for active page: Scrolling DOWN hides TopBar, reaching TOP shows TopBar
+                    if (currentIsActivePage) {
+                        val yOffset = view.currentYOffset
+                        if (view.currentPage == 0 && yOffset >= -80f) {
+                            if (!currentTopBarVisible) {
+                                currentToggleTopBar(true)
+                            }
+                        } else {
+                            val deltaY = lastYOffset - yOffset
+                            if (deltaY > 15f) {
+                                if (currentTopBarVisible) {
+                                    currentToggleTopBar(false)
+                                }
+                            }
+                        }
+                        lastYOffset = yOffset
+                    }
+
+                    val shadowGradient = android.graphics.LinearGradient(
+                        0f, pageHeight,
+                        0f, pageHeight + 12f,
+                        intArrayOf(
+                            android.graphics.Color.parseColor("#28000000"),
+                            android.graphics.Color.parseColor("#0F000000"),
+                            android.graphics.Color.TRANSPARENT
+                        ),
+                        null,
+                        android.graphics.Shader.TileMode.CLAMP
+                    )
+                    val shadowPaint = android.graphics.Paint().apply {
+                        shader = shadowGradient
+                        style = android.graphics.Paint.Style.FILL
+                    }
+                    canvas.drawRect(0f, pageHeight, pageWidth, pageHeight + 12f, shadowPaint)
+                })
+                .onTap(OnTapListener {
+                    if (currentIsActivePage) {
+                        currentToggleTopBar(!currentTopBarVisible)
+                        wakeUpControls()
+                    }
+                    true
+                })
+                .load()
+        } catch (e: Exception) {
+            android.util.Log.e("PdfDocumentViewer", "Error initiating PDF load", e)
+        }
+    }
+
+    // Clean state isolation when active page changes in the pager
+    LaunchedEffect(isActivePage, isPdfLoaded) {
+        if (isActivePage) {
+            wakeUpControls()
+            pdfViewRef?.let { view ->
+                if (isPdfLoaded && view.pageCount > 0) {
+                    currentZoom = view.zoom
+                    currentOnZoomChange(view.zoom)
                 }
-                canvas.drawRect(0f, pageHeight, pageWidth, pageHeight + 12f, shadowPaint)
-            })
-            .onTap(OnTapListener {
-                currentToggleTopBar(!currentTopBarVisible)
-                wakeUpControls()
-                true
-            })
-            .load()
+            }
+        } else {
+            pdfViewRef?.let { view ->
+                if (isPdfLoaded && view.pageCount > 0) {
+                    try {
+                        val centerX = if (view.width > 0) view.width / 2f else 0f
+                        if (kotlin.math.abs(view.zoom - targetInitialZoom) > 0.05f) {
+                            view.zoomCenteredTo(targetInitialZoom, PointF(centerX, 0f))
+                            currentZoom = targetInitialZoom
+                        }
+                        view.jumpTo(0, false)
+                    } catch (e: Exception) {
+                        android.util.Log.e("PdfDocumentViewer", "Error resetting inactive page", e)
+                    }
+                }
+            }
+        }
     }
 
     Box(
@@ -260,9 +335,15 @@ fun PdfDocumentViewer(
                             onClick = {
                                 wakeUpControls()
                                 pdfViewRef?.let { view ->
-                                    val target = (view.zoom - 1.0f).coerceAtLeast(MIN_ZOOM_LEVEL)
-                                    view.zoomWithAnimation(target)
-                                    view.invalidate()
+                                    if (isPdfLoaded && view.pageCount > 0) {
+                                        try {
+                                            val target = (view.zoom - 1.0f).coerceAtLeast(MIN_ZOOM_LEVEL)
+                                            view.zoomWithAnimation(target)
+                                            view.invalidate()
+                                        } catch (e: Exception) {
+                                            android.util.Log.e("PdfDocumentViewer", "Error zooming out", e)
+                                        }
+                                    }
                                 }
                             },
                             enabled = isCanZoomOut
@@ -290,9 +371,15 @@ fun PdfDocumentViewer(
                             onClick = {
                                 wakeUpControls()
                                 pdfViewRef?.let { view ->
-                                    val target = (view.zoom + 1.0f).coerceAtMost(MAX_ZOOM_LEVEL)
-                                    view.zoomWithAnimation(target)
-                                    view.invalidate()
+                                    if (isPdfLoaded && view.pageCount > 0) {
+                                        try {
+                                            val target = (view.zoom + 1.0f).coerceAtMost(MAX_ZOOM_LEVEL)
+                                            view.zoomWithAnimation(target)
+                                            view.invalidate()
+                                        } catch (e: Exception) {
+                                            android.util.Log.e("PdfDocumentViewer", "Error zooming in", e)
+                                        }
+                                    }
                                 }
                             },
                             enabled = isCanZoomIn
@@ -308,8 +395,14 @@ fun PdfDocumentViewer(
                             onClick = {
                                 wakeUpControls()
                                 pdfViewRef?.let { view ->
-                                    view.zoomWithAnimation(1.0f)
-                                    view.invalidate()
+                                    if (isPdfLoaded && view.pageCount > 0) {
+                                        try {
+                                            view.zoomWithAnimation(1.0f)
+                                            view.invalidate()
+                                        } catch (e: Exception) {
+                                            android.util.Log.e("PdfDocumentViewer", "Error resetting zoom", e)
+                                        }
+                                    }
                                 }
                             },
                             enabled = isCanReset
