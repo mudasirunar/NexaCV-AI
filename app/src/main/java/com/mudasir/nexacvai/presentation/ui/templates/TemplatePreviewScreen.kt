@@ -36,11 +36,19 @@ import com.mudasir.nexacvai.domain.model.template.ResumeTemplate
 import com.mudasir.nexacvai.domain.model.template.TemplateCategory
 import com.mudasir.nexacvai.domain.model.template.TemplateData
 import com.mudasir.nexacvai.domain.model.template.TemplateStyle
+import com.github.barteksc.pdfviewer.PDFView
+import com.mudasir.nexacvai.presentation.ui.components.FloatingZoomControls
+import com.mudasir.nexacvai.presentation.ui.components.MAX_ZOOM_LEVEL
+import com.mudasir.nexacvai.presentation.ui.components.MIN_ZOOM_LEVEL
+import com.mudasir.nexacvai.presentation.ui.components.calculateNextZoomIn
+import com.mudasir.nexacvai.presentation.ui.components.calculateNextZoomOut
 import com.mudasir.nexacvai.presentation.ui.components.PdfDocumentViewer
 import com.mudasir.nexacvai.presentation.ui.templates.components.FavoriteStarButton
 import com.mudasir.nexacvai.presentation.ui.templates.components.shimmerEffect
 import com.mudasir.nexacvai.presentation.ui.templates.viewmodel.TemplatesViewModel
 import com.mudasir.nexacvai.ui.theme.getPdfCanvasBgColor
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -112,12 +120,44 @@ fun TemplatePreviewScreen(
     }
 
     var currentZoomLevel by remember { mutableFloatStateOf(targetInitialZoom) }
+    var targetZoomLevel by remember { mutableFloatStateOf(targetInitialZoom) }
+    var lastZoomPressTime by remember { mutableLongStateOf(0L) }
     val isPagingEnabled = currentZoomLevel <= (targetInitialZoom + 0.05f)
     var isTopBarVisible by remember { mutableStateOf(true) }
 
+    val pdfViews = remember { mutableStateMapOf<Int, PDFView>() }
+    val pageInfoMap = remember { mutableStateMapOf<Int, Pair<Int, Int>>() }
+
+    var isControlsVisible by remember { mutableStateOf(true) }
+    var lastInteractionTime by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    var skipSlideAnimation by remember { mutableStateOf(false) }
+
+    fun wakeUpControls(animate: Boolean = false) {
+        skipSlideAnimation = !animate
+        lastInteractionTime = System.currentTimeMillis()
+        isControlsVisible = true
+    }
+
+    // 3s Inactivity Auto-Hide timer for the floating zoom controls island
+    LaunchedEffect(lastInteractionTime) {
+        isControlsVisible = true
+        delay(3000L)
+        isControlsVisible = false
+    }
+
+    LaunchedEffect(skipSlideAnimation) {
+        if (skipSlideAnimation) {
+            delay(150L)
+            skipSlideAnimation = false
+        }
+    }
+
     LaunchedEffect(pagerState.currentPage, targetInitialZoom) {
         currentZoomLevel = targetInitialZoom
+        targetZoomLevel = targetInitialZoom
+        lastZoomPressTime = 0L
         isTopBarVisible = true
+        wakeUpControls(animate = false)
     }
 
     // Dynamic dark / light theme canvas color
@@ -172,9 +212,24 @@ fun TemplatePreviewScreen(
                             isTopBarVisible = isTopBarVisible,
                             isActivePage = pagerState.currentPage == page,
                             onToggleTopBar = { isTopBarVisible = it },
+                            onTapDocument = { wakeUpControls(animate = true) },
                             onZoomChange = { zoom ->
                                 if (pagerState.currentPage == page) {
                                     currentZoomLevel = zoom
+                                    if (System.currentTimeMillis() - lastZoomPressTime >= 500L) {
+                                        targetZoomLevel = zoom
+                                    }
+                                    wakeUpControls(animate = true)
+                                }
+                            },
+                            onPageInfoChange = { current, total ->
+                                pageInfoMap[page] = Pair(current, total)
+                            },
+                            onPdfViewReady = { view ->
+                                if (view != null) {
+                                    pdfViews[page] = view
+                                } else {
+                                    pdfViews.remove(page)
                                 }
                             },
                             topPadding = topPadding
@@ -248,6 +303,95 @@ fun TemplatePreviewScreen(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
             )
         }
+
+        // Floating Zoom Controls Island Overlay (Anchored statically during horizontal swipes)
+        val (activeCurrentPage, activeTotalPages) = pageInfoMap[pagerState.currentPage] ?: Pair(1, 1)
+        val activePdfView = pdfViews[pagerState.currentPage]
+        val coroutineScope = rememberCoroutineScope()
+        val hasPrevious = pagerState.currentPage > 0
+        val hasNext = pagerState.currentPage < pagerTemplates.size - 1
+
+        FloatingZoomControls(
+            currentZoom = currentZoomLevel,
+            currentPage = activeCurrentPage,
+            totalPages = activeTotalPages,
+            isVisible = isControlsVisible,
+            skipEnterAnimation = skipSlideAnimation,
+            hasPrevious = hasPrevious,
+            hasNext = hasNext,
+            onPrevious = {
+                wakeUpControls(animate = false)
+                if (hasPrevious) {
+                    coroutineScope.launch {
+                        val prevPage = (pagerState.targetPage - 1).coerceAtLeast(0)
+                        pagerState.animateScrollToPage(prevPage)
+                    }
+                }
+            },
+            onNext = {
+                wakeUpControls(animate = false)
+                if (hasNext) {
+                    coroutineScope.launch {
+                        val nextPage = (pagerState.targetPage + 1).coerceAtMost(pagerTemplates.size - 1)
+                        pagerState.animateScrollToPage(nextPage)
+                    }
+                }
+            },
+            onZoomIn = {
+                wakeUpControls(animate = false)
+                activePdfView?.let { view ->
+                    if (view.pageCount > 0) {
+                        val now = System.currentTimeMillis()
+                        val base = if (now - lastZoomPressTime < 500L) targetZoomLevel else view.zoom
+                        val target = calculateNextZoomIn(base)
+                        targetZoomLevel = target
+                        lastZoomPressTime = now
+                        try {
+                            view.zoomWithAnimation(target)
+                            view.invalidate()
+                        } catch (e: Exception) {
+                            android.util.Log.e("TemplatePreviewScreen", "Error zooming in", e)
+                        }
+                    }
+                }
+            },
+            onZoomOut = {
+                wakeUpControls(animate = false)
+                activePdfView?.let { view ->
+                    if (view.pageCount > 0) {
+                        val now = System.currentTimeMillis()
+                        val base = if (now - lastZoomPressTime < 500L) targetZoomLevel else view.zoom
+                        val target = calculateNextZoomOut(base)
+                        targetZoomLevel = target
+                        lastZoomPressTime = now
+                        try {
+                            view.zoomWithAnimation(target)
+                            view.invalidate()
+                        } catch (e: Exception) {
+                            android.util.Log.e("TemplatePreviewScreen", "Error zooming out", e)
+                        }
+                    }
+                }
+            },
+            onResetZoom = {
+                wakeUpControls(animate = false)
+                activePdfView?.let { view ->
+                    if (view.pageCount > 0) {
+                        targetZoomLevel = 1.0f
+                        lastZoomPressTime = System.currentTimeMillis()
+                        try {
+                            view.zoomWithAnimation(1.0f)
+                            view.invalidate()
+                        } catch (e: Exception) {
+                            android.util.Log.e("TemplatePreviewScreen", "Error resetting zoom", e)
+                        }
+                    }
+                }
+            },
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 16.dp)
+        )
     }
 }
 
@@ -258,6 +402,9 @@ private fun TemplatePreviewPageItem(
     isActivePage: Boolean,
     onToggleTopBar: (Boolean) -> Unit,
     onZoomChange: (Float) -> Unit,
+    onPageInfoChange: (Int, Int) -> Unit = { _, _ -> },
+    onTapDocument: () -> Unit = {},
+    onPdfViewReady: (PDFView?) -> Unit = {},
     topPadding: Dp,
     modifier: Modifier = Modifier
 ) {
@@ -332,8 +479,12 @@ private fun TemplatePreviewPageItem(
                 .padding(top = topPadding),
             isTopBarVisible = isTopBarVisible,
             isActivePage = isActivePage,
+            showFloatingControls = false,
             onToggleTopBar = onToggleTopBar,
-            onZoomChange = onZoomChange
+            onZoomChange = onZoomChange,
+            onPageInfoChange = onPageInfoChange,
+            onTapDocument = onTapDocument,
+            onPdfViewReady = onPdfViewReady
         )
     }
 }

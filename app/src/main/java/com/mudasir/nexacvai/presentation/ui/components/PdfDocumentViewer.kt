@@ -1,21 +1,8 @@
 package com.mudasir.nexacvai.presentation.ui.components
 
-import android.annotation.SuppressLint
 import android.graphics.PointF
-import android.view.MotionEvent
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -33,26 +20,26 @@ import com.github.barteksc.pdfviewer.util.FitPolicy
 import com.mudasir.nexacvai.ui.theme.*
 import kotlinx.coroutines.delay
 import java.io.File
-import kotlin.math.roundToInt
-
-private const val MIN_ZOOM_LEVEL = 0.5f
-private const val MID_ZOOM_LEVEL = 2.5f
-private const val MAX_ZOOM_LEVEL = 5.0f
-
 @Composable
 fun PdfDocumentViewer(
     pdfFile: File?,
     modifier: Modifier = Modifier,
     isTopBarVisible: Boolean = true,
     isActivePage: Boolean = true,
+    showFloatingControls: Boolean = true,
     onToggleTopBar: (Boolean) -> Unit = {},
-    onZoomChange: (Float) -> Unit = {}
+    onZoomChange: (Float) -> Unit = {},
+    onPageInfoChange: (currentPage: Int, totalPages: Int) -> Unit = { _, _ -> },
+    onTapDocument: () -> Unit = {},
+    onPdfViewReady: (PDFView?) -> Unit = {}
 ) {
     var pdfViewRef by remember { mutableStateOf<PDFView?>(null) }
     var isPdfLoaded by remember { mutableStateOf(false) }
     var currentPage by remember { mutableIntStateOf(1) }
     var totalPages by remember { mutableIntStateOf(1) }
     var currentZoom by remember { mutableFloatStateOf(1.0f) }
+    var targetZoomLevel by remember { mutableFloatStateOf(1.0f) }
+    var lastZoomPressTime by remember { mutableLongStateOf(0L) }
 
     val isDark = isAppInDarkTheme()
     val canvasBgColor = getPdfCanvasBgColor(isDark)
@@ -81,6 +68,9 @@ fun PdfDocumentViewer(
     val currentToggleTopBar by rememberUpdatedState(onToggleTopBar)
     val currentOnZoomChange by rememberUpdatedState(onZoomChange)
     val currentIsActivePage by rememberUpdatedState(isActivePage)
+    val currentOnPageInfoChange by rememberUpdatedState(onPageInfoChange)
+    val currentOnTapDocument by rememberUpdatedState(onTapDocument)
+    val currentOnPdfViewReady by rememberUpdatedState(onPdfViewReady)
 
     val configuration = androidx.compose.ui.platform.LocalConfiguration.current
     val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
@@ -133,6 +123,7 @@ fun PdfDocumentViewer(
                 .onLoad(OnLoadCompleteListener { nbPages ->
                     isPdfLoaded = true
                     totalPages = nbPages
+                    currentOnPageInfoChange(currentPage, nbPages)
                     if (!hasAppliedInitialZoom && targetInitialZoom != 1.0f) {
                         hasAppliedInitialZoom = true
                         try {
@@ -154,6 +145,7 @@ fun PdfDocumentViewer(
                 .onPageChange(OnPageChangeListener { page, pageCount ->
                     currentPage = page + 1
                     totalPages = pageCount
+                    currentOnPageInfoChange(currentPage, pageCount)
                     if (!hasAppliedInitialZoom && targetInitialZoom != 1.0f) {
                         hasAppliedInitialZoom = true
                         try {
@@ -172,6 +164,9 @@ fun PdfDocumentViewer(
                     val z = view.zoom
                     if (kotlin.math.abs(z - currentZoom) > 0.01f) {
                         currentZoom = z
+                        if (System.currentTimeMillis() - lastZoomPressTime >= 500L) {
+                            targetZoomLevel = z
+                        }
                         if (currentIsActivePage) {
                             currentOnZoomChange(z)
                             wakeUpControls()
@@ -216,6 +211,7 @@ fun PdfDocumentViewer(
                 .onTap(OnTapListener {
                     if (currentIsActivePage) {
                         currentToggleTopBar(!currentTopBarVisible)
+                        currentOnTapDocument()
                         wakeUpControls()
                     }
                     true
@@ -265,6 +261,12 @@ fun PdfDocumentViewer(
         } else {
             var lastAppliedBgHex by remember { mutableStateOf<String?>(null) }
 
+            DisposableEffect(Unit) {
+                onDispose {
+                    currentOnPdfViewReady(null)
+                }
+            }
+
             AndroidView(
                 factory = { context ->
                     TouchInterceptPdfView(context, targetInitialZoom).apply {
@@ -276,10 +278,12 @@ fun PdfDocumentViewer(
                         useBestQuality(true)
                         enableRenderDuringScale(true)
                         pdfViewRef = this
+                        currentOnPdfViewReady(this)
                     }
                 },
                 update = { pdfView ->
                     pdfViewRef = pdfView
+                    currentOnPdfViewReady(pdfView)
                     (pdfView as? TouchInterceptPdfView)?.initialZoom = targetInitialZoom
                     if (lastAppliedBgHex != canvasBgHex) {
                         pdfView.setBackgroundColor(android.graphics.Color.parseColor(canvasBgHex))
@@ -291,163 +295,69 @@ fun PdfDocumentViewer(
                     .padding(all = 16.dp)
             )
 
-            val isCanZoomOut = currentZoom > (MIN_ZOOM_LEVEL + 0.05f)
-            val isCanZoomIn = currentZoom < (MAX_ZOOM_LEVEL - 0.05f)
-            val isCanReset = kotlin.math.abs(currentZoom - 1.0f) > 0.05f
-
-            val rawPercent = (currentZoom * 100).roundToInt()
-            val displayZoomPercent = when {
-                rawPercent in 48..52 -> 50
-                rawPercent in 98..102 -> 100
-                rawPercent in 148..152 -> 150
-                rawPercent in 198..202 -> 200
-                rawPercent in 247..253 -> 250
-                rawPercent in 298..302 -> 300
-                rawPercent in 348..352 -> 350
-                rawPercent in 398..402 -> 400
-                rawPercent in 448..452 -> 450
-                rawPercent in 495..505 -> 500
-                else -> rawPercent
-            }
-
-            // Floating Zoom Controls (Independent 3s inactivity auto-hide)
-            AnimatedVisibility(
-                visible = isControlsVisible,
-                enter = fadeIn() + slideInVertically(initialOffsetY = { it / 2 }),
-                exit = fadeOut() + slideOutVertically(targetOffsetY = { it / 2 }),
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 16.dp)
-            ) {
-                Surface(
-                    shape = RoundedCornerShape(28.dp),
-                    color = PdfControlsContainerBg,
-                    border = BorderStroke(1.dp, PdfControlsBorder),
-                    shadowElevation = 12.dp,
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        IconButton(
-                            onClick = {
-                                wakeUpControls()
-                                pdfViewRef?.let { view ->
-                                    if (isPdfLoaded && view.pageCount > 0) {
-                                        try {
-                                            val target = (view.zoom - 1.0f).coerceAtLeast(MIN_ZOOM_LEVEL)
-                                            view.zoomWithAnimation(target)
-                                            view.invalidate()
-                                        } catch (e: Exception) {
-                                            android.util.Log.e("PdfDocumentViewer", "Error zooming out", e)
-                                        }
-                                    }
+            if (showFloatingControls) {
+                FloatingZoomControls(
+                    currentZoom = currentZoom,
+                    currentPage = currentPage,
+                    totalPages = totalPages,
+                    isVisible = isControlsVisible,
+                    onZoomIn = {
+                        wakeUpControls()
+                        pdfViewRef?.let { view ->
+                            if (isPdfLoaded && view.pageCount > 0) {
+                                val now = System.currentTimeMillis()
+                                val base = if (now - lastZoomPressTime < 500L) targetZoomLevel else view.zoom
+                                val target = calculateNextZoomIn(base)
+                                targetZoomLevel = target
+                                lastZoomPressTime = now
+                                try {
+                                    view.zoomWithAnimation(target)
+                                    view.invalidate()
+                                } catch (e: Exception) {
+                                    android.util.Log.e("PdfDocumentViewer", "Error zooming in", e)
                                 }
-                            },
-                            enabled = isCanZoomOut
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Remove,
-                                contentDescription = "Zoom Out",
-                                tint = if (isCanZoomOut) PdfControlsIconTintEnabled else PdfControlsIconTintDisabled
-                            )
+                            }
                         }
-
-                        Surface(
-                            shape = RoundedCornerShape(14.dp),
-                            color = PdfControlsPillBg
-                        ) {
-                            Text(
-                                text = if (totalPages > 1) "Page $currentPage of $totalPages" else "$displayZoomPercent%",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = PdfControlsIconTintEnabled,
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
-                            )
-                        }
-
-                        IconButton(
-                            onClick = {
-                                wakeUpControls()
-                                pdfViewRef?.let { view ->
-                                    if (isPdfLoaded && view.pageCount > 0) {
-                                        try {
-                                            val target = (view.zoom + 1.0f).coerceAtMost(MAX_ZOOM_LEVEL)
-                                            view.zoomWithAnimation(target)
-                                            view.invalidate()
-                                        } catch (e: Exception) {
-                                            android.util.Log.e("PdfDocumentViewer", "Error zooming in", e)
-                                        }
-                                    }
+                    },
+                    onZoomOut = {
+                        wakeUpControls()
+                        pdfViewRef?.let { view ->
+                            if (isPdfLoaded && view.pageCount > 0) {
+                                val now = System.currentTimeMillis()
+                                val base = if (now - lastZoomPressTime < 500L) targetZoomLevel else view.zoom
+                                val target = calculateNextZoomOut(base)
+                                targetZoomLevel = target
+                                lastZoomPressTime = now
+                                try {
+                                    view.zoomWithAnimation(target)
+                                    view.invalidate()
+                                } catch (e: Exception) {
+                                    android.util.Log.e("PdfDocumentViewer", "Error zooming out", e)
                                 }
-                            },
-                            enabled = isCanZoomIn
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Add,
-                                contentDescription = "Zoom In",
-                                tint = if (isCanZoomIn) PdfControlsIconTintEnabled else PdfControlsIconTintDisabled
-                            )
+                            }
                         }
-
-                        IconButton(
-                            onClick = {
-                                wakeUpControls()
-                                pdfViewRef?.let { view ->
-                                    if (isPdfLoaded && view.pageCount > 0) {
-                                        try {
-                                            view.zoomWithAnimation(1.0f)
-                                            view.invalidate()
-                                        } catch (e: Exception) {
-                                            android.util.Log.e("PdfDocumentViewer", "Error resetting zoom", e)
-                                        }
-                                    }
+                    },
+                    onResetZoom = {
+                        wakeUpControls()
+                        pdfViewRef?.let { view ->
+                            if (isPdfLoaded && view.pageCount > 0) {
+                                targetZoomLevel = 1.0f
+                                lastZoomPressTime = System.currentTimeMillis()
+                                try {
+                                    view.zoomWithAnimation(1.0f)
+                                    view.invalidate()
+                                } catch (e: Exception) {
+                                    android.util.Log.e("PdfDocumentViewer", "Error resetting zoom", e)
                                 }
-                            },
-                            enabled = isCanReset
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.RestartAlt,
-                                contentDescription = "Reset Zoom",
-                                tint = if (isCanReset) PdfControlsIconTintEnabled else PdfControlsIconTintDisabled
-                            )
+                            }
                         }
-                    }
-                }
+                    },
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 16.dp)
+                )
             }
         }
     }
 }
 
-@SuppressLint("ViewConstructor")
-private class TouchInterceptPdfView(
-    context: android.content.Context,
-    var initialZoom: Float
-) : PDFView(context, null) {
-    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
-        when (ev.actionMasked) {
-            MotionEvent.ACTION_DOWN -> {
-                if (zoom > (initialZoom + 0.05f)) {
-                    parent?.requestDisallowInterceptTouchEvent(true)
-                } else {
-                    parent?.requestDisallowInterceptTouchEvent(false)
-                }
-            }
-            MotionEvent.ACTION_POINTER_DOWN -> {
-                // Multi-touch detected (2 or more fingers -> pinch to zoom).
-                // Block parent pagers from intercepting this gesture!
-                parent?.requestDisallowInterceptTouchEvent(true)
-            }
-            MotionEvent.ACTION_MOVE -> {
-                if (ev.pointerCount >= 2 || zoom > (initialZoom + 0.05f)) {
-                    parent?.requestDisallowInterceptTouchEvent(true)
-                }
-            }
-            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                parent?.requestDisallowInterceptTouchEvent(false)
-            }
-        }
-        return super.dispatchTouchEvent(ev)
-    }
-}
